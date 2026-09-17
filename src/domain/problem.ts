@@ -1,5 +1,6 @@
 import {
   collectReferences,
+  evaluateRelation,
   type Bindings,
   type QuantityId,
   type Relation,
@@ -31,6 +32,10 @@ export type ProblemReferenceIssue = {
   id: QuantityId;
 };
 
+export type ProblemSolutionIssue =
+  | { kind: 'missing-answer-binding'; id: QuantityId }
+  | { kind: 'unsatisfied-relation' };
+
 export function getVisibleBindings(problem: Problem): Bindings {
   const entries = problem.quantities.flatMap((quantity) =>
     quantity.given.kind === 'known'
@@ -49,4 +54,17 @@ export function validateProblemReferences(
   return collectReferences(problem.relation)
     .filter((id) => !declaredIds.has(id))
     .map((id) => ({ kind: 'undefined-quantity', id }));
+}
+
+export function validateProblemSolution(
+  problem: Problem,
+  answerKey: AnswerKey,
+): readonly ProblemSolutionIssue[] {
+  const result = evaluateRelation(problem.relation, answerKey.bindings);
+
+  if (result.kind === 'missing-binding') {
+    return [{ kind: 'missing-answer-binding', id: result.id }];
+  }
+
+  return result.value ? [] : [{ kind: 'unsatisfied-relation' }];
 }
