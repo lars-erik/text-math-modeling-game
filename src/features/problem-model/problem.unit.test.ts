@@ -2,11 +2,13 @@ import { describe, expect, test } from 'vitest';
 
 import { collectReferences, evaluateRelation } from './expression';
 import {
-  allProblemConstraintCodes,
   getVisibleBindings,
+} from './problem';
+import {
+  allProblemConstraintCodes,
   validateProblemAst,
   validateProblemConstraints,
-} from './problem';
+} from './problem-validation';
 import {
   totalFromPartsAnswerKey,
   totalFromPartsProblem,

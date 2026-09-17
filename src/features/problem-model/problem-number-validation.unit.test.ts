@@ -1,11 +1,13 @@
 import { describe, expect, test } from 'vitest';
 
 import {
-  validateProblemAst,
-  validateProblemConstraints,
   type AnswerKey,
   type Problem,
 } from './problem';
+import {
+  validateProblemAst,
+  validateProblemConstraints,
+} from './problem-validation';
 import {
   totalFromPartsAnswerKey,
   totalFromPartsProblem,
