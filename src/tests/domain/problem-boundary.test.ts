@@ -1,7 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
-import { evaluateRelation } from '../../domain/expression';
-import { getVisibleBindings } from '../../domain/problem';
+import { collectReferences, evaluateRelation } from '../../domain/expression';
+import {
+  getVisibleBindings,
+  validateProblemReferences,
+} from '../../domain/problem';
 import {
   totalFromPartsAnswerKey,
   totalFromPartsProblem,
@@ -23,5 +26,27 @@ describe('learner-visible problem boundary', () => {
         totalFromPartsAnswerKey.bindings,
       ),
     ).toEqual({ kind: 'value', value: true });
+  });
+
+  test('collects referenced quantity IDs in stable tree order', () => {
+    expect(collectReferences(totalFromPartsProblem.relation)).toEqual([
+      'total',
+      'base',
+      'count',
+      'unitValue',
+    ]);
+  });
+
+  test('reports a relation reference that has no declared quantity', () => {
+    const problemWithoutUnitValue = {
+      ...totalFromPartsProblem,
+      quantities: totalFromPartsProblem.quantities.filter(
+        (quantity) => quantity.id !== 'unitValue',
+      ),
+    };
+
+    expect(validateProblemReferences(problemWithoutUnitValue)).toEqual([
+      { kind: 'undefined-quantity', id: 'unitValue' },
+    ]);
   });
 });

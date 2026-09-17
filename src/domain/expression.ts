@@ -18,6 +18,16 @@ export type EvaluationResult<T> =
   | { kind: 'value'; value: T }
   | { kind: 'missing-binding'; id: QuantityId };
 
+export function collectReferences(relation: Relation): readonly QuantityId[] {
+  const references: QuantityId[] = [];
+  const seen = new Set<QuantityId>();
+
+  collectExpressionReferences(relation.left, references, seen);
+  collectExpressionReferences(relation.right, references, seen);
+
+  return references;
+}
+
 export function evaluateExpression(
   expression: Expression,
   bindings: Bindings,
@@ -73,4 +83,27 @@ function evaluateBinary(
   }
 
   return { kind: 'value', value: operation(left.value, right.value) };
+}
+
+function collectExpressionReferences(
+  expression: Expression,
+  references: QuantityId[],
+  seen: Set<QuantityId>,
+): void {
+  switch (expression.kind) {
+    case 'literal':
+      return;
+
+    case 'quantity':
+      if (!seen.has(expression.id)) {
+        seen.add(expression.id);
+        references.push(expression.id);
+      }
+      return;
+
+    case 'add':
+    case 'multiply':
+      collectExpressionReferences(expression.left, references, seen);
+      collectExpressionReferences(expression.right, references, seen);
+  }
 }

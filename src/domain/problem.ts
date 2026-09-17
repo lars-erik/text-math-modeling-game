@@ -1,4 +1,9 @@
-import type { Bindings, QuantityId, Relation } from './expression';
+import {
+  collectReferences,
+  type Bindings,
+  type QuantityId,
+  type Relation,
+} from './expression';
 
 export type QuantityRole = 'base' | 'count' | 'per-item' | 'total';
 
@@ -21,6 +26,11 @@ export type AnswerKey = {
   bindings: Bindings;
 };
 
+export type ProblemReferenceIssue = {
+  kind: 'undefined-quantity';
+  id: QuantityId;
+};
+
 export function getVisibleBindings(problem: Problem): Bindings {
   const entries = problem.quantities.flatMap((quantity) =>
     quantity.given.kind === 'known'
@@ -29,4 +39,14 @@ export function getVisibleBindings(problem: Problem): Bindings {
   );
 
   return Object.fromEntries(entries);
+}
+
+export function validateProblemReferences(
+  problem: Problem,
+): readonly ProblemReferenceIssue[] {
+  const declaredIds = new Set(problem.quantities.map((quantity) => quantity.id));
+
+  return collectReferences(problem.relation)
+    .filter((id) => !declaredIds.has(id))
+    .map((id) => ({ kind: 'undefined-quantity', id }));
 }
