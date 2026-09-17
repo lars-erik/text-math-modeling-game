@@ -53,40 +53,56 @@ export type ProblemInvariantIssue =
       answerValue: number;
     };
 
-type ProblemReferenceValidationContext = {
+export type ProblemAstIssue =
+  | ProblemReferenceIssue
+  | Extract<ProblemNumberIssue, { kind: 'unsafe-known-value' | 'unsafe-literal' }>
+  | Extract<
+      ProblemInvariantIssue,
+      { kind: 'duplicate-quantity-id' | 'invalid-hidden-quantity-count' }
+    >;
+
+export type ProblemConstraintIssue =
+  | ProblemSolutionIssue
+  | Extract<ProblemNumberIssue, { kind: 'unsafe-answer-value' }>
+  | Extract<
+      ProblemInvariantIssue,
+      { kind: 'missing-known-answer-binding' | 'known-answer-mismatch' }
+    >;
+
+export type ProblemConstraintCode =
+  | 'relation-satisfaction'
+  | 'known-answer-consistency'
+  | 'safe-answer-values';
+
+type ProblemAstValidatorCode =
+  | 'defined-quantity-references'
+  | 'safe-known-values'
+  | 'safe-literals'
+  | 'unique-quantity-ids'
+  | 'single-hidden-quantity';
+
+type ProblemAstValidationContext = {
   problem: Problem;
 };
 
-type ProblemSolutionValidationContext = {
-  problem: Problem;
+type ProblemConstraintValidationContext = ProblemAstValidationContext & {
   answerKey: AnswerKey;
 };
 
-type ProblemNumberValidationContext = {
-  problem: Problem;
-  answerKey: AnswerKey;
+type ProblemValidator<Context, Code extends string, Issue> = {
+  code: Code;
+  validate: (context: Context) => readonly Issue[];
 };
 
-type ProblemInvariantValidationContext = {
-  problem: Problem;
-  answerKey: AnswerKey;
-};
+const defaultProblemConstraintCodes = [
+  'relation-satisfaction',
+] as const satisfies readonly ProblemConstraintCode[];
 
-type ProblemReferenceValidator = (
-  context: ProblemReferenceValidationContext,
-) => readonly ProblemReferenceIssue[];
-
-type ProblemSolutionValidator = (
-  context: ProblemSolutionValidationContext,
-) => readonly ProblemSolutionIssue[];
-
-type ProblemNumberValidator = (
-  context: ProblemNumberValidationContext,
-) => readonly ProblemNumberIssue[];
-
-type ProblemInvariantValidator = (
-  context: ProblemInvariantValidationContext,
-) => readonly ProblemInvariantIssue[];
+export const allProblemConstraintCodes = [
+  'relation-satisfaction',
+  'known-answer-consistency',
+  'safe-answer-values',
+] as const satisfies readonly ProblemConstraintCode[];
 
 export function getVisibleBindings(problem: Problem): Bindings {
   const entries = problem.quantities.flatMap((quantity) =>
@@ -98,54 +114,64 @@ export function getVisibleBindings(problem: Problem): Bindings {
   return Object.fromEntries(entries);
 }
 
-export function validateProblemReferences(
-  problem: Problem,
-): readonly ProblemReferenceIssue[] {
-  const context = { problem } satisfies ProblemReferenceValidationContext;
-  return problemReferenceValidators.flatMap((validator) => validator(context));
+export function validateProblemAst(problem: Problem): readonly ProblemAstIssue[] {
+  return runValidators({ problem }, problemAstValidators);
 }
 
-export function validateProblemSolution(
+export function validateProblemConstraints(
   problem: Problem,
   answerKey: AnswerKey,
-): readonly ProblemSolutionIssue[] {
-  const context = { problem, answerKey } satisfies ProblemSolutionValidationContext;
-  return problemSolutionValidators.flatMap((validator) => validator(context));
-}
-
-export function validateProblemNumbers(
+): readonly ProblemConstraintIssue[];
+export function validateProblemConstraints(
   problem: Problem,
   answerKey: AnswerKey,
-): readonly ProblemNumberIssue[] {
-  const context = { problem, answerKey } satisfies ProblemNumberValidationContext;
-  return problemNumberValidators.flatMap((validator) => validator(context));
-}
-
-export function validateProblemInvariants(
+  constraints: readonly ProblemConstraintCode[],
+): readonly ProblemConstraintIssue[];
+export function validateProblemConstraints(
   problem: Problem,
   answerKey: AnswerKey,
-): readonly ProblemInvariantIssue[] {
-  const context = { problem, answerKey } satisfies ProblemInvariantValidationContext;
-  return problemInvariantValidators.flatMap((validator) => validator(context));
+  constraints: readonly ProblemConstraintCode[] = defaultProblemConstraintCodes,
+): readonly ProblemConstraintIssue[] {
+  return runValidators(
+    { problem, answerKey },
+    problemConstraintValidators,
+    constraints,
+  );
 }
 
-function validateSatisfiedRelation({
+function runValidators<Context, Code extends string, Issue>(
+  context: Context,
+  validators: readonly ProblemValidator<Context, Code, Issue>[],
+  allowedCodes?: readonly Code[],
+): readonly Issue[] {
+  const allowedCodeSet = allowedCodes ? new Set(allowedCodes) : undefined;
+
+  return validators.flatMap((validator) => {
+    if (allowedCodeSet && !allowedCodeSet.has(validator.code)) {
+      return [];
+    }
+
+    return validator.validate(context);
+  });
+}
+
+function validateUndefinedQuantityReferences({
   problem,
-  answerKey,
-}: ProblemSolutionValidationContext): readonly ProblemSolutionIssue[] {
-  const result = evaluateRelation(problem.relation, answerKey.bindings);
+}: ProblemAstValidationContext): readonly ProblemReferenceIssue[] {
+  const declaredIds = new Set(problem.quantities.map((quantity) => quantity.id));
 
-  if (result.kind === 'missing-binding') {
-    return [{ kind: 'missing-answer-binding', id: result.id }];
-  }
-
-  return result.value ? [] : [{ kind: 'unsatisfied-relation' }];
+  return collectReferences(problem.relation)
+    .filter((id) => !declaredIds.has(id))
+    .map((id) => ({ kind: 'undefined-quantity', id }));
 }
 
 function validateKnownNumberSafety({
   problem,
-}: ProblemNumberValidationContext): readonly ProblemNumberIssue[] {
-  const issues: ProblemNumberIssue[] = [];
+}: ProblemAstValidationContext): readonly Extract<
+  ProblemNumberIssue,
+  { kind: 'unsafe-known-value' }
+>[] {
+  const issues: Extract<ProblemNumberIssue, { kind: 'unsafe-known-value' }>[] = [];
 
   for (const quantity of problem.quantities) {
     if (
@@ -165,8 +191,11 @@ function validateKnownNumberSafety({
 
 function validateLiteralNumberSafety({
   problem,
-}: ProblemNumberValidationContext): readonly ProblemNumberIssue[] {
-  const issues: ProblemNumberIssue[] = [];
+}: ProblemAstValidationContext): readonly Extract<
+  ProblemNumberIssue,
+  { kind: 'unsafe-literal' }
+>[] {
+  const issues: Extract<ProblemNumberIssue, { kind: 'unsafe-literal' }>[] = [];
 
   for (const value of collectLiterals(problem.relation)) {
     if (!Number.isSafeInteger(value)) {
@@ -177,24 +206,16 @@ function validateLiteralNumberSafety({
   return issues;
 }
 
-function validateAnswerNumberSafety({
-  answerKey,
-}: ProblemNumberValidationContext): readonly ProblemNumberIssue[] {
-  const issues: ProblemNumberIssue[] = [];
-
-  for (const [id, value] of Object.entries(answerKey.bindings)) {
-    if (!Number.isSafeInteger(value)) {
-      issues.push({ kind: 'unsafe-answer-value', id, value });
-    }
-  }
-
-  return issues;
-}
-
 function validateUniqueQuantityIds({
   problem,
-}: ProblemInvariantValidationContext): readonly ProblemInvariantIssue[] {
-  const issues: ProblemInvariantIssue[] = [];
+}: ProblemAstValidationContext): readonly Extract<
+  ProblemInvariantIssue,
+  { kind: 'duplicate-quantity-id' }
+>[] {
+  const issues: Extract<
+    ProblemInvariantIssue,
+    { kind: 'duplicate-quantity-id' }
+  >[] = [];
   const quantityIdCounts = new Map<QuantityId, number>();
   for (const quantity of problem.quantities) {
     quantityIdCounts.set(quantity.id, (quantityIdCounts.get(quantity.id) ?? 0) + 1);
@@ -211,7 +232,10 @@ function validateUniqueQuantityIds({
 
 function validateHiddenQuantityCount({
   problem,
-}: ProblemInvariantValidationContext): readonly ProblemInvariantIssue[] {
+}: ProblemAstValidationContext): readonly Extract<
+  ProblemInvariantIssue,
+  { kind: 'invalid-hidden-quantity-count' }
+>[] {
   const hiddenCount = problem.quantities.filter(
     (quantity) => quantity.given.kind === 'hidden',
   ).length;
@@ -221,26 +245,40 @@ function validateHiddenQuantityCount({
     : [{ kind: 'invalid-hidden-quantity-count', count: hiddenCount }];
 }
 
-function validateKnownAnswerConsistency({
-  problem,
-  answerKey,
-}: ProblemInvariantValidationContext): readonly ProblemInvariantIssue[] {
-  const issues: ProblemInvariantIssue[] = [];
+function validateSatisfiedRelation(
+  context: ProblemConstraintValidationContext,
+): readonly ProblemSolutionIssue[] {
+  const { problem, answerKey } = context;
+  const result = evaluateRelation(problem.relation, answerKey.bindings);
 
-  const knownValuesById = new Map<QuantityId, number[]>();
+  if (result.kind === 'missing-binding') {
+    return [{ kind: 'missing-answer-binding', id: result.id }];
+  }
+
+  return result.value ? [] : [{ kind: 'unsatisfied-relation' }];
+}
+
+function validateKnownAnswerConsistency(
+  context: ProblemConstraintValidationContext,
+): readonly Extract<
+  ProblemInvariantIssue,
+  { kind: 'missing-known-answer-binding' | 'known-answer-mismatch' }
+>[] {
+  const { problem, answerKey } = context;
+  const issues: Extract<
+    ProblemInvariantIssue,
+    { kind: 'missing-known-answer-binding' | 'known-answer-mismatch' }
+  >[] = [];
+
+  const missingBindingReportedIds = new Set<QuantityId>();
+  const reportedMismatchValuesById = new Map<QuantityId, Set<number>>();
   for (const quantity of problem.quantities) {
     if (quantity.given.kind !== 'known') {
       continue;
     }
-    if (!knownValuesById.has(quantity.id)) {
-      knownValuesById.set(quantity.id, []);
-    }
-    knownValuesById.get(quantity.id)?.push(quantity.given.value);
-  }
 
-  const missingBindingReportedIds = new Set<QuantityId>();
-  const reportedMismatchValuesById = new Map<QuantityId, Set<number>>();
-  for (const [id, knownValues] of knownValuesById) {
+    const id = quantity.id;
+    const knownValue = quantity.given.value;
     const hasBinding = Object.prototype.hasOwnProperty.call(answerKey.bindings, id);
     const answerValue = answerKey.bindings[id];
     if (!hasBinding || answerValue === undefined) {
@@ -250,55 +288,60 @@ function validateKnownAnswerConsistency({
       }
       continue;
     }
-    for (const knownValue of knownValues) {
-      if (answerValue !== knownValue) {
-        if (!reportedMismatchValuesById.has(id)) {
-          reportedMismatchValuesById.set(id, new Set<number>());
-        }
-        const reportedMismatchValues = reportedMismatchValuesById.get(id);
-        if (reportedMismatchValues?.has(knownValue)) {
-          continue;
-        }
-        reportedMismatchValues?.add(knownValue);
-        issues.push({
-          kind: 'known-answer-mismatch',
-          id,
-          knownValue,
-          answerValue,
-        });
+
+    if (answerValue !== knownValue) {
+      if (!reportedMismatchValuesById.has(id)) {
+        reportedMismatchValuesById.set(id, new Set<number>());
       }
+      const reportedMismatchValues = reportedMismatchValuesById.get(id);
+      if (reportedMismatchValues?.has(knownValue)) {
+        continue;
+      }
+      reportedMismatchValues?.add(knownValue);
+      issues.push({
+        kind: 'known-answer-mismatch',
+        id,
+        knownValue,
+        answerValue,
+      });
     }
   }
 
   return issues;
 }
 
-function validateUndefinedQuantityReferences({
-  problem,
-}: ProblemReferenceValidationContext): readonly ProblemReferenceIssue[] {
-  const declaredIds = new Set(problem.quantities.map((quantity) => quantity.id));
+function validateAnswerNumberSafety(
+  { answerKey }: ProblemConstraintValidationContext,
+): readonly Extract<ProblemNumberIssue, { kind: 'unsafe-answer-value' }>[] {
+  const issues: Extract<ProblemNumberIssue, { kind: 'unsafe-answer-value' }>[] = [];
 
-  return collectReferences(problem.relation)
-    .filter((id) => !declaredIds.has(id))
-    .map((id) => ({ kind: 'undefined-quantity', id }));
+  for (const [id, value] of Object.entries(answerKey.bindings)) {
+    if (!Number.isSafeInteger(value)) {
+      issues.push({ kind: 'unsafe-answer-value', id, value });
+    }
+  }
+
+  return issues;
 }
 
-const problemReferenceValidators: readonly ProblemReferenceValidator[] = [
-  validateUndefinedQuantityReferences,
+const problemAstValidators: readonly ProblemValidator<
+  ProblemAstValidationContext,
+  ProblemAstValidatorCode,
+  ProblemAstIssue
+>[] = [
+  { code: 'defined-quantity-references', validate: validateUndefinedQuantityReferences },
+  { code: 'safe-known-values', validate: validateKnownNumberSafety },
+  { code: 'safe-literals', validate: validateLiteralNumberSafety },
+  { code: 'unique-quantity-ids', validate: validateUniqueQuantityIds },
+  { code: 'single-hidden-quantity', validate: validateHiddenQuantityCount },
 ];
 
-const problemSolutionValidators: readonly ProblemSolutionValidator[] = [
-  validateSatisfiedRelation,
-];
-
-const problemNumberValidators: readonly ProblemNumberValidator[] = [
-  validateKnownNumberSafety,
-  validateLiteralNumberSafety,
-  validateAnswerNumberSafety,
-];
-
-const problemInvariantValidators: readonly ProblemInvariantValidator[] = [
-  validateUniqueQuantityIds,
-  validateHiddenQuantityCount,
-  validateKnownAnswerConsistency,
+const problemConstraintValidators: readonly ProblemValidator<
+  ProblemConstraintValidationContext,
+  ProblemConstraintCode,
+  ProblemConstraintIssue
+>[] = [
+  { code: 'relation-satisfaction', validate: validateSatisfiedRelation },
+  { code: 'known-answer-consistency', validate: validateKnownAnswerConsistency },
+  { code: 'safe-answer-values', validate: validateAnswerNumberSafety },
 ];
