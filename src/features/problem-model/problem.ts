@@ -16,13 +16,19 @@ export type Quantity = {
   given: QuantityGiven;
 };
 
+export type AnswerKey = {
+  bindings: Bindings;
+};
+
+export type ProblemReplay = {
+  seed: number;
+  generatorVersion: string;
+};
+
 export type Problem = {
   quantities: readonly Quantity[];
   relation: Relation;
-};
-
-export type AnswerKey = {
-  bindings: Bindings;
+  replay: ProblemReplay;
 };
 
 export function getVisibleBindings(problem: Problem): Bindings {

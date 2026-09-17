@@ -39,6 +39,10 @@ export const totalFromPartsProblem = {
     },
   ],
   relation: totalFromParts,
+  replay: {
+    seed: 0,
+    generatorVersion: 'hand-built-v1',
+  },
 } satisfies Problem;
 
 export const totalFromPartsAnswerKey = {
