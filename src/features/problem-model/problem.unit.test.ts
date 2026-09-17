@@ -1,15 +1,15 @@
 import { describe, expect, test } from 'vitest';
 
-import { collectReferences, evaluateRelation } from '../../domain/expression';
+import { collectReferences, evaluateRelation } from './expression';
 import {
   getVisibleBindings,
   validateProblemReferences,
   validateProblemSolution,
-} from '../../domain/problem';
+} from './problem';
 import {
   totalFromPartsAnswerKey,
   totalFromPartsProblem,
-} from '../fixtures/total-from-parts';
+} from './total-from-parts.fixture';
 
 describe('learner-visible problem boundary', () => {
   test('omits the hidden per-item value from visible bindings', () => {

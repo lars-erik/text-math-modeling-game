@@ -23,6 +23,12 @@ Prefer affirmative requirements and acceptance criteria over prohibition lists. 
 - Use ApprovalTests for human-reviewed use-case/debug output. Use precise assertions and fast-check for mathematical invariants. Test the browser UI with interaction assertions and selective semantic-DOM approvals.
 - Commit `*.approved.*`; exclude `*.received.*`; review diffs before accepting new baselines. CI verifies approved artifacts and does not reapprove them.
 
+## Source layout
+
+Organize implementation under `features/<feature-name>/`. Colocate each feature's production modules, unit tests, browser tests, approval tests, approved artifacts, and test fixtures. Use the suffixes `*.unit.test.ts`, `*.browser.test.ts`, `*.approval.test.ts`, and `*.fixture.ts` so test and production build configurations remain explicit.
+
+Keep only cross-feature test infrastructure under `testing/`. Production modules must not import test modules, fixtures, or `testing/`; `tsconfig.build.json` and Vite's entry graph exclude them from production builds.
+
 ## Initial stack decision
 
 Use TypeScript, Lit, Vite, Vitest, fast-check, KaTeX, and Ohm/JS as the **working hypothesis**. Validate Lit + Vitest browser + the Node approvals package in a small compatibility spike before investing in UI. Keep the package manager/runtime on standard Node + npm for that spike; Bun remains an optional subsequent change.

@@ -13,6 +13,6 @@ export default defineConfig({
       provider: playwright(),
     },
     fileParallelism: false,
-    include: ['tests/browser/**/*.test.ts'],
+    include: ['features/**/*.browser.test.ts'],
   },
 });

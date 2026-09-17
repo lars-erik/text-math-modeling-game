@@ -1,1 +1,1 @@
-import './ui/compatibility-input';
+import './features/compatibility-spike/compatibility-input';

@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 
-import '../../ui/compatibility-input';
+import './compatibility-input';
 
 test('accepts keyboard input and submits with Enter', async () => {
   document.body.innerHTML = '<compatibility-input></compatibility-input>';

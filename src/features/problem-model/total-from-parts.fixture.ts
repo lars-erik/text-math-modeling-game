@@ -1,5 +1,5 @@
-import type { Relation } from '../../domain/expression';
-import type { AnswerKey, Problem } from '../../domain/problem';
+import type { Relation } from './expression';
+import type { AnswerKey, Problem } from './problem';
 
 export const totalFromParts: Relation = {
   kind: 'equation',

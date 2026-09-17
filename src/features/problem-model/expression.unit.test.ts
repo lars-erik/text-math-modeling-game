@@ -3,8 +3,8 @@ import { describe, expect, test } from 'vitest';
 import {
   evaluateExpression,
   evaluateRelation,
-} from '../../domain/expression';
-import { totalFromParts } from '../fixtures/total-from-parts';
+} from './expression';
+import { totalFromParts } from './total-from-parts.fixture';
 
 describe('semantic expression evaluation', () => {
   test.each([

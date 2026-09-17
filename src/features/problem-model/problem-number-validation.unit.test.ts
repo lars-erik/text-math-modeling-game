@@ -4,11 +4,11 @@ import {
   validateProblemNumbers,
   type AnswerKey,
   type Problem,
-} from '../../domain/problem';
+} from './problem';
 import {
   totalFromPartsAnswerKey,
   totalFromPartsProblem,
-} from '../fixtures/total-from-parts';
+} from './total-from-parts.fixture';
 
 describe('Phase 1 numeric range validation', () => {
   test('accepts the canonical safe-integer problem and answer key', () => {

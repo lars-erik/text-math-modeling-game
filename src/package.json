@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "browser:install": "node tools/browser.mjs install",
-    "build": "vite build",
+    "build": "tsc --project tsconfig.build.json && vite build",
     "dev": "vite",
     "test": "npm run test:node && npm run test:browser",
-    "test:approval": "vitest run --config vitest.config.ts tests/approval/approval-spike.test.ts",
+    "test:approval": "vitest run --config vitest.config.ts testing/approval-tooling.test.ts",
     "test:browser": "node tools/browser.mjs test",
     "test:node": "vitest run --config vitest.config.ts",
     "typecheck": "tsc --noEmit"

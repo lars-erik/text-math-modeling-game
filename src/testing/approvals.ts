@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 type ApprovalReporter = {
@@ -70,11 +71,12 @@ const options: ApprovalOptions = {
 
 approvals.configure(options);
 
-const approvalDirectory = fileURLToPath(
-  new URL('../approval/', import.meta.url),
-);
-
-export function verifyApproval(name: string, value: string): void {
+export function verifyApproval(
+  testModuleUrl: string,
+  name: string,
+  value: string,
+): void {
+  const approvalDirectory = dirname(fileURLToPath(testModuleUrl));
   approvals.verify(approvalDirectory, name, value, options);
 }
 
