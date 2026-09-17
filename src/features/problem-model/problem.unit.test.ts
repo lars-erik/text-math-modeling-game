@@ -183,6 +183,28 @@ describe('Phase 1 problem invariants', () => {
     });
   });
 
+  test('reports mismatch when duplicate known IDs disagree with answer key', () => {
+    const duplicateProblem = {
+      ...totalFromPartsProblem,
+      quantities: [
+        ...totalFromPartsProblem.quantities,
+        {
+          ...totalFromPartsProblem.quantities[0],
+          given: { kind: 'known' as const, value: 31 },
+        },
+      ],
+    };
+
+    expect(
+      validateProblemInvariants(duplicateProblem, totalFromPartsAnswerKey),
+    ).toContainEqual({
+      kind: 'known-answer-mismatch',
+      id: 'base',
+      knownValue: 31,
+      answerValue: 30,
+    });
+  });
+
   test('reports multiple invariant failures together', () => {
     const invalidProblem = {
       ...totalFromPartsProblem,

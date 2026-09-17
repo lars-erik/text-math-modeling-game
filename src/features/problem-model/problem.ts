@@ -144,29 +144,46 @@ export function validateProblemInvariants(
     issues.push({ kind: 'invalid-hidden-quantity-count', count: hiddenCount });
   }
 
-  const checkedKnownIds = new Set<QuantityId>();
+  const knownValuesById = new Map<QuantityId, number[]>();
   for (const quantity of problem.quantities) {
     if (quantity.given.kind !== 'known') {
       continue;
     }
-    if (checkedKnownIds.has(quantity.id)) {
+    if (!knownValuesById.has(quantity.id)) {
+      knownValuesById.set(quantity.id, []);
+    }
+    knownValuesById.get(quantity.id)?.push(quantity.given.value);
+  }
+
+  const missingBindingReportedIds = new Set<QuantityId>();
+  const reportedMismatchValuesById = new Map<QuantityId, Set<number>>();
+  for (const [id, knownValues] of knownValuesById) {
+    if (!Object.prototype.hasOwnProperty.call(answerKey.bindings, id)) {
+      if (!missingBindingReportedIds.has(id)) {
+        missingBindingReportedIds.add(id);
+        issues.push({ kind: 'missing-known-answer-binding', id });
+      }
       continue;
     }
-    checkedKnownIds.add(quantity.id);
 
-    if (!Object.prototype.hasOwnProperty.call(answerKey.bindings, quantity.id)) {
-      issues.push({ kind: 'missing-known-answer-binding', id: quantity.id });
-      continue;
-    }
-
-    const answerValue = answerKey.bindings[quantity.id];
-    if (answerValue !== quantity.given.value) {
-      issues.push({
-        kind: 'known-answer-mismatch',
-        id: quantity.id,
-        knownValue: quantity.given.value,
-        answerValue,
-      });
+    const answerValue = answerKey.bindings[id];
+    for (const knownValue of knownValues) {
+      if (answerValue !== knownValue) {
+        if (!reportedMismatchValuesById.has(id)) {
+          reportedMismatchValuesById.set(id, new Set<number>());
+        }
+        const reportedMismatchValues = reportedMismatchValuesById.get(id);
+        if (reportedMismatchValues?.has(knownValue)) {
+          continue;
+        }
+        reportedMismatchValues?.add(knownValue);
+        issues.push({
+          kind: 'known-answer-mismatch',
+          id,
+          knownValue,
+          answerValue,
+        });
+      }
     }
   }
 
