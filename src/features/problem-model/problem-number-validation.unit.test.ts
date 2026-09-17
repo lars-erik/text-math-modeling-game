@@ -1,10 +1,13 @@
 import { describe, expect, test } from 'vitest';
 
 import {
-  validateProblemNumbers,
   type AnswerKey,
   type Problem,
 } from './problem';
+import {
+  validateProblemAst,
+  validateProblemConstraints,
+} from './problem-validation';
 import {
   totalFromPartsAnswerKey,
   totalFromPartsProblem,
@@ -12,11 +15,11 @@ import {
 
 describe('Phase 1 numeric range validation', () => {
   test('accepts the canonical safe-integer problem and answer key', () => {
+    expect(validateProblemAst(totalFromPartsProblem)).toEqual([]);
     expect(
-      validateProblemNumbers(
-        totalFromPartsProblem,
-        totalFromPartsAnswerKey,
-      ),
+      validateProblemConstraints(totalFromPartsProblem, totalFromPartsAnswerKey, [
+        'safe-answer-values',
+      ]),
     ).toEqual([]);
   });
 
@@ -30,7 +33,7 @@ describe('Phase 1 numeric range validation', () => {
       ),
     } satisfies Problem;
 
-    expect(validateProblemNumbers(problem, totalFromPartsAnswerKey)).toContainEqual(
+    expect(validateProblemAst(problem)).toContainEqual(
       { kind: 'unsafe-known-value', id: 'base', value: 30.5 },
     );
   });
@@ -44,7 +47,11 @@ describe('Phase 1 numeric range validation', () => {
       },
     } satisfies AnswerKey;
 
-    expect(validateProblemNumbers(totalFromPartsProblem, answerKey)).toContainEqual(
+    expect(
+      validateProblemConstraints(totalFromPartsProblem, answerKey, [
+        'safe-answer-values',
+      ]),
+    ).toContainEqual(
       {
         kind: 'unsafe-answer-value',
         id: 'unitValue',
@@ -63,7 +70,7 @@ describe('Phase 1 numeric range validation', () => {
       },
     } satisfies Problem;
 
-    expect(validateProblemNumbers(problem, totalFromPartsAnswerKey)).toContainEqual(
+    expect(validateProblemAst(problem)).toContainEqual(
       { kind: 'unsafe-literal', value: Number.POSITIVE_INFINITY },
     );
   });

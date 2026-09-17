@@ -1,0 +1,320 @@
+import {
+  collectLiterals,
+  collectReferences,
+  evaluateRelation,
+  type QuantityId,
+} from './expression';
+
+import { 
+    AnswerKey,
+    Problem 
+} from './problem';
+
+export type ProblemReferenceIssue = {
+  kind: 'undefined-quantity';
+  id: QuantityId;
+};
+
+export type ProblemSolutionIssue =
+  | { kind: 'missing-answer-binding'; id: QuantityId }
+  | { kind: 'unsatisfied-relation' };
+
+export type ProblemNumberIssue =
+  | { kind: 'unsafe-known-value'; id: QuantityId; value: number }
+  | { kind: 'unsafe-answer-value'; id: QuantityId; value: number }
+  | { kind: 'unsafe-literal'; value: number };
+
+export type ProblemInvariantIssue =
+  | { kind: 'duplicate-quantity-id'; id: QuantityId }
+  | { kind: 'invalid-hidden-quantity-count'; count: number }
+  | { kind: 'missing-known-answer-binding'; id: QuantityId }
+  | {
+      kind: 'known-answer-mismatch';
+      id: QuantityId;
+      knownValue: number;
+      answerValue: number;
+    };
+
+export type ProblemAstIssue =
+  | ProblemReferenceIssue
+  | Extract<ProblemNumberIssue, { kind: 'unsafe-known-value' | 'unsafe-literal' }>
+  | Extract<
+      ProblemInvariantIssue,
+      { kind: 'duplicate-quantity-id' | 'invalid-hidden-quantity-count' }
+    >;
+
+export type ProblemConstraintIssue =
+  | ProblemSolutionIssue
+  | Extract<ProblemNumberIssue, { kind: 'unsafe-answer-value' }>
+  | Extract<
+      ProblemInvariantIssue,
+      { kind: 'missing-known-answer-binding' | 'known-answer-mismatch' }
+    >;
+
+export type ProblemConstraintCode =
+  | 'relation-satisfaction'
+  | 'known-answer-consistency'
+  | 'safe-answer-values';
+
+type ProblemAstValidatorCode =
+  | 'defined-quantity-references'
+  | 'safe-known-values'
+  | 'safe-literals'
+  | 'unique-quantity-ids'
+  | 'single-hidden-quantity';
+
+type ProblemAstValidationContext = {
+  problem: Problem;
+};
+
+type ProblemConstraintValidationContext = ProblemAstValidationContext & {
+  answerKey: AnswerKey;
+};
+
+type ProblemValidator<Context, Code extends string, Issue> = {
+  code: Code;
+  validate: (context: Context) => readonly Issue[];
+};
+
+const defaultProblemConstraintCodes = [
+  'relation-satisfaction',
+] as const satisfies readonly ProblemConstraintCode[];
+
+export const allProblemConstraintCodes = [
+  'relation-satisfaction',
+  'known-answer-consistency',
+  'safe-answer-values',
+] as const satisfies readonly ProblemConstraintCode[];
+
+
+export function validateProblemAst(problem: Problem): readonly ProblemAstIssue[] {
+  return runValidators({ problem }, problemAstValidators);
+}
+
+export function validateProblemConstraints(
+  problem: Problem,
+  answerKey: AnswerKey,
+): readonly ProblemConstraintIssue[];
+export function validateProblemConstraints(
+  problem: Problem,
+  answerKey: AnswerKey,
+  constraints: readonly ProblemConstraintCode[],
+): readonly ProblemConstraintIssue[];
+export function validateProblemConstraints(
+  problem: Problem,
+  answerKey: AnswerKey,
+  constraints: readonly ProblemConstraintCode[] = defaultProblemConstraintCodes,
+): readonly ProblemConstraintIssue[] {
+  return runValidators(
+    { problem, answerKey },
+    problemConstraintValidators,
+    constraints,
+  );
+}
+
+function runValidators<Context, Code extends string, Issue>(
+  context: Context,
+  validators: readonly ProblemValidator<Context, Code, Issue>[],
+  allowedCodes?: readonly Code[],
+): readonly Issue[] {
+  const allowedCodeSet = allowedCodes ? new Set(allowedCodes) : undefined;
+
+  return validators.flatMap((validator) => {
+    if (allowedCodeSet && !allowedCodeSet.has(validator.code)) {
+      return [];
+    }
+
+    return validator.validate(context);
+  });
+}
+
+function validateUndefinedQuantityReferences({
+  problem,
+}: ProblemAstValidationContext): readonly ProblemReferenceIssue[] {
+  const declaredIds = new Set(problem.quantities.map((quantity) => quantity.id));
+
+  return collectReferences(problem.relation)
+    .filter((id) => !declaredIds.has(id))
+    .map((id) => ({ kind: 'undefined-quantity', id }));
+}
+
+function validateKnownNumberSafety({
+  problem,
+}: ProblemAstValidationContext): readonly Extract<
+  ProblemNumberIssue,
+  { kind: 'unsafe-known-value' }
+>[] {
+  const issues: Extract<ProblemNumberIssue, { kind: 'unsafe-known-value' }>[] = [];
+
+  for (const quantity of problem.quantities) {
+    if (
+      quantity.given.kind === 'known' &&
+      !Number.isSafeInteger(quantity.given.value)
+    ) {
+      issues.push({
+        kind: 'unsafe-known-value',
+        id: quantity.id,
+        value: quantity.given.value,
+      });
+    }
+  }
+
+  return issues;
+}
+
+function validateLiteralNumberSafety({
+  problem,
+}: ProblemAstValidationContext): readonly Extract<
+  ProblemNumberIssue,
+  { kind: 'unsafe-literal' }
+>[] {
+  const issues: Extract<ProblemNumberIssue, { kind: 'unsafe-literal' }>[] = [];
+
+  for (const value of collectLiterals(problem.relation)) {
+    if (!Number.isSafeInteger(value)) {
+      issues.push({ kind: 'unsafe-literal', value });
+    }
+  }
+
+  return issues;
+}
+
+function validateUniqueQuantityIds({
+  problem,
+}: ProblemAstValidationContext): readonly Extract<
+  ProblemInvariantIssue,
+  { kind: 'duplicate-quantity-id' }
+>[] {
+  const issues: Extract<
+    ProblemInvariantIssue,
+    { kind: 'duplicate-quantity-id' }
+  >[] = [];
+  const quantityIdCounts = new Map<QuantityId, number>();
+  for (const quantity of problem.quantities) {
+    quantityIdCounts.set(quantity.id, (quantityIdCounts.get(quantity.id) ?? 0) + 1);
+  }
+
+  for (const [id, count] of quantityIdCounts) {
+    if (count > 1) {
+      issues.push({ kind: 'duplicate-quantity-id', id });
+    }
+  }
+
+  return issues;
+}
+
+function validateHiddenQuantityCount({
+  problem,
+}: ProblemAstValidationContext): readonly Extract<
+  ProblemInvariantIssue,
+  { kind: 'invalid-hidden-quantity-count' }
+>[] {
+  const hiddenCount = problem.quantities.filter(
+    (quantity) => quantity.given.kind === 'hidden',
+  ).length;
+
+  return hiddenCount === 1
+    ? []
+    : [{ kind: 'invalid-hidden-quantity-count', count: hiddenCount }];
+}
+
+function validateSatisfiedRelation(
+  context: ProblemConstraintValidationContext,
+): readonly ProblemSolutionIssue[] {
+  const { problem, answerKey } = context;
+  const result = evaluateRelation(problem.relation, answerKey.bindings);
+
+  if (result.kind === 'missing-binding') {
+    return [{ kind: 'missing-answer-binding', id: result.id }];
+  }
+
+  return result.value ? [] : [{ kind: 'unsatisfied-relation' }];
+}
+
+function validateKnownAnswerConsistency(
+  context: ProblemConstraintValidationContext,
+): readonly Extract<
+  ProblemInvariantIssue,
+  { kind: 'missing-known-answer-binding' | 'known-answer-mismatch' }
+>[] {
+  const { problem, answerKey } = context;
+  const issues: Extract<
+    ProblemInvariantIssue,
+    { kind: 'missing-known-answer-binding' | 'known-answer-mismatch' }
+  >[] = [];
+
+  const missingBindingReportedIds = new Set<QuantityId>();
+  const reportedMismatchValuesById = new Map<QuantityId, Set<number>>();
+  for (const quantity of problem.quantities) {
+    if (quantity.given.kind !== 'known') {
+      continue;
+    }
+
+    const id = quantity.id;
+    const knownValue = quantity.given.value;
+    const hasBinding = Object.prototype.hasOwnProperty.call(answerKey.bindings, id);
+    const answerValue = answerKey.bindings[id];
+    if (!hasBinding || answerValue === undefined) {
+      if (!missingBindingReportedIds.has(id)) {
+        missingBindingReportedIds.add(id);
+        issues.push({ kind: 'missing-known-answer-binding', id });
+      }
+      continue;
+    }
+
+    if (answerValue !== knownValue) {
+      if (!reportedMismatchValuesById.has(id)) {
+        reportedMismatchValuesById.set(id, new Set<number>());
+      }
+      const reportedMismatchValues = reportedMismatchValuesById.get(id);
+      if (reportedMismatchValues?.has(knownValue)) {
+        continue;
+      }
+      reportedMismatchValues?.add(knownValue);
+      issues.push({
+        kind: 'known-answer-mismatch',
+        id,
+        knownValue,
+        answerValue,
+      });
+    }
+  }
+
+  return issues;
+}
+
+function validateAnswerNumberSafety(
+  { answerKey }: ProblemConstraintValidationContext,
+): readonly Extract<ProblemNumberIssue, { kind: 'unsafe-answer-value' }>[] {
+  const issues: Extract<ProblemNumberIssue, { kind: 'unsafe-answer-value' }>[] = [];
+
+  for (const [id, value] of Object.entries(answerKey.bindings)) {
+    if (!Number.isSafeInteger(value)) {
+      issues.push({ kind: 'unsafe-answer-value', id, value });
+    }
+  }
+
+  return issues;
+}
+
+const problemAstValidators: readonly ProblemValidator<
+  ProblemAstValidationContext,
+  ProblemAstValidatorCode,
+  ProblemAstIssue
+>[] = [
+  { code: 'defined-quantity-references', validate: validateUndefinedQuantityReferences },
+  { code: 'safe-known-values', validate: validateKnownNumberSafety },
+  { code: 'safe-literals', validate: validateLiteralNumberSafety },
+  { code: 'unique-quantity-ids', validate: validateUniqueQuantityIds },
+  { code: 'single-hidden-quantity', validate: validateHiddenQuantityCount },
+];
+
+const problemConstraintValidators: readonly ProblemValidator<
+  ProblemConstraintValidationContext,
+  ProblemConstraintCode,
+  ProblemConstraintIssue
+>[] = [
+  { code: 'relation-satisfaction', validate: validateSatisfiedRelation },
+  { code: 'known-answer-consistency', validate: validateKnownAnswerConsistency },
+  { code: 'safe-answer-values', validate: validateAnswerNumberSafety },
+];
