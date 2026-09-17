@@ -1,49 +1,10 @@
-import type { Relation } from './expression';
 import type { AnswerKey, Problem } from './problem';
+import {
+  totalFromParts,
+  totalFromPartsProblem,
+} from './total-from-parts';
 
-export const totalFromParts: Relation = {
-  kind: 'equation',
-  left: { kind: 'quantity', id: 'total' },
-  right: {
-    kind: 'add',
-    left: { kind: 'quantity', id: 'base' },
-    right: {
-      kind: 'multiply',
-      left: { kind: 'quantity', id: 'count' },
-      right: { kind: 'quantity', id: 'unitValue' },
-    },
-  },
-};
-
-export const totalFromPartsProblem = {
-  quantities: [
-    {
-      given: { kind: 'known', value: 30 },
-      id: 'base',
-      role: 'base',
-    },
-    {
-      given: { kind: 'known', value: 4 },
-      id: 'count',
-      role: 'count',
-    },
-    {
-      given: { kind: 'hidden' },
-      id: 'unitValue',
-      role: 'per-item',
-    },
-    {
-      given: { kind: 'known', value: 210 },
-      id: 'total',
-      role: 'total',
-    },
-  ],
-  relation: totalFromParts,
-  replay: {
-    seed: 0,
-    generatorVersion: 'hand-built-v1',
-  },
-} satisfies Problem;
+export { totalFromParts, totalFromPartsProblem };
 
 export const totalFromPartsAnswerKey = {
   bindings: {

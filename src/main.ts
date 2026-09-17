@@ -1,1 +1,1 @@
-import './features/compatibility-spike/compatibility-input';
+import './features/puzzle/puzzle-game';
