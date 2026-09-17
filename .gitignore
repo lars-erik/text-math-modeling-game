@@ -1,0 +1,4 @@
+node_modules/
+dist/
+.approval_tests_temp/
+*.received.*

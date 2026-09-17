@@ -37,6 +37,12 @@ For the initial slice, use **Node + npm + Vite + Vitest** to reduce simultaneous
 - **fast-check:** property tests for reproducible generator invariants and DSL round-trips.
 - **Approvals.NodeJS** (`approvals` npm package): initial file-based approval tool. Prove ESM/Vitest compatibility and reporter configuration in a spike; isolate the package in a thin approval adapter so a compatible alternative can be substituted if needed.
 
+### Approval tooling spike result
+
+On 17 September 2026, `approvals@7.3.0` was verified through its direct CommonJS API, loaded behind an ESM adapter with `createRequire`, using Node 24.12.0, npm 11.6.2, TypeScript 7.0.2, and Vitest 5.0.1. The missing-baseline, accepted-baseline, and deliberately changed-output paths all ran under Vitest.
+
+The package's built-in `nodediff` reporter failed with its installed `diff` dependency and created an empty approved file while reporting a missing baseline. The adapter therefore uses a small read-only console reporter that prints deterministic line changes and never writes approved files. Received output remains package-generated; human review remains the only path to an approved baseline.
+
 ## Official / project references
 
 - Lit testing: https://lit.dev/docs/tools/testing/

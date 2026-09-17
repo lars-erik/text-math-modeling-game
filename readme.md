@@ -34,3 +34,15 @@ DSL parser ─────┼──> semantic Problem AST ──> puzzle/use-cas
 ```
 
 The domain remains usable from tests and command-line tooling without a browser. All generated cases are reproducible with seed + generator version/configuration. The test suite includes exact invariants, properties, and human-reviewed approved artifacts.
+
+## Development
+
+Milestone 0a is pinned and verified with Node `v24.12.0` and npm `11.6.2`.
+
+```powershell
+npm install
+npm run typecheck
+npm run test:approval
+```
+
+Approval tests write deterministic `*.received.*` files when a baseline is missing or changed. Received files are ignored by Git. Inspect the console diff and received file before manually promoting it to the corresponding committed `*.approved.*` file. Tests and CI never update approved files automatically.

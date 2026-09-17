@@ -27,6 +27,17 @@ Prefer affirmative requirements and acceptance criteria over prohibition lists. 
 
 Use TypeScript, Lit, Vite, Vitest, fast-check, KaTeX, and Ohm/JS as the **working hypothesis**. Validate Lit + Vitest browser + the Node approvals package in a small compatibility spike before investing in UI. Keep the package manager/runtime on standard Node + npm for that spike; Bun remains an optional subsequent change.
 
+## Context7 documentation
+
+Use the locally configured Context7 MCP server for current third-party library and framework documentation when work depends on API signatures, installation, configuration, version-specific behavior, or browser-test setup. Codex starts the server on demand; no separate editor process needs to keep it running.
+
+1. Call `resolve-library-id` with the library name and the specific documentation question.
+2. Select the result that matches the required version, authoritative source, and relevant coverage.
+3. Call `query-docs` with the returned `libraryId` and a focused question.
+4. If the user or repository already supplies a Context7 library ID, skip resolution and call `query-docs` directly.
+
+Context7 answers library questions; this repository's specifications and approved ADRs remain authoritative for product, mathematical, and architectural decisions. If the Context7 tools are unavailable, run `codex mcp list` to diagnose the connection and report the limitation. Do not silently guess version-sensitive APIs or install/reconfigure the server as a workaround.
+
 ## Stop and report
 
 At the end of each small vertical slice, summarize observable behavior, test results, unresolved trade-offs, and the next proposed test. Ask for a design decision only when competing valid implementations cannot be resolved by the specification.
