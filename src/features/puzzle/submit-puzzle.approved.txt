@@ -1,0 +1,47 @@
+puzzle quantities -> named-equation
+replay seed=0 generator=hand-built-v1
+prompt Write an equation that relates these quantities.
+quantities
+  base [base] = 30
+  count [count] = 4
+  unitValue [per-item] = ?
+  total [total] = 210
+input expression = ""
+
+puzzle quantities -> named-equation
+replay seed=0 generator=hand-built-v1
+prompt Write an equation that relates these quantities.
+quantities
+  base [base] = 30
+  count [count] = 4
+  unitValue [per-item] = ?
+  total [total] = 210
+input expression = ""
+submission named-equation
+  equation
+    quantity total
+    add
+      quantity base
+      multiply
+        quantity count
+        quantity unitValue
+feedback accepted: The equation matches the quantity model.
+
+puzzle quantities -> named-equation
+replay seed=0 generator=hand-built-v1
+prompt Write an equation that relates these quantities.
+quantities
+  base [base] = 30
+  count [count] = 4
+  unitValue [per-item] = ?
+  total [total] = 210
+input expression = ""
+submission named-equation
+  equation
+    quantity total
+    multiply
+      quantity count
+      add
+        quantity base
+        quantity unitValue
+feedback structural-mismatch: The equation does not match the quantity model.

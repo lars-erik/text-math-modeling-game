@@ -4,6 +4,7 @@ import type {
   QuantityGiven,
   QuantityRole,
 } from '../problem-model/problem';
+import type { Relation } from '../problem-model/expression';
 
 export type ScreenQuantity = {
   id: string;
@@ -25,6 +26,19 @@ export type PuzzleScreen = {
     value: string;
   };
   replay: ProblemReplay;
+  submission?: {
+    kind: 'named-equation';
+    relation: Relation;
+  };
+  feedback?:
+    | {
+        kind: 'accepted';
+        message: string;
+      }
+    | {
+        kind: 'structural-mismatch';
+        message: string;
+      };
 };
 
 export function startPuzzle(problem: Problem): PuzzleScreen {

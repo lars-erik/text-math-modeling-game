@@ -53,3 +53,42 @@ export const totalFromPartsAnswerKey = {
     unitValue: 45,
   },
 } satisfies AnswerKey;
+
+export const totalFromPartsProblemSeed1 = {
+  quantities: [
+    {
+      given: { kind: 'known', value: 18 },
+      id: 'base',
+      role: 'base',
+    },
+    {
+      given: { kind: 'known', value: 6 },
+      id: 'count',
+      role: 'count',
+    },
+    {
+      given: { kind: 'hidden' },
+      id: 'unitValue',
+      role: 'per-item',
+    },
+    {
+      given: { kind: 'known', value: 60 },
+      id: 'total',
+      role: 'total',
+    },
+  ],
+  relation: totalFromParts,
+  replay: {
+    seed: 1,
+    generatorVersion: 'hand-built-v1',
+  },
+} satisfies Problem;
+
+export const totalFromPartsAnswerKeySeed1 = {
+  bindings: {
+    base: 18,
+    count: 6,
+    total: 60,
+    unitValue: 7,
+  },
+} satisfies AnswerKey;
