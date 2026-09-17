@@ -1,10 +1,10 @@
 # Working agreement for Codex, Copilot and other agents.
 
-Read `README.md` and the relevant `docs/` document before editing. Treat the Phase 1 plan as the implementation scope and the future roadmap as context.
+Read `../readme.md` and the relevant `../docs/` document before editing. Treat the Phase 1 plan as the implementation scope and the future roadmap as context.
 
 ## Working rhythm
 
-1. Select one acceptance criterion from `docs/07-phase-1-plan.md`.
+1. Select one acceptance criterion from `../docs/07-phase-1-plan.md`.
 2. Add the smallest failing example, property, or approval test expressing observable behavior.
 3. Implement the smallest production change that makes it pass.
 4. Run the relevant tests and refactor with the tests green.
@@ -45,4 +45,4 @@ At the end of each small vertical slice, summarize observable behavior, test res
 ## Architecture Decision Record (ADR)
 
 When a user prompt approves a design decision, use the [MADR](https://adr.github.io/madr/) template to document it.   
-Store under ./docs/adr/ with a YYYY-MM-DD-<title>.md filename.
+Store under `../docs/adr/` with a `YYYY-MM-DD-<title>.md` filename.

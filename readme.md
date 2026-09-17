@@ -16,7 +16,7 @@ Build a test-driven web puzzle for translating between natural-language situatio
 8. [Future roadmap](docs/08-future-roadmap.md) — architecture boundaries only.
 9. [Technology decisions](docs/09-technology-decisions.md) — Lit, Svelte, Vue, React; Vite/Bun; parser and renderer trade-offs.
 
-[Codex working agreement](AGENTS.md) specifies how an implementation agent should proceed.
+[Codex working agreement](src/AGENTS.md) specifies how an implementation agent should proceed.
 
 ## First vertical slice
 
@@ -38,8 +38,10 @@ The domain remains usable from tests and command-line tooling without a browser.
 ## Development
 
 Milestone 0a is pinned and verified with Node `v24.12.0` and npm `11.6.2`.
+The implementation package is rooted in `src/` so the repository can add other technology packages later without restructuring this one.
 
 ```powershell
+cd src
 npm install
 npm run typecheck
 npm run test:approval
