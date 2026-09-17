@@ -3,22 +3,8 @@ import { describe, expect, test } from 'vitest';
 import {
   evaluateExpression,
   evaluateRelation,
-  type Relation,
 } from '../../domain/expression';
-
-const totalFromParts: Relation = {
-  kind: 'equation',
-  left: { kind: 'quantity', id: 'total' },
-  right: {
-    kind: 'add',
-    left: { kind: 'quantity', id: 'base' },
-    right: {
-      kind: 'multiply',
-      left: { kind: 'quantity', id: 'count' },
-      right: { kind: 'quantity', id: 'unitValue' },
-    },
-  },
-};
+import { totalFromParts } from '../fixtures/total-from-parts';
 
 describe('semantic expression evaluation', () => {
   test.each([

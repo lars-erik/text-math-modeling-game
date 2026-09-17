@@ -1,0 +1,7 @@
+equation
+  quantity total
+  add
+    quantity base
+    multiply
+      quantity count
+      quantity unitValue
