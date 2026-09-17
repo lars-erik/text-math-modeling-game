@@ -43,8 +43,12 @@ The implementation package is rooted in `src/` so the repository can add other t
 ```powershell
 cd src
 npm install
+npm run browser:install
 npm run typecheck
-npm run test:approval
+npm test
+npm run build
 ```
 
 Approval tests write deterministic `*.received.*` files when a baseline is missing or changed. Received files are ignored by Git. Inspect the console diff and received file before manually promoting it to the corresponding committed `*.approved.*` file. Tests and CI never update approved files automatically.
+
+`browser:install` keeps Playwright's Chromium binaries under `src/node_modules`; it does not write them to the user-level Playwright cache. `npm test` runs both the Node approval suite and the headless Chromium interaction suite.

@@ -43,6 +43,12 @@ On 17 September 2026, `approvals@7.3.0` was verified through its direct CommonJS
 
 The package's built-in `nodediff` reporter failed with its installed `diff` dependency and created an empty approved file while reporting a missing baseline. The adapter therefore uses a small read-only console reporter that prints deterministic line changes and never writes approved files. Received output remains package-generated; human review remains the only path to an approved baseline.
 
+### Browser tooling spike result
+
+On 17 September 2026, Lit 3.3.3 and Vite 8.3.0 were verified with Vitest 5.0.1, `@vitest/browser-playwright` 5.0.1, Playwright 1.63.0, and Node 24.12.0. A headless Chromium test mounted a Lit custom element, entered text through real keyboard events, submitted with Enter, and observed updated status feedback through its shadow DOM. The same package also produced a Vite production build.
+
+The Playwright install/test wrapper sets `PLAYWRIGHT_BROWSERS_PATH=0`, placing Chromium under `node_modules/playwright-core/.local-browsers` and keeping browser writes inside the package directory. Lit reactive properties use constructor initialization with type-only class declarations because emitted native class fields would shadow Lit's generated accessors under the current TypeScript target.
+
 ## Official / project references
 
 - Lit testing: https://lit.dev/docs/tools/testing/

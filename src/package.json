@@ -4,14 +4,25 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "vitest run",
-    "test:approval": "vitest run tests/approval/approval-spike.test.ts",
+    "browser:install": "node tools/browser.mjs install",
+    "build": "vite build",
+    "dev": "vite",
+    "test": "npm run test:node && npm run test:browser",
+    "test:approval": "vitest run --config vitest.config.ts tests/approval/approval-spike.test.ts",
+    "test:browser": "node tools/browser.mjs test",
+    "test:node": "vitest run --config vitest.config.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/node": "24.13.5",
+    "@vitest/browser-playwright": "5.0.1",
     "approvals": "7.3.0",
+    "playwright": "1.63.0",
     "typescript": "7.0.2",
+    "vite": "8.3.0",
     "vitest": "5.0.1"
+  },
+  "dependencies": {
+    "lit": "3.3.3"
   }
 }

@@ -1,4 +1,5 @@
 node_modules/
 dist/
 .approval_tests_temp/
+.vitest/
 *.received.*
