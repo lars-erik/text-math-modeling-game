@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { collectReferences, evaluateRelation } from './expression';
 import {
   getVisibleBindings,
+  validateProblemInvariants,
   validateProblemReferences,
   validateProblemSolution,
 } from './problem';
@@ -89,5 +90,96 @@ describe('learner-visible problem boundary', () => {
     expect(
       validateProblemSolution(totalFromPartsProblem, wrongAnswerKey),
     ).toEqual([{ kind: 'unsatisfied-relation' }]);
+  });
+});
+
+describe('Phase 1 problem invariants', () => {
+  test('reports duplicate quantity IDs', () => {
+    const duplicateProblem = {
+      ...totalFromPartsProblem,
+      quantities: [...totalFromPartsProblem.quantities, totalFromPartsProblem.quantities[0]],
+    };
+
+    expect(
+      validateProblemInvariants(duplicateProblem, totalFromPartsAnswerKey),
+    ).toContainEqual({
+      kind: 'duplicate-quantity-id',
+      id: 'base',
+    });
+  });
+
+  test.each([
+    {
+      hiddenQuantityIds: [] as string[],
+      expectedIssue: { kind: 'invalid-hidden-quantity-count' as const, count: 0 },
+    },
+    {
+      hiddenQuantityIds: ['unitValue'] as string[],
+      expectedIssue: undefined,
+    },
+    {
+      hiddenQuantityIds: ['base', 'unitValue'] as string[],
+      expectedIssue: { kind: 'invalid-hidden-quantity-count' as const, count: 2 },
+    },
+  ])(
+    'enforces exactly one hidden quantity for %j',
+    ({ hiddenQuantityIds, expectedIssue }) => {
+      const problem = {
+        ...totalFromPartsProblem,
+        quantities: totalFromPartsProblem.quantities.map((quantity) => ({
+          ...quantity,
+          given: hiddenQuantityIds.includes(quantity.id)
+            ? ({ kind: 'hidden' } as const)
+            : ({ kind: 'known', value: 1 } as const),
+        })),
+      };
+
+      const issues = validateProblemInvariants(problem, totalFromPartsAnswerKey);
+
+      if (expectedIssue === undefined) {
+        expect(
+          issues.filter((issue) => issue.kind === 'invalid-hidden-quantity-count'),
+        ).toEqual([]);
+        return;
+      }
+
+      expect(issues).toContainEqual(expectedIssue);
+    },
+  );
+
+  test('reports a known quantity that has no answer-key binding', () => {
+    const answerKeyWithoutKnownCount = {
+      bindings: {
+        base: 30,
+        total: 210,
+        unitValue: 45,
+      },
+    };
+
+    expect(
+      validateProblemInvariants(totalFromPartsProblem, answerKeyWithoutKnownCount),
+    ).toContainEqual({
+      kind: 'missing-known-answer-binding',
+      id: 'count',
+    });
+  });
+
+  test('reports disagreement between known values and answer-key bindings', () => {
+    const mismatchedAnswerKey = {
+      ...totalFromPartsAnswerKey,
+      bindings: {
+        ...totalFromPartsAnswerKey.bindings,
+        total: 211,
+      },
+    };
+
+    expect(
+      validateProblemInvariants(totalFromPartsProblem, mismatchedAnswerKey),
+    ).toContainEqual({
+      kind: 'known-answer-mismatch',
+      id: 'total',
+      knownValue: 210,
+      answerValue: 211,
+    });
   });
 });

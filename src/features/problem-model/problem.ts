@@ -42,6 +42,17 @@ export type ProblemNumberIssue =
   | { kind: 'unsafe-answer-value'; id: QuantityId; value: number }
   | { kind: 'unsafe-literal'; value: number };
 
+export type ProblemInvariantIssue =
+  | { kind: 'duplicate-quantity-id'; id: QuantityId }
+  | { kind: 'invalid-hidden-quantity-count'; count: number }
+  | { kind: 'missing-known-answer-binding'; id: QuantityId }
+  | {
+      kind: 'known-answer-mismatch';
+      id: QuantityId;
+      knownValue: number;
+      answerValue: number;
+    };
+
 export function getVisibleBindings(problem: Problem): Bindings {
   const entries = problem.quantities.flatMap((quantity) =>
     quantity.given.kind === 'known'
@@ -103,6 +114,54 @@ export function validateProblemNumbers(
   for (const [id, value] of Object.entries(answerKey.bindings)) {
     if (!Number.isSafeInteger(value)) {
       issues.push({ kind: 'unsafe-answer-value', id, value });
+    }
+  }
+
+  return issues;
+}
+
+export function validateProblemInvariants(
+  problem: Problem,
+  answerKey: AnswerKey,
+): readonly ProblemInvariantIssue[] {
+  const issues: ProblemInvariantIssue[] = [];
+
+  const quantityIdCounts = new Map<QuantityId, number>();
+  for (const quantity of problem.quantities) {
+    quantityIdCounts.set(quantity.id, (quantityIdCounts.get(quantity.id) ?? 0) + 1);
+  }
+
+  for (const [id, count] of quantityIdCounts) {
+    if (count > 1) {
+      issues.push({ kind: 'duplicate-quantity-id', id });
+    }
+  }
+
+  const hiddenCount = problem.quantities.filter(
+    (quantity) => quantity.given.kind === 'hidden',
+  ).length;
+  if (hiddenCount !== 1) {
+    issues.push({ kind: 'invalid-hidden-quantity-count', count: hiddenCount });
+  }
+
+  for (const quantity of problem.quantities) {
+    if (quantity.given.kind !== 'known') {
+      continue;
+    }
+
+    if (!Object.hasOwn(answerKey.bindings, quantity.id)) {
+      issues.push({ kind: 'missing-known-answer-binding', id: quantity.id });
+      continue;
+    }
+
+    const answerValue = answerKey.bindings[quantity.id];
+    if (answerValue !== quantity.given.value) {
+      issues.push({
+        kind: 'known-answer-mismatch',
+        id: quantity.id,
+        knownValue: quantity.given.value,
+        answerValue,
+      });
     }
   }
 
