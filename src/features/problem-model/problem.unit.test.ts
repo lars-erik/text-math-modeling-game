@@ -182,4 +182,41 @@ describe('Phase 1 problem invariants', () => {
       answerValue: 211,
     });
   });
+
+  test('reports multiple invariant failures together', () => {
+    const invalidProblem = {
+      ...totalFromPartsProblem,
+      quantities: [
+        ...totalFromPartsProblem.quantities.map((quantity) =>
+          quantity.id === 'unitValue'
+            ? { ...quantity, given: { kind: 'known' as const, value: 45 } }
+            : quantity,
+        ),
+        {
+          ...totalFromPartsProblem.quantities[0],
+          given: { kind: 'known' as const, value: 31 },
+        },
+      ],
+    };
+    const inconsistentAnswerKey = {
+      ...totalFromPartsAnswerKey,
+      bindings: {
+        ...totalFromPartsAnswerKey.bindings,
+        total: 211,
+      },
+    };
+
+    expect(validateProblemInvariants(invalidProblem, inconsistentAnswerKey)).toEqual(
+      expect.arrayContaining([
+        { kind: 'duplicate-quantity-id', id: 'base' },
+        { kind: 'invalid-hidden-quantity-count', count: 0 },
+        {
+          kind: 'known-answer-mismatch',
+          id: 'total',
+          knownValue: 210,
+          answerValue: 211,
+        },
+      ]),
+    );
+  });
 });

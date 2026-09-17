@@ -144,12 +144,17 @@ export function validateProblemInvariants(
     issues.push({ kind: 'invalid-hidden-quantity-count', count: hiddenCount });
   }
 
+  const checkedKnownIds = new Set<QuantityId>();
   for (const quantity of problem.quantities) {
     if (quantity.given.kind !== 'known') {
       continue;
     }
+    if (checkedKnownIds.has(quantity.id)) {
+      continue;
+    }
+    checkedKnownIds.add(quantity.id);
 
-    if (!Object.hasOwn(answerKey.bindings, quantity.id)) {
+    if (!Object.prototype.hasOwnProperty.call(answerKey.bindings, quantity.id)) {
       issues.push({ kind: 'missing-known-answer-binding', id: quantity.id });
       continue;
     }
