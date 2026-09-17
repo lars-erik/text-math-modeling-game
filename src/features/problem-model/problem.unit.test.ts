@@ -164,6 +164,25 @@ describe('Phase 1 problem invariants', () => {
     });
   });
 
+  test('treats undefined known binding as missing', () => {
+    const answerKeyWithUndefinedKnownBinding = {
+      bindings: {
+        ...totalFromPartsAnswerKey.bindings,
+        count: undefined,
+      },
+    } as unknown as typeof totalFromPartsAnswerKey;
+
+    expect(
+      validateProblemInvariants(
+        totalFromPartsProblem,
+        answerKeyWithUndefinedKnownBinding,
+      ),
+    ).toContainEqual({
+      kind: 'missing-known-answer-binding',
+      id: 'count',
+    });
+  });
+
   test('reports disagreement between known values and answer-key bindings', () => {
     const mismatchedAnswerKey = {
       ...totalFromPartsAnswerKey,
