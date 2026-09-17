@@ -1,4 +1,5 @@
 import {
+  collectLiterals,
   collectReferences,
   evaluateRelation,
   type Bindings,
@@ -36,6 +37,11 @@ export type ProblemSolutionIssue =
   | { kind: 'missing-answer-binding'; id: QuantityId }
   | { kind: 'unsatisfied-relation' };
 
+export type ProblemNumberIssue =
+  | { kind: 'unsafe-known-value'; id: QuantityId; value: number }
+  | { kind: 'unsafe-answer-value'; id: QuantityId; value: number }
+  | { kind: 'unsafe-literal'; value: number };
+
 export function getVisibleBindings(problem: Problem): Bindings {
   const entries = problem.quantities.flatMap((quantity) =>
     quantity.given.kind === 'known'
@@ -67,4 +73,38 @@ export function validateProblemSolution(
   }
 
   return result.value ? [] : [{ kind: 'unsatisfied-relation' }];
+}
+
+export function validateProblemNumbers(
+  problem: Problem,
+  answerKey: AnswerKey,
+): readonly ProblemNumberIssue[] {
+  const issues: ProblemNumberIssue[] = [];
+
+  for (const quantity of problem.quantities) {
+    if (
+      quantity.given.kind === 'known' &&
+      !Number.isSafeInteger(quantity.given.value)
+    ) {
+      issues.push({
+        kind: 'unsafe-known-value',
+        id: quantity.id,
+        value: quantity.given.value,
+      });
+    }
+  }
+
+  for (const value of collectLiterals(problem.relation)) {
+    if (!Number.isSafeInteger(value)) {
+      issues.push({ kind: 'unsafe-literal', value });
+    }
+  }
+
+  for (const [id, value] of Object.entries(answerKey.bindings)) {
+    if (!Number.isSafeInteger(value)) {
+      issues.push({ kind: 'unsafe-answer-value', id, value });
+    }
+  }
+
+  return issues;
 }

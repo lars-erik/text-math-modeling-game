@@ -28,6 +28,15 @@ export function collectReferences(relation: Relation): readonly QuantityId[] {
   return references;
 }
 
+export function collectLiterals(relation: Relation): readonly number[] {
+  const literals: number[] = [];
+
+  collectExpressionLiterals(relation.left, literals);
+  collectExpressionLiterals(relation.right, literals);
+
+  return literals;
+}
+
 export function evaluateExpression(
   expression: Expression,
   bindings: Bindings,
@@ -105,5 +114,24 @@ function collectExpressionReferences(
     case 'multiply':
       collectExpressionReferences(expression.left, references, seen);
       collectExpressionReferences(expression.right, references, seen);
+  }
+}
+
+function collectExpressionLiterals(
+  expression: Expression,
+  literals: number[],
+): void {
+  switch (expression.kind) {
+    case 'literal':
+      literals.push(expression.value);
+      return;
+
+    case 'quantity':
+      return;
+
+    case 'add':
+    case 'multiply':
+      collectExpressionLiterals(expression.left, literals);
+      collectExpressionLiterals(expression.right, literals);
   }
 }
