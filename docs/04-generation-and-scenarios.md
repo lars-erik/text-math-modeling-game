@@ -67,6 +67,14 @@ total = 30 + 4 * 45 = 210
 
 Hide `unitValue` in the first vertical slice. Later allow hiding `base`, `count`, or `total` after writing appropriate domain and pedagogy tests (including zero/non-integer cases). Preserve the complete answer key rather than solving randomly constructed equations to recover it.
 
+Before scenario binding, this mathematical family uses the abstract dimensions
+`scalar + item * scalar -> scalar`: `item` marks the repeated count and the
+second `scalar` is the abstract per-count value. The Phase 1 dimension validator
+also supports the concrete scenario rule `item * powerPerItem -> power` and
+rejects incompatible sums, products, and equation sides. Milestone 6 binds the
+abstract roles to concrete power/drone dimensions and units; the Milestone 5
+generator does not embed story-specific labels or units.
+
 The initial family trains the requested concept composition:
 
 ```
