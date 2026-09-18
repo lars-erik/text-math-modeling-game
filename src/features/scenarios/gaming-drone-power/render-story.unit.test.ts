@@ -17,3 +17,24 @@ test('renders the reference English story from planned validated facts', () => {
     },
   });
 });
+
+test('locale changes rendered wording without changing the deterministic StoryPlan', () => {
+  const facts = bindDronePowerScenario(totalFromPartsProblem);
+  const firstPlan = planDronePowerStory(facts, 17);
+  const replayedPlan = planDronePowerStory(facts, 17);
+  const english = renderDronePowerStory(facts, firstPlan, 'en');
+  const norwegian = renderDronePowerStory(facts, firstPlan, 'nb');
+
+  expect(replayedPlan).toEqual(firstPlan);
+  expect(norwegian.text).toBe(
+    'Et skip bruker 30 MW til grunnleggende systemer. Fire identiske droner er aktive. Til sammen trekker de 210 MW. Hvor mye effekt trekker én drone?',
+  );
+  expect(norwegian.text).not.toBe(english.text);
+  expect(english.text).not.toContain('45');
+  expect(norwegian.text).not.toContain('45');
+  expect(norwegian.replay).toEqual({
+    locale: 'nb',
+    scenarioId: firstPlan.scenarioId,
+    storySeed: firstPlan.seed,
+  });
+});
