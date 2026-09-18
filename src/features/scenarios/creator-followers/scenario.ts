@@ -20,6 +20,27 @@ export type CreatorFollowersScenarioBinding = {
   problem: Problem;
 };
 
+export type CreatorFollowersStoryPlan = {
+  scenarioId: 'creator.followers';
+  seed: number;
+  sentences: readonly (
+    | {
+        fragmentKey: 'baseFact.startingAudience' | 'countFact.promotedPosts';
+        factId: CreatorFollowersFact['id'];
+        nounKey: 'creator' | 'post';
+      }
+    | {
+        fragmentKey: 'totalFact.finalAudience';
+        factId: CreatorFollowersFact['id'];
+      }
+  )[];
+  question: {
+    fragmentKey: 'question.followersPerPost';
+    factId: CreatorFollowersFact['id'];
+    nounKey: 'post';
+  };
+};
+
 const roleMap = {
   base: {
     id: 'startingFollowers',
@@ -102,6 +123,37 @@ export function bindCreatorFollowersAnswerKey(
         return [fact.id, value];
       }),
     ),
+  };
+}
+
+export function planCreatorFollowersStory(
+  _binding: CreatorFollowersScenarioBinding,
+  seed: number,
+): CreatorFollowersStoryPlan {
+  return {
+    scenarioId: 'creator.followers',
+    seed,
+    sentences: [
+      {
+        fragmentKey: 'baseFact.startingAudience',
+        factId: 'startingFollowers',
+        nounKey: 'creator',
+      },
+      {
+        fragmentKey: 'countFact.promotedPosts',
+        factId: 'promotedPostCount',
+        nounKey: 'post',
+      },
+      {
+        fragmentKey: 'totalFact.finalAudience',
+        factId: 'finalFollowers',
+      },
+    ],
+    question: {
+      fragmentKey: 'question.followersPerPost',
+      factId: 'followersPerPost',
+      nounKey: 'post',
+    },
   };
 }
 

@@ -8,6 +8,7 @@ import {
 import {
   bindCreatorFollowersAnswerKey,
   bindCreatorFollowersScenario,
+  planCreatorFollowersStory,
 } from './scenario';
 
 test('binds creator semantics while preserving mathematical shape and private values', () => {
@@ -51,4 +52,34 @@ test('binds creator semantics while preserving mathematical shape and private va
   expect(binding.facts.find((fact) => fact.id === 'followersPerPost')).not.toHaveProperty(
     'value',
   );
+});
+
+test('plans creator prose with locale-independent semantic keys', () => {
+  const binding = bindCreatorFollowersScenario(totalFromPartsProblem);
+
+  expect(planCreatorFollowersStory(binding, 17)).toEqual({
+    scenarioId: 'creator.followers',
+    seed: 17,
+    sentences: [
+      {
+        fragmentKey: 'baseFact.startingAudience',
+        factId: 'startingFollowers',
+        nounKey: 'creator',
+      },
+      {
+        fragmentKey: 'countFact.promotedPosts',
+        factId: 'promotedPostCount',
+        nounKey: 'post',
+      },
+      {
+        fragmentKey: 'totalFact.finalAudience',
+        factId: 'finalFollowers',
+      },
+    ],
+    question: {
+      fragmentKey: 'question.followersPerPost',
+      factId: 'followersPerPost',
+      nounKey: 'post',
+    },
+  });
 });
