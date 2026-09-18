@@ -9,22 +9,28 @@ export class NamedEquationChoiceInput extends LitElement {
   static properties = {
     choices: { attribute: false },
     selectedChoiceId: { attribute: false },
+    legend: { attribute: false },
+    checkLabel: { attribute: false },
   };
 
   declare choices: readonly NamedEquationChoice[];
   declare selectedChoiceId: string | undefined;
+  declare legend: string;
+  declare checkLabel: string;
 
   constructor() {
     super();
     this.choices = [];
     this.selectedChoiceId = undefined;
+    this.legend = 'Choose the named equation';
+    this.checkLabel = 'Check';
   }
 
   render() {
     return html`
       <form @submit=${this.handleSubmit}>
         <fieldset>
-          <legend>Choose the named equation</legend>
+          <legend>${this.legend}</legend>
           ${this.choices.map(
             (choice) => html`
               <div>
@@ -42,7 +48,7 @@ export class NamedEquationChoiceInput extends LitElement {
             `,
           )}
         </fieldset>
-        <button type="submit">Check</button>
+        <button type="submit">${this.checkLabel}</button>
       </form>
     `;
   }

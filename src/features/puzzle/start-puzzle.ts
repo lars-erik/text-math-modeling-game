@@ -76,7 +76,10 @@ export type PuzzleScreen = {
       };
 };
 
-export function startPuzzle(problem: Problem): PuzzleScreen {
+export function startPuzzle(
+  problem: Problem,
+  prompt = 'Write an equation that relates these quantities.',
+): PuzzleScreen {
   return {
     source: {
       kind: 'quantities',
@@ -91,7 +94,7 @@ export function startPuzzle(problem: Problem): PuzzleScreen {
     },
     target: {
       kind: 'named-equation',
-      prompt: 'Write an equation that relates these quantities.',
+      prompt,
     },
     input: {
       kind: 'expression',

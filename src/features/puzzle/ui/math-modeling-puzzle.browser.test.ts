@@ -9,6 +9,7 @@ import {
 import type { Problem } from '../../problem-model/problem';
 import type { PuzzleRegistry } from '../puzzle-definition';
 import { referencePuzzle } from '../reference-puzzle';
+import { createSeededPuzzle } from '../seeded-puzzle';
 import { MathModelingPuzzle } from './math-modeling-puzzle';
 
 const browserGlobal = globalThis as typeof globalThis & {
@@ -161,25 +162,135 @@ test('starts the real application with a generated puzzle from the URL seed', as
   );
 
   await expect
-    .element(page.getByText(`base = ${generated.answerKey.bindings.base}`))
+    .element(
+      page.getByText(
+        new RegExp(`uses ${generated.answerKey.bindings.base} MW`),
+      ),
+    )
     .toBeVisible();
   await expect
-    .element(page.getByText(`count = ${generated.answerKey.bindings.count}`))
+    .element(page.getByText(/How much power does one drone draw/))
     .toBeVisible();
-  await expect
-    .element(page.getByText(`total = ${generated.answerKey.bindings.total}`))
-    .toBeVisible();
-  await expect.element(page.getByText('unitValue = ?')).toBeVisible();
-
-  const input = page.getByLabelText('Named equation');
-  await userEvent.click(input);
-  await userEvent.keyboard('total = base + count * unitValue');
-  await userEvent.click(page.getByRole('button', { name: 'Check' }));
-  await expect
-    .element(page.getByRole('status'))
-    .toHaveTextContent('The equation matches the quantity model.');
 
   expect(document.body.textContent).not.toContain(
-    `unitValue = ${generated.answerKey.bindings.unitValue}`,
+    String(generated.answerKey.bindings.unitValue),
   );
+});
+
+test('renders the generated story as a Story-to-Quantities interaction', async () => {
+  browserGlobal.mathModelingPuzzles = {
+    generated: createSeededPuzzle({ seed: 17 }),
+  };
+  document.body.innerHTML = `
+    <math-modeling-puzzle
+      puzzle="generated"
+      locale="en"
+    ></math-modeling-puzzle>
+  `;
+
+  const puzzle = document.querySelector('math-modeling-puzzle');
+  expect(puzzle).toBeInstanceOf(MathModelingPuzzle);
+  await (puzzle as MathModelingPuzzle).updateComplete;
+
+  await expect
+    .element(page.getByRole('heading', { name: 'Story to quantities' }))
+    .toBeVisible();
+  await expect
+    .element(page.getByText(/A ship uses \d+ MW for basic systems/))
+    .toBeVisible();
+  await expect
+    .element(page.getByRole('radio', { name: 'power per drone' }))
+    .toBeVisible();
+  expect(puzzle?.shadowRoot?.textContent).not.toContain('dronePower =');
+});
+
+test('preserves an incorrect quantity selection and accepts its keyboard-submitted revision', async () => {
+  browserGlobal.mathModelingPuzzles = {
+    generated: createSeededPuzzle({ seed: 17 }),
+  };
+  document.body.innerHTML = `
+    <math-modeling-puzzle puzzle="generated" locale="en"></math-modeling-puzzle>
+  `;
+
+  const baseKnown = page.getByRole('checkbox', { name: 'base power: 30 MW' });
+  const countKnown = page.getByRole('checkbox', { name: 'number of drones: 3 drones' });
+  const totalKnown = page.getByRole('checkbox', { name: 'total power: 66 MW' });
+  const wrongUnknown = page.getByRole('radio', { name: 'total power' });
+  const correctUnknown = page.getByRole('radio', { name: 'power per drone' });
+  const check = page.getByRole('button', { name: 'Check' });
+
+  await userEvent.click(baseKnown);
+  await userEvent.click(countKnown);
+  await userEvent.click(wrongUnknown);
+  await userEvent.click(check);
+  await expect
+    .element(page.getByRole('status'))
+    .toHaveTextContent(
+      'Not quite. Review which values the story gives and which one it asks for.',
+    );
+  await expect.element(baseKnown).toBeChecked();
+  await expect.element(countKnown).toBeChecked();
+  await expect.element(wrongUnknown).toBeChecked();
+
+  await userEvent.click(totalKnown);
+  await userEvent.click(correctUnknown);
+  await userEvent.click(check);
+  await userEvent.keyboard('{Enter}');
+  await expect
+    .element(page.getByRole('status'))
+    .toHaveTextContent('The quantities match the story.');
+
+  expect(document.body.textContent).not.toContain('12');
+});
+
+test('switches story language and learner names without regenerating the problem', async () => {
+  const definition = createSeededPuzzle({ seed: 17 });
+  const originalProblem = definition.problem;
+  browserGlobal.mathModelingPuzzles = { generated: definition };
+  document.body.innerHTML = `
+    <math-modeling-puzzle puzzle="generated" locale="en"></math-modeling-puzzle>
+  `;
+
+  await userEvent.selectOptions(page.getByRole('combobox'), 'nb');
+
+  await expect
+    .element(page.getByRole('heading', { name: 'Fra fortelling til størrelser' }))
+    .toBeVisible();
+  await expect
+    .element(page.getByText(/Et skip bruker 30 MW til grunnleggende systemer/))
+    .toBeVisible();
+  await expect
+    .element(page.getByRole('radio', { name: 'effekt per drone' }))
+    .toBeVisible();
+  expect(document.querySelector('math-modeling-puzzle')?.getAttribute('locale')).toBe('nb');
+  expect(definition.problem).toBe(originalProblem);
+  expect(definition.problem.replay).toEqual({
+    seed: 17,
+    generatorVersion: 'total-from-parts-v1',
+  });
+});
+
+test('keeps the named-equation puzzle consistent with the selected locale', async () => {
+  const generated = createSeededPuzzle({ seed: 17 });
+  browserGlobal.mathModelingPuzzles = {
+    named: { ...generated, kind: 'quantities-to-named-equation' },
+  };
+  document.body.innerHTML = `
+    <math-modeling-puzzle
+      puzzle="named"
+      locale="nb"
+      input-mode="text"
+    ></math-modeling-puzzle>
+  `;
+
+  await expect.element(page.getByText('grunnEffekt = 30')).toBeVisible();
+  const input = page.getByLabelText('Navngitt likning');
+  await userEvent.click(input);
+  await userEvent.keyboard(
+    'totalEffekt = grunnEffekt + droneAntall * droneEffekt',
+  );
+  await userEvent.click(page.getByRole('button', { name: 'Sjekk' }));
+  await expect
+    .element(page.getByRole('status'))
+    .toHaveTextContent('Likningen stemmer med modellen for størrelsene.');
 });

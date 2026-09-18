@@ -5,19 +5,25 @@ import type { TextEquationAnswer } from '../learner-answer';
 export class NamedEquationTextInput extends LitElement {
   static properties = {
     value: { type: String },
+    inputLabel: { attribute: false },
+    checkLabel: { attribute: false },
   };
 
   declare value: string;
+  declare inputLabel: string;
+  declare checkLabel: string;
 
   constructor() {
     super();
     this.value = '';
+    this.inputLabel = 'Named equation';
+    this.checkLabel = 'Check';
   }
 
   render() {
     return html`
       <form @submit=${this.handleSubmit}>
-        <label for="named-equation">Named equation</label>
+        <label for="named-equation">${this.inputLabel}</label>
         <input
           id="named-equation"
           name="named-equation"
@@ -25,7 +31,7 @@ export class NamedEquationTextInput extends LitElement {
           .value=${this.value}
           required
         />
-        <button type="submit">Check</button>
+        <button type="submit">${this.checkLabel}</button>
       </form>
     `;
   }
