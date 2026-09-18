@@ -31,6 +31,12 @@ export function submitPuzzle(
     parsed.relation,
     namedEquationStructurePolicy,
   );
+  const sidesAreReversed =
+    !accepted &&
+    relationsHaveNormalizedStructure(problem.relation, parsed.relation, {
+      ...namedEquationStructurePolicy,
+      equationSides: 'swappable',
+    });
 
   return {
     ...screen,
@@ -49,7 +55,9 @@ export function submitPuzzle(
         }
       : {
           kind: 'structural-mismatch',
-          message: 'The equation grouping does not match the quantity model.',
+          message: sidesAreReversed
+            ? 'The equation sides are reversed; keep them in the requested order.'
+            : 'The equation grouping does not match the quantity model.',
           checkPolicy: 'normalized-structure',
           equationSides: namedEquationStructurePolicy.equationSides,
         },

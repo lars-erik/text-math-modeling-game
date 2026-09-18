@@ -42,6 +42,21 @@ test('preserves a differently grouped equation as a structural mismatch', () => 
   });
 });
 
+test('rejects reversed equation sides with side-order feedback', () => {
+  const screen = submitPuzzle(
+    totalFromPartsProblem,
+    'base + count * unitValue = total',
+    learnerNames,
+  );
+
+  expect(screen.feedback).toEqual({
+    kind: 'structural-mismatch',
+    checkPolicy: 'normalized-structure',
+    equationSides: 'ordered',
+    message: 'The equation sides are reversed; keep them in the requested order.',
+  });
+});
+
 test('returns a structured syntax error and preserves the learner input', () => {
   const input = 'total = base + * count';
   const screen = submitPuzzle(totalFromPartsProblem, input, learnerNames);
