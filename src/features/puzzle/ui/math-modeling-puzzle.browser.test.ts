@@ -309,7 +309,10 @@ test('switches language in the named-equation shell without regenerating the pro
     ></math-modeling-puzzle>
   `;
 
-  await userEvent.selectOptions(page.getByLabelText('Language'), 'nb');
+  await userEvent.selectOptions(
+    page.getByRole('combobox', { name: 'Language' }),
+    'nb',
+  );
 
   await expect
     .element(
@@ -352,7 +355,9 @@ test('uses the same labelled puzzle shell for both puzzle kinds', async () => {
     await expect
       .element(page.getByRole('heading', { name: 'Feedback' }))
       .toBeVisible();
-    await expect.element(page.getByLabelText('Language')).toBeVisible();
+    await expect
+      .element(page.getByRole('combobox', { name: 'Language' }))
+      .toBeVisible();
   }
 });
 
