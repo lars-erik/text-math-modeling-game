@@ -8,22 +8,37 @@ import {
   relationsHaveNormalizedStructure,
 } from '../problem-model/normalized-structure';
 import type { Problem } from '../problem-model/problem';
+import type { LearnerAnswer } from './learner-answer';
 import { startPuzzle, type PuzzleScreen } from './start-puzzle';
 
 export function submitPuzzle(
   problem: Problem,
-  input: string,
+  answer: LearnerAnswer,
   names: LearnerNameSource,
 ): PuzzleScreen {
   const screen = startPuzzle(problem);
-  const parsed = parseNamedRelation(input, names);
-  if (parsed.kind !== 'success') {
+  const displayInput =
+    answer.kind === 'text' ? answer.input : answer.label;
+  const parsed =
+    answer.kind === 'text'
+      ? parseNamedRelation(answer.input, names)
+      : { kind: 'success' as const, relation: answer.relation };
+
+  if (parsed.kind !== 'success' && answer.kind === 'text') {
     return {
       ...screen,
-      input: { kind: 'expression', value: input },
-      submission: { kind: 'named-equation', input },
+      input: { kind: 'expression', value: displayInput },
+      submission: {
+        kind: 'named-equation',
+        answerKind: answer.kind,
+        input: displayInput,
+      },
       feedback: formatDiagnostic(parsed),
     };
+  }
+
+  if (parsed.kind !== 'success') {
+    return screen;
   }
 
   const accepted = relationsHaveNormalizedStructure(
@@ -40,10 +55,14 @@ export function submitPuzzle(
 
   return {
     ...screen,
-    input: { kind: 'expression', value: input },
+    input: { kind: 'expression', value: displayInput },
     submission: {
       kind: 'named-equation',
-      input,
+      answerKind: answer.kind,
+      input: displayInput,
+      ...(answer.kind === 'relation-choice'
+        ? { choiceId: answer.choiceId }
+        : {}),
       relation: parsed.relation,
     },
     feedback: accepted

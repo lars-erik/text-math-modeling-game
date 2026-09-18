@@ -2,6 +2,7 @@ import { expect, test } from 'vitest';
 
 import type { LearnerNameMap } from '../named-expression';
 import { totalFromPartsProblem } from '../problem-model/total-from-parts.fixture';
+import type { TextEquationAnswer } from './learner-answer';
 import { submitPuzzle } from './submit-puzzle';
 
 const learnerNames = {
@@ -11,18 +12,47 @@ const learnerNames = {
   unitValue: 'unitValue',
 } as const satisfies LearnerNameMap;
 
+const textAnswer = (input: string): TextEquationAnswer => ({
+  kind: 'text',
+  input,
+});
+
 test('accepts a typed named equation after parsing it', () => {
   const input = 'total = base + count * unitValue';
-  const screen = submitPuzzle(totalFromPartsProblem, input, learnerNames);
+  const screen = submitPuzzle(
+    totalFromPartsProblem,
+    textAnswer(input),
+    learnerNames,
+  );
 
   expect(screen.input.value).toBe(input);
+  expect(screen.feedback?.kind).toBe('accepted');
+});
+
+test('accepts a structured relation selected by an input provider', () => {
+  const screen = submitPuzzle(
+    totalFromPartsProblem,
+    {
+      kind: 'relation-choice',
+      choiceId: 'matching',
+      label: 'total = base + count * unitValue',
+      relation: totalFromPartsProblem.relation,
+    },
+    learnerNames,
+  );
+
+  expect(screen.input.value).toBe('total = base + count * unitValue');
+  expect(screen.submission).toMatchObject({
+    answerKind: 'relation-choice',
+    choiceId: 'matching',
+  });
   expect(screen.feedback?.kind).toBe('accepted');
 });
 
 test('accepts commutative reordering under normalized structural checking', () => {
   const screen = submitPuzzle(
     totalFromPartsProblem,
-    'total = unitValue * count + base',
+    textAnswer('total = unitValue * count + base'),
     learnerNames,
   );
 
@@ -31,7 +61,11 @@ test('accepts commutative reordering under normalized structural checking', () =
 
 test('preserves a differently grouped equation as a structural mismatch', () => {
   const input = 'total = count * (base + unitValue)';
-  const screen = submitPuzzle(totalFromPartsProblem, input, learnerNames);
+  const screen = submitPuzzle(
+    totalFromPartsProblem,
+    textAnswer(input),
+    learnerNames,
+  );
 
   expect(screen.input.value).toBe(input);
   expect(screen.feedback).toEqual({
@@ -45,7 +79,7 @@ test('preserves a differently grouped equation as a structural mismatch', () => 
 test('rejects reversed equation sides with side-order feedback', () => {
   const screen = submitPuzzle(
     totalFromPartsProblem,
-    'base + count * unitValue = total',
+    textAnswer('base + count * unitValue = total'),
     learnerNames,
   );
 
@@ -59,10 +93,18 @@ test('rejects reversed equation sides with side-order feedback', () => {
 
 test('returns a structured syntax error and preserves the learner input', () => {
   const input = 'total = base + * count';
-  const screen = submitPuzzle(totalFromPartsProblem, input, learnerNames);
+  const screen = submitPuzzle(
+    totalFromPartsProblem,
+    textAnswer(input),
+    learnerNames,
+  );
 
   expect(screen.input.value).toBe(input);
-  expect(screen.submission).toEqual({ kind: 'named-equation', input });
+  expect(screen.submission).toEqual({
+    kind: 'named-equation',
+    answerKind: 'text',
+    input,
+  });
   expect(screen.feedback).toEqual({
     kind: 'syntax-error',
     expected: 'an identifier, an integer, or "("',
@@ -77,7 +119,11 @@ test('returns a structured syntax error and preserves the learner input', () => 
 
 test('returns an unknown-identifier diagnostic with the available names', () => {
   const input = 'total = base + mystery';
-  const screen = submitPuzzle(totalFromPartsProblem, input, learnerNames);
+  const screen = submitPuzzle(
+    totalFromPartsProblem,
+    textAnswer(input),
+    learnerNames,
+  );
 
   expect(screen.input.value).toBe(input);
   expect(screen.feedback).toEqual({
@@ -94,10 +140,14 @@ test('returns an unknown-identifier diagnostic with the available names', () => 
 });
 
 test('returns an ambiguous-identifier diagnostic without structural checking', () => {
-  const screen = submitPuzzle(totalFromPartsProblem, 'total = rate', {
-    rate: ['base', 'unitValue'],
-    total: 'total',
-  });
+  const screen = submitPuzzle(
+    totalFromPartsProblem,
+    textAnswer('total = rate'),
+    {
+      rate: ['base', 'unitValue'],
+      total: 'total',
+    },
+  );
 
   expect(screen.feedback).toMatchObject({
     kind: 'ambiguous-identifier',
@@ -110,7 +160,7 @@ test('returns an ambiguous-identifier diagnostic without structural checking', (
 test('returns an invalid-integer diagnostic without structural checking', () => {
   const screen = submitPuzzle(
     totalFromPartsProblem,
-    'total = 999999999999999999999999999999',
+    textAnswer('total = 999999999999999999999999999999'),
     learnerNames,
   );
 

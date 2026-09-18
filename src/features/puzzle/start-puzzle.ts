@@ -6,6 +6,7 @@ import type {
 } from '../problem-model/problem';
 import type { Relation } from '../problem-model/expression';
 import type { SourceRange } from '../named-expression';
+import type { LearnerAnswer } from './learner-answer';
 
 export type ScreenQuantity = {
   id: string;
@@ -29,7 +30,9 @@ export type PuzzleScreen = {
   replay: ProblemReplay;
   submission?: {
     kind: 'named-equation';
+    answerKind: LearnerAnswer['kind'];
     input: string;
+    choiceId?: string;
     relation?: Relation;
   };
   feedback?:
