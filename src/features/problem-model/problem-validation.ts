@@ -25,6 +25,7 @@ export type ProblemSolutionIssue =
 export type ProblemNumberIssue =
   | { kind: 'unsafe-known-value'; id: QuantityId; value: number }
   | { kind: 'unsafe-answer-value'; id: QuantityId; value: number }
+  | { kind: 'unsafe-replay-seed'; value: number }
   | { kind: 'unsafe-literal'; value: number };
 
 export type ProblemInvariantIssue =
@@ -40,7 +41,10 @@ export type ProblemInvariantIssue =
 
 export type ProblemAstIssue =
   | ProblemReferenceIssue
-  | Extract<ProblemNumberIssue, { kind: 'unsafe-known-value' | 'unsafe-literal' }>
+  | Extract<
+      ProblemNumberIssue,
+      { kind: 'unsafe-known-value' | 'unsafe-replay-seed' | 'unsafe-literal' }
+    >
   | Extract<
       ProblemInvariantIssue,
       { kind: 'duplicate-quantity-id' | 'invalid-hidden-quantity-count' }
@@ -63,6 +67,7 @@ type ProblemAstValidatorCode =
   | 'defined-quantity-references'
   | 'defined-academic-symbol-quantities'
   | 'safe-known-values'
+  | 'safe-replay-seed'
   | 'safe-literals'
   | 'unique-quantity-ids'
   | 'single-hidden-quantity';
@@ -196,6 +201,19 @@ function validateLiteralNumberSafety({
   return issues;
 }
 
+function validateReplaySeedNumberSafety({
+  problem,
+}: ProblemAstValidationContext): readonly Extract<
+  ProblemNumberIssue,
+  { kind: 'unsafe-replay-seed' }
+>[] {
+  if (!problem.replay || Number.isSafeInteger(problem.replay.seed)) {
+    return [];
+  }
+
+  return [{ kind: 'unsafe-replay-seed', value: problem.replay.seed }];
+}
+
 function validateUniqueQuantityIds({
   problem,
 }: ProblemAstValidationContext): readonly Extract<
@@ -325,6 +343,7 @@ const problemAstValidators: readonly ProblemValidator<
     validate: validateAcademicSymbolQuantities,
   },
   { code: 'safe-known-values', validate: validateKnownNumberSafety },
+  { code: 'safe-replay-seed', validate: validateReplaySeedNumberSafety },
   { code: 'safe-literals', validate: validateLiteralNumberSafety },
   { code: 'unique-quantity-ids', validate: validateUniqueQuantityIds },
   { code: 'single-hidden-quantity', validate: validateHiddenQuantityCount },
