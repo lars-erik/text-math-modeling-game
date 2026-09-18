@@ -140,3 +140,24 @@ test('returns a typed diagnostic instead of discarding a duplicate symbol mappin
     symbols: ['p', 'q'],
   });
 });
+
+test('reports an unsafe replay seed as a typed invalid-problem issue', () => {
+  const unsafeReplaySeedDsl = `${referenceProblemDsl.slice(0, -2)}
+
+    replay {
+        seed 999999999999999999999999999999
+        generator hand-built-v1
+    }
+}
+`;
+
+  expect(parseProblem(unsafeReplaySeedDsl)).toEqual({
+    kind: 'invalid-problem',
+    issues: [
+      {
+        kind: 'unsafe-replay-seed',
+        value: 1e30,
+      },
+    ],
+  });
+});

@@ -64,6 +64,42 @@ test('parenthesizes grouped addition so equation structure survives round-trip',
   });
 });
 
+test('preserves nested right-associated addition and multiplication trees through round-trip', () => {
+  const rightAssociatedProblem = {
+    ...totalFromPartsProblem,
+    relation: {
+      kind: 'equation' as const,
+      left: { kind: 'quantity' as const, id: 'total' },
+      right: {
+        kind: 'add' as const,
+        left: { kind: 'quantity' as const, id: 'base' },
+        right: {
+          kind: 'add' as const,
+          left: { kind: 'quantity' as const, id: 'count' },
+          right: {
+            kind: 'multiply' as const,
+            left: { kind: 'quantity' as const, id: 'unitValue' },
+            right: {
+              kind: 'multiply' as const,
+              left: { kind: 'literal' as const, value: 2 },
+              right: { kind: 'literal' as const, value: 3 },
+            },
+          },
+        },
+      },
+    },
+  };
+
+  const serialized = serializeProblem(rightAssociatedProblem);
+  expect(serialized).toContain(
+    '        total = base + (count + unitValue * (2 * 3))\n',
+  );
+  expect(parseProblem(serialized)).toEqual({
+    kind: 'success',
+    problem: rightAssociatedProblem,
+  });
+});
+
 test('orders symbol mappings canonically and serializes deterministically', () => {
   const problemWithUnorderedSymbols = {
     ...totalFromPartsProblem,

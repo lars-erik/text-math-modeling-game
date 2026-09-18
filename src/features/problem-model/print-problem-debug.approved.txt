@@ -1,0 +1,90 @@
+problem total-from-parts
+scenario gaming.drone-power
+concepts arithmetic.addition, arithmetic.multiplication, algebra.variable, linear.one-unknown
+quantities
+  quantity base dimension=scalar role=base visibility=known value=30
+  quantity count dimension=item role=count visibility=known value=4
+  quantity unitValue dimension=scalar role=per-item visibility=hidden value=?
+  quantity total dimension=scalar role=total visibility=known value=210
+relation
+  equation
+    quantity total
+    add
+      quantity base
+      multiply
+        quantity count
+        quantity unitValue
+replay seed=0 generator=hand-built-v1
+answer-key none
+dsl
+  problem total-from-parts {
+      concepts {
+          arithmetic.addition
+          arithmetic.multiplication
+          algebra.variable
+          linear.one-unknown
+      }
+  
+      quantity base: scalar role base = 30
+      quantity count: item role count = 4
+      quantity unitValue: scalar role per-item = ?
+      quantity total: scalar role total = 210
+  
+      equation {
+          total = base + count * unitValue
+      }
+  
+      scenario gaming.drone-power
+      symbol unitValue = p
+  
+      replay {
+          seed 0
+          generator hand-built-v1
+      }
+  }
+
+problem total-from-parts
+scenario gaming.drone-power
+concepts arithmetic.addition, arithmetic.multiplication, algebra.variable, linear.one-unknown
+quantities
+  quantity base dimension=scalar role=base visibility=known value=30
+  quantity count dimension=item role=count visibility=known value=4
+  quantity unitValue dimension=scalar role=per-item visibility=hidden value=?
+  quantity total dimension=scalar role=total visibility=known value=210
+relation
+  equation
+    quantity total
+    add
+      quantity base
+      multiply
+        quantity count
+        quantity unitValue
+replay seed=0 generator=hand-built-v1
+answer-key
+  unitValue = 45
+dsl
+  problem total-from-parts {
+      concepts {
+          arithmetic.addition
+          arithmetic.multiplication
+          algebra.variable
+          linear.one-unknown
+      }
+  
+      quantity base: scalar role base = 30
+      quantity count: item role count = 4
+      quantity unitValue: scalar role per-item = ?
+      quantity total: scalar role total = 210
+  
+      equation {
+          total = base + count * unitValue
+      }
+  
+      scenario gaming.drone-power
+      symbol unitValue = p
+  
+      replay {
+          seed 0
+          generator hand-built-v1
+      }
+  }
