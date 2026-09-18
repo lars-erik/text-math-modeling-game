@@ -5,6 +5,7 @@ on:
     branches:
       - pr
       - main
+      - copilot/add-github-actions-ci-cd
   pull_request:
     branches:
       - pr
@@ -57,7 +58,7 @@ jobs:
           retention-days: 14
 
       - name: Upload Pages artifact
-        if: ${{ success() }}
+        if: ${{ success() && github.event_name == 'push' }}
         uses: actions/upload-pages-artifact@v4
         with:
           path: src/dist
@@ -65,7 +66,7 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: ci
-    if: ${{ needs.ci.result == 'success' }}
+    if: ${{ needs.ci.result == 'success' && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     permissions:
       pages: write
