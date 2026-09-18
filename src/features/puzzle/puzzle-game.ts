@@ -39,28 +39,19 @@ export class MathModelingPuzzle extends LitElement {
         </section>
 
         <form @submit=${this.handleSubmit}>
-          <fieldset>
-            <legend>Choose the named equation</legend>
-            ${referencePuzzle.choices.map(
-              (choice) => html`
-                <div>
-                  <label>
-                    <input
-                      type="radio"
-                      name="named-equation"
-                      value=${choice.id}
-                      required
-                    />
-                    ${choice.label}
-                  </label>
-                </div>
-              `,
-            )}
-          </fieldset>
+          <label for="named-equation">Named equation</label>
+          <input
+            id="named-equation"
+            name="named-equation"
+            type="text"
+            .value=${this.screen.input.value}
+            aria-describedby="equation-feedback"
+            required
+          />
           <button type="submit">Check</button>
         </form>
 
-        <p role="status" aria-live="polite">
+        <p id="equation-feedback" role="status" aria-live="polite">
           ${this.screen.feedback?.message ?? ''}
         </p>
       </main>
@@ -74,16 +65,16 @@ export class MathModelingPuzzle extends LitElement {
       return;
     }
 
-    const choiceId = new FormData(event.currentTarget).get('named-equation');
-    const choice = referencePuzzle.choices.find(
-      (candidate) => candidate.id === choiceId,
-    );
-
-    if (choice === undefined) {
+    const input = new FormData(event.currentTarget).get('named-equation');
+    if (typeof input !== 'string') {
       return;
     }
 
-    this.screen = submitPuzzle(referencePuzzle.problem, choice.relation);
+    this.screen = submitPuzzle(
+      referencePuzzle.problem,
+      input,
+      referencePuzzle.learnerNames,
+    );
   }
 }
 

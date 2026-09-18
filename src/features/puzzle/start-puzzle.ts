@@ -29,20 +29,20 @@ export type PuzzleScreen = {
   replay: ProblemReplay;
   submission?: {
     kind: 'named-equation';
-    input?: string;
+    input: string;
     relation?: Relation;
   };
   feedback?:
     | {
         kind: 'accepted';
         message: string;
-        checkPolicy: 'exact-structure' | 'normalized-structure';
+        checkPolicy: 'normalized-structure';
         equationSides: 'ordered';
       }
     | {
         kind: 'structural-mismatch';
         message: string;
-        checkPolicy: 'exact-structure' | 'normalized-structure';
+        checkPolicy: 'normalized-structure';
         equationSides: 'ordered';
       }
     | {

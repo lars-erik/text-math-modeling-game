@@ -19,6 +19,21 @@ export function printScreen(screen: PuzzleScreen): string {
   }
 
   if (screen.feedback !== undefined) {
+    if ('checkPolicy' in screen.feedback) {
+      lines.push(
+        `check ${screen.feedback.checkPolicy} equation-sides=${screen.feedback.equationSides}`,
+      );
+    }
+    if ('range' in screen.feedback) {
+      const { start, end } = screen.feedback.range;
+      const expected =
+        screen.feedback.kind === 'syntax-error'
+          ? ` expected=${JSON.stringify(screen.feedback.expected)}`
+          : '';
+      lines.push(
+        `diagnostic range=${start.line}:${start.column}-${end.line}:${end.column} offsets=${start.offset}-${end.offset}${expected}`,
+      );
+    }
     lines.push(`feedback ${screen.feedback.kind}: ${screen.feedback.message}`);
   }
 

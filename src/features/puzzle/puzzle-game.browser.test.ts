@@ -3,7 +3,7 @@ import { page, userEvent } from 'vitest/browser';
 
 import { MathModelingPuzzle } from './puzzle-game';
 
-test('completes the fixed quantities-to-named-equation interaction', async () => {
+test('edits and resubmits a typed equation', async () => {
   document.body.innerHTML = '<math-modeling-puzzle></math-modeling-puzzle>';
 
   const element = document.querySelector('math-modeling-puzzle');
@@ -15,21 +15,27 @@ test('completes the fixed quantities-to-named-equation interaction', async () =>
   await expect.element(page.getByText('unitValue = ?')).toBeVisible();
   expect(puzzle.shadowRoot?.textContent).not.toContain('45');
 
-  await userEvent.click(
-    page.getByLabelText('total = count * (base + unitValue)'),
-  );
+  const input = page.getByLabelText('Named equation');
+
+  await userEvent.click(input);
+  await userEvent.keyboard('total = count * (base + unitValue)');
   await userEvent.click(page.getByRole('button', { name: 'Check' }));
   await expect
     .element(page.getByRole('status'))
-    .toHaveTextContent('The equation does not match the quantity model.');
-
-  await userEvent.click(
-    page.getByLabelText('total = base + count * unitValue'),
+    .toHaveTextContent('The equation grouping does not match the quantity model.');
+  await expect.element(input).toHaveValue(
+    'total = count * (base + unitValue)',
   );
+
+  await userEvent.clear(input);
+  await userEvent.keyboard('total = unitValue * count + base');
   await userEvent.click(page.getByRole('button', { name: 'Check' }));
   await expect
     .element(page.getByRole('status'))
     .toHaveTextContent('The equation matches the quantity model.');
+  await expect.element(input).toHaveValue(
+    'total = unitValue * count + base',
+  );
 
   expect(puzzle.shadowRoot?.textContent).not.toContain('45');
 });
