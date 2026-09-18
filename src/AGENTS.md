@@ -5,10 +5,17 @@ Read `../readme.md` and the relevant `../docs/` document before editing. Treat t
 ## Working rhythm
 
 1. Select one acceptance criterion from `../docs/07-phase-1-plan.md`.
-2. Add the smallest failing example, property, or approval test expressing observable behavior.
-3. Implement the smallest production change that makes it pass.
-4. Run the relevant tests and refactor with the tests green.
-5. Report the changed files, test command/results, accepted approval artifacts, and the next smallest step.
+2. Add exactly one smallest test expressing the next observable behavior.
+3. If it does not compile, add only enough production interface for it to compile.
+4. Run that test and confirm it fails for the intended behavioral reason.
+5. Add, remove, or modify only enough production code to make that test pass.
+6. Refactor with the focused test green, then repeat from step 2 for the next behavior.
+7. Report the changed files, test command/results, accepted approval artifacts, and the next smallest step.
+
+Do not batch several predicted behaviors into one red phase. A compile failure may be
+the first useful feedback when shaping a new interface, but follow it with a behavioral
+red result before implementing the behavior. Add broader approval and browser coverage
+after the underlying behavior has emerged through these one-test cycles.
 
 Prefer affirmative requirements and acceptance criteria over prohibition lists. Propose a narrowly scoped change when an existing design decision conflicts with a discovered technical constraint.
 
