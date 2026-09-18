@@ -268,7 +268,7 @@ export class MathModelingPuzzle extends LitElement {
       `,
       input: html`
         <div @puzzle-answer=${this.handleAnswer}>
-          <nav aria-label="Input mode">
+          <nav aria-label=${resources.controls.inputMode}>
             ${(
               Object.keys(puzzleInputProviders) as PuzzleInputMode[]
             ).map(

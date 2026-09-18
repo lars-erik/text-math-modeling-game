@@ -1,4 +1,4 @@
-import { html, LitElement } from 'lit';
+import { css, html, LitElement } from 'lit';
 
 import type {
   StoryQuantitiesScreen,
@@ -12,6 +12,82 @@ export class StoryQuantitiesInput extends LitElement {
     unknownLegend: { attribute: false },
     checkLabel: { attribute: false },
   };
+
+  static styles = css`
+    :host {
+      display: block;
+      min-width: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    form {
+      display: grid;
+      gap: 1rem;
+      min-width: 0;
+    }
+
+    fieldset {
+      display: grid;
+      gap: 0.5rem;
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    legend {
+      margin-block-end: 0.5rem;
+      font-weight: 700;
+    }
+
+    label {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      min-width: 0;
+      padding: 0.7rem 0.75rem;
+      border: 1px solid #c5cbd1;
+      border-radius: 0.35rem;
+      background: #fff;
+      overflow-wrap: anywhere;
+      cursor: pointer;
+    }
+
+    label:has(input:checked) {
+      border-color: #285f78;
+      background: #edf5f8;
+    }
+
+    input {
+      flex: 0 0 auto;
+      width: 1.15rem;
+      height: 1.15rem;
+      margin: 0.15rem 0 0;
+      accent-color: #285f78;
+    }
+
+    button {
+      justify-self: start;
+      min-height: 2.75rem;
+      padding: 0.6rem 1rem;
+      border: 1px solid #17475d;
+      border-radius: 0.35rem;
+      background: #285f78;
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    @media (max-width: 30rem) {
+      button {
+        width: 100%;
+      }
+    }
+  `;
 
   declare screen: StoryQuantitiesScreen;
   declare knownLegend: string;

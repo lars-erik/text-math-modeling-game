@@ -6,6 +6,7 @@ export type PuzzleLocaleResources = {
   };
   controls: {
     check: string;
+    inputMode: string;
     textInput: string;
     multipleChoice: string;
   };

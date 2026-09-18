@@ -8,6 +8,7 @@ export const nb = {
   },
   controls: {
     check: 'Sjekk',
+    inputMode: 'Svarmåte',
     textInput: 'Tekstfelt',
     multipleChoice: 'Flervalg',
   },

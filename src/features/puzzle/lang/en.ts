@@ -8,6 +8,7 @@ export const en = {
   },
   controls: {
     check: 'Check',
+    inputMode: 'Answer method',
     textInput: 'Text input',
     multipleChoice: 'Multiple choice',
   },
