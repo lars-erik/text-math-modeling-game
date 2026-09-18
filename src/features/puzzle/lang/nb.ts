@@ -12,9 +12,16 @@ export const nb = {
     multipleChoice: 'Flervalg',
   },
   common: {
+    puzzle: 'Oppgave',
     source: 'Utgangspunkt',
+    target: 'Mål',
     quantities: 'Størrelser',
     feedback: 'Tilbakemelding',
+    replay: 'Informasjon for gjentakelse',
+    seed: 'Frø',
+    generatorVersion: 'Generatorversjon',
+    scenario: 'Scenario',
+    storySeed: 'Fortellingsfrø',
   },
   storyToQuantities: {
     heading: 'Fra fortelling til størrelser',

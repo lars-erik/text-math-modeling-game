@@ -294,3 +294,33 @@ test('keeps the named-equation puzzle consistent with the selected locale', asyn
     .element(page.getByRole('status'))
     .toHaveTextContent('Likningen stemmer med modellen for størrelsene.');
 });
+
+test('uses the same labelled puzzle shell for both puzzle kinds', async () => {
+  const generated = createSeededPuzzle({ seed: 17 });
+  browserGlobal.mathModelingPuzzles = {
+    story: generated,
+    named: { ...generated, kind: 'quantities-to-named-equation' },
+  };
+
+  for (const puzzleKey of ['story', 'named']) {
+    document.body.innerHTML = `
+      <math-modeling-puzzle
+        puzzle="${puzzleKey}"
+        locale="en"
+        input-mode="text"
+      ></math-modeling-puzzle>
+    `;
+
+    await expect.element(page.getByRole('main')).toBeVisible();
+    await expect
+      .element(page.getByRole('heading', { name: 'Source' }))
+      .toBeVisible();
+    await expect
+      .element(page.getByRole('heading', { name: 'Target' }))
+      .toBeVisible();
+    await expect
+      .element(page.getByRole('heading', { name: 'Feedback' }))
+      .toBeVisible();
+    await expect.element(page.getByLabelText('Language')).toBeVisible();
+  }
+});

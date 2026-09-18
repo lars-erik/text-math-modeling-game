@@ -1,4 +1,10 @@
-import { html, LitElement, type PropertyValues } from 'lit';
+import {
+  css,
+  html,
+  LitElement,
+  type PropertyValues,
+  type TemplateResult,
+} from 'lit';
 
 import type { LearnerAnswer } from '../learner-answer';
 import {
@@ -22,6 +28,7 @@ import {
   type PuzzleInputMode,
 } from './puzzle-input-providers';
 import './story-quantities-input';
+import './puzzle-shell';
 
 export class MathModelingPuzzle extends LitElement {
   static properties = {
@@ -31,6 +38,107 @@ export class MathModelingPuzzle extends LitElement {
     screen: { state: true },
     storyScreen: { state: true },
   };
+
+  static styles = css`
+    :host {
+      display: block;
+      min-width: 0;
+      padding: clamp(0rem, 3vw, 2rem);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    label,
+    nav,
+    ul,
+    dl {
+      min-width: 0;
+    }
+
+    .language-control {
+      display: grid;
+      gap: 0.25rem;
+      color: #596168;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    select {
+      min-height: 2.75rem;
+      max-width: 100%;
+      padding: 0.55rem 2rem 0.55rem 0.75rem;
+      border: 1px solid #8d969e;
+      border-radius: 0.35rem;
+      background: #fff;
+      color: #202428;
+      font: inherit;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-block-end: 1rem;
+    }
+
+    nav button {
+      min-height: 2.75rem;
+      padding: 0.55rem 0.85rem;
+      border: 1px solid #8d969e;
+      border-radius: 0.35rem;
+      background: #fff;
+      color: #202428;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    nav button[aria-pressed='true'] {
+      border-color: #285f78;
+      background: #dcebf2;
+      font-weight: 700;
+    }
+
+    .quantity-list {
+      display: grid;
+      gap: 0.5rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .quantity-list li {
+      padding: 0.65rem 0.75rem;
+      border: 1px solid #c5cbd1;
+      border-radius: 0.35rem;
+      background: #f7f8f9;
+      overflow-wrap: anywhere;
+    }
+
+    .replay-list {
+      display: grid;
+      grid-template-columns: max-content minmax(0, 1fr);
+      gap: 0.25rem 0.75rem;
+      margin-block-end: 0;
+    }
+
+    .replay-list dt {
+      font-weight: 600;
+    }
+
+    .replay-list dd {
+      min-width: 0;
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 47.99rem) {
+      :host {
+        padding: 0;
+      }
+    }
+  `;
 
   declare puzzleKey: string;
   declare inputMode: string;
@@ -138,56 +246,53 @@ export class MathModelingPuzzle extends LitElement {
       choices: namedDefinition.choices,
     };
 
-    return html`
-      <main @puzzle-answer=${this.handleAnswer}>
-        <nav aria-label="Input mode">
-          ${(
-            Object.keys(puzzleInputProviders) as PuzzleInputMode[]
-          ).map(
-            (mode) => html`
-              <button
-                type="button"
-                aria-pressed=${this.inputMode === mode}
-                @click=${() => this.selectInputMode(mode)}
-              >
-                ${mode === 'text'
-                  ? resources.controls.textInput
-                  : resources.controls.multipleChoice}
-              </button>
+    return this.renderShell({
+      locale: this.locale,
+      heading: resources.quantitiesToNamedEquation.heading,
+      prompt: this.screen.target.prompt,
+      feedback: this.screen.feedback?.message ?? '',
+      replay: this.screen.replay,
+      source: html`
+        <ul class="quantity-list">
+          ${this.screen.source.quantities.map(
+            (quantity) => html`
+              <li>
+                ${namedDefinition.quantityNames[quantity.id] ?? quantity.id} =
+                ${quantity.given.kind === 'known'
+                  ? quantity.given.value
+                  : '?'}
+              </li>
             `,
           )}
-        </nav>
-
-        <h1>${resources.quantitiesToNamedEquation.heading}</h1>
-        <p>${this.screen.target.prompt}</p>
-
-        <section aria-labelledby="quantities-heading">
-          <h2 id="quantities-heading">${resources.common.quantities}</h2>
-          <ul>
-            ${this.screen.source.quantities.map(
-              (quantity) => html`
-                <li>
-                  ${namedDefinition.quantityNames[quantity.id] ?? quantity.id} =
-                  ${quantity.given.kind === 'known'
-                    ? quantity.given.value
-                    : '?'}
-                </li>
+        </ul>
+      `,
+      input: html`
+        <div @puzzle-answer=${this.handleAnswer}>
+          <nav aria-label="Input mode">
+            ${(
+              Object.keys(puzzleInputProviders) as PuzzleInputMode[]
+            ).map(
+              (mode) => html`
+                <button
+                  type="button"
+                  aria-pressed=${this.inputMode === mode}
+                  @click=${() => this.selectInputMode(mode)}
+                >
+                  ${mode === 'text'
+                    ? resources.controls.textInput
+                    : resources.controls.multipleChoice}
+                </button>
               `,
             )}
-          </ul>
-        </section>
-
-        ${inputProvider.render({
-          definition: localizedPuzzleDefinition,
-          screen: this.screen,
-          resources,
-        })}
-
-        <p id="equation-feedback" role="status" aria-live="polite">
-          ${this.screen.feedback?.message ?? ''}
-        </p>
-      </main>
-    `;
+          </nav>
+          ${inputProvider.render({
+            definition: localizedPuzzleDefinition,
+            screen: this.screen,
+            resources,
+          })}
+        </div>
+      `,
+    });
   }
 
   private renderStoryQuantities(locale: PuzzleLocale) {
@@ -197,31 +302,95 @@ export class MathModelingPuzzle extends LitElement {
       return html``;
     }
 
+    return this.renderShell({
+      locale,
+      heading: resources.storyToQuantities.heading,
+      prompt: screen.target.prompt,
+      feedback: screen.feedback?.message ?? '',
+      replay: screen.replay,
+      source: html`<p>${screen.source.text}</p>`,
+      input: html`
+        <div @puzzle-quantity-selection=${this.handleQuantitySelection}>
+          <story-quantities-input
+            .screen=${screen}
+            .knownLegend=${resources.storyToQuantities.knownLegend}
+            .unknownLegend=${resources.storyToQuantities.unknownLegend}
+            .checkLabel=${resources.controls.check}
+          ></story-quantities-input>
+        </div>
+      `,
+    });
+  }
+
+  private renderShell({
+    locale,
+    heading,
+    prompt,
+    source,
+    input,
+    feedback,
+    replay,
+  }: {
+    locale: PuzzleLocale;
+    heading: string;
+    prompt: string;
+    source: TemplateResult;
+    input: TemplateResult;
+    feedback: string;
+    replay:
+      | {
+          seed: number;
+          generatorVersion: string;
+          scenarioId?: string;
+          storySeed?: number;
+        }
+      | undefined;
+  }) {
+    const resources = puzzleResources[locale];
+
     return html`
-      <main @puzzle-quantity-selection=${this.handleQuantitySelection}>
-        <label>
+      <puzzle-shell
+        .heading=${heading}
+        .sourceLabel=${resources.common.source}
+        .targetLabel=${resources.common.target}
+        .feedbackLabel=${resources.common.feedback}
+        .prompt=${prompt}
+        .feedback=${feedback}
+        .replayLabel=${resources.common.replay}
+        .hasReplay=${replay !== undefined}
+      >
+        <label slot="language" class="language-control">
           ${resources.language.label}
           <select .value=${locale} @change=${this.handleLocaleChange}>
             <option value="en">${resources.language.en}</option>
             <option value="nb">${resources.language.nb}</option>
           </select>
         </label>
-        <h1>${resources.storyToQuantities.heading}</h1>
-        <section aria-labelledby="story-source-heading">
-          <h2 id="story-source-heading">${resources.common.source}</h2>
-          <p>${screen.source.text}</p>
-        </section>
-        <p>${screen.target.prompt}</p>
-        <story-quantities-input
-          .screen=${screen}
-          .knownLegend=${resources.storyToQuantities.knownLegend}
-          .unknownLegend=${resources.storyToQuantities.unknownLegend}
-          .checkLabel=${resources.controls.check}
-        ></story-quantities-input>
-        <p role="status" aria-live="polite">
-          ${screen.feedback?.message ?? ''}
-        </p>
-      </main>
+        <div slot="source">${source}</div>
+        <div slot="input">${input}</div>
+        ${replay === undefined
+          ? null
+          : html`
+              <dl slot="replay" class="replay-list">
+                <dt>${resources.common.seed}</dt>
+                <dd>${replay.seed}</dd>
+                <dt>${resources.common.generatorVersion}</dt>
+                <dd>${replay.generatorVersion}</dd>
+                ${replay.scenarioId === undefined
+                  ? null
+                  : html`
+                      <dt>${resources.common.scenario}</dt>
+                      <dd>${replay.scenarioId}</dd>
+                    `}
+                ${replay.storySeed === undefined
+                  ? null
+                  : html`
+                      <dt>${resources.common.storySeed}</dt>
+                      <dd>${replay.storySeed}</dd>
+                    `}
+              </dl>
+            `}
+      </puzzle-shell>
     `;
   }
 

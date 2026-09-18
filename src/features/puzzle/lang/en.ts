@@ -12,9 +12,16 @@ export const en = {
     multipleChoice: 'Multiple choice',
   },
   common: {
+    puzzle: 'Puzzle',
     source: 'Source',
+    target: 'Target',
     quantities: 'Quantities',
     feedback: 'Feedback',
+    replay: 'Replay information',
+    seed: 'Seed',
+    generatorVersion: 'Generator version',
+    scenario: 'Scenario',
+    storySeed: 'Story seed',
   },
   storyToQuantities: {
     heading: 'Story to quantities',
