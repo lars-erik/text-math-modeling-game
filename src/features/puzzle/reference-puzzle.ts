@@ -1,11 +1,6 @@
-import type { Relation } from '../problem-model/expression';
+import type { LearnerNameMap } from '../named-expression';
 import { totalFromPartsProblem } from '../problem-model/total-from-parts';
-
-export type NamedEquationChoice = {
-  id: string;
-  label: string;
-  relation: Relation;
-};
+import type { PuzzleDefinition } from './puzzle-definition';
 
 export const referencePuzzle = {
   choices: [
@@ -31,6 +26,12 @@ export const referencePuzzle = {
         },
       },
     },
-  ] satisfies readonly NamedEquationChoice[],
+  ],
+  learnerNames: {
+    base: 'base',
+    count: 'count',
+    total: 'total',
+    unitValue: 'unitValue',
+  } as const satisfies LearnerNameMap,
   problem: totalFromPartsProblem,
-};
+} as const satisfies PuzzleDefinition;

@@ -5,6 +5,8 @@ import type {
   QuantityRole,
 } from '../problem-model/problem';
 import type { Relation } from '../problem-model/expression';
+import type { SourceRange } from '../named-expression';
+import type { LearnerAnswer } from './learner-answer';
 
 export type ScreenQuantity = {
   id: string;
@@ -28,16 +30,49 @@ export type PuzzleScreen = {
   replay: ProblemReplay;
   submission?: {
     kind: 'named-equation';
-    relation: Relation;
+    answerKind: LearnerAnswer['kind'];
+    input: string;
+    choiceId?: string;
+    relation?: Relation;
   };
   feedback?:
     | {
         kind: 'accepted';
         message: string;
+        checkPolicy: 'normalized-structure';
+        equationSides: 'ordered';
       }
     | {
         kind: 'structural-mismatch';
         message: string;
+        checkPolicy: 'normalized-structure';
+        equationSides: 'ordered';
+      }
+    | {
+        kind: 'syntax-error';
+        message: string;
+        expected: string;
+        range: SourceRange;
+      }
+    | {
+        kind: 'unknown-identifier';
+        message: string;
+        identifier: string;
+        availableIdentifiers: readonly string[];
+        range: SourceRange;
+      }
+    | {
+        kind: 'ambiguous-identifier';
+        message: string;
+        identifier: string;
+        candidateIds: readonly string[];
+        range: SourceRange;
+      }
+    | {
+        kind: 'invalid-integer-literal';
+        message: string;
+        literal: string;
+        range: SourceRange;
       };
 };
 

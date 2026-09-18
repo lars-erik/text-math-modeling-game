@@ -12,7 +12,12 @@ export const namedExpressionGrammar = ohm.grammar(String.raw`
       = MultiplyExpression "*" Primary  -- multiply
       | Primary
 
-    Primary = identifier
-    identifier = letter alnum*
+    Primary
+      = "(" AddExpression ")"  -- parenthesized
+      | integer                 -- integer
+      | identifier              -- identifier
+
+    identifier (an identifier) = letter alnum*
+    integer (an integer) = digit+
   }
 `);
