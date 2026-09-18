@@ -20,10 +20,33 @@ export type TotalFromPartsGenerationConfig = {
   concepts: readonly ConceptId[];
 };
 
+export const defaultTotalFromPartsConcepts = [
+  'arithmetic.addition',
+  'arithmetic.multiplication',
+  'algebra.variable',
+  'algebra.equation',
+  'linear.one-unknown',
+] as const satisfies readonly ConceptId[];
+
+export const defaultTotalFromPartsGenerationConfig = {
+  base: { min: 10, max: 40 },
+  count: { min: 2, max: 8 },
+  unitValue: { min: 3, max: 20 },
+  scenarioId: 'gaming.drone-power',
+  concepts: defaultTotalFromPartsConcepts,
+} as const satisfies TotalFromPartsGenerationConfig;
+
 export type GeneratedProblemCase = {
   problem: Problem;
   answerKey: AnswerKey;
+  replay: {
+    seed: number;
+    generatorVersion: string;
+    config: TotalFromPartsGenerationConfig;
+  };
 };
+
+const safeIntegerError = 'Generation config must guarantee a positive safe integer result.';
 
 export function generateTotalFromPartsCase({
   seed,
@@ -34,6 +57,8 @@ export function generateTotalFromPartsCase({
   config: TotalFromPartsGenerationConfig;
   randomSource?: RandomSource;
 }): GeneratedProblemCase {
+  validateGenerationRequest(seed, config);
+
   const base = nextInteger(randomSource, config.base);
   const count = nextInteger(randomSource, config.count);
   const unitValue = nextInteger(randomSource, config.unitValue);
@@ -85,7 +110,31 @@ export function generateTotalFromPartsCase({
         total,
       },
     },
+    replay: {
+      seed,
+      generatorVersion: totalFromPartsGeneratorVersion,
+      config: cloneConfig(config),
+    },
   };
+}
+
+function validateGenerationRequest(
+  seed: number,
+  config: TotalFromPartsGenerationConfig,
+): void {
+  if (!Number.isSafeInteger(seed)) {
+    throw new Error(safeIntegerError);
+  }
+
+  for (const range of [config.base, config.count, config.unitValue]) {
+    validatePositiveIntegerRange(range);
+  }
+
+  const maxTotal =
+    config.base.max + config.count.max * config.unitValue.max;
+  if (!Number.isSafeInteger(maxTotal)) {
+    throw new Error(safeIntegerError);
+  }
 }
 
 function createMulberry32Random(seed: number): RandomSource {
@@ -107,4 +156,28 @@ function nextInteger(
   range: PositiveIntegerRange,
 ): number {
   return Math.floor(randomSource.nextFloat() * (range.max - range.min + 1)) + range.min;
+}
+
+function validatePositiveIntegerRange(range: PositiveIntegerRange): void {
+  if (
+    !Number.isSafeInteger(range.min) ||
+    !Number.isSafeInteger(range.max) ||
+    range.min <= 0 ||
+    range.max <= 0 ||
+    range.min > range.max
+  ) {
+    throw new Error(safeIntegerError);
+  }
+}
+
+function cloneConfig(
+  config: TotalFromPartsGenerationConfig,
+): TotalFromPartsGenerationConfig {
+  return {
+    base: { ...config.base },
+    count: { ...config.count },
+    unitValue: { ...config.unitValue },
+    scenarioId: config.scenarioId,
+    concepts: [...config.concepts],
+  };
 }

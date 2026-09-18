@@ -54,3 +54,63 @@ test('generates a valid learner-visible problem and separate answer key', () => 
     ]),
   ).toEqual([]);
 });
+
+test('replays the same generated case for the same seed and configuration', () => {
+  const first = generateTotalFromPartsCase({
+    seed: 99,
+    config: generationConfig,
+  });
+  const second = generateTotalFromPartsCase({
+    seed: 99,
+    config: generationConfig,
+  });
+
+  expect(second).toEqual(first);
+});
+
+test('preserves generator replay details outside the canonical problem DSL', () => {
+  const generated = generateTotalFromPartsCase({
+    seed: 7,
+    config: generationConfig,
+  });
+
+  expect(generated.replay).toEqual({
+    seed: 7,
+    generatorVersion: totalFromPartsGeneratorVersion,
+    config: generationConfig,
+  });
+});
+
+test('rejects generation bounds that cannot guarantee safe integers', () => {
+  expect(() =>
+    generateTotalFromPartsCase({
+      seed: 1,
+      config: {
+        ...generationConfig,
+        base: { min: Number.MAX_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER },
+      },
+    }),
+  ).toThrow('safe integer');
+});
+
+test('accepts an injected random source for reproducible value selection', () => {
+  const nextFloat = [
+    0,
+    0.5,
+    0.999999999,
+  ];
+  const generated = generateTotalFromPartsCase({
+    seed: 123,
+    config: generationConfig,
+    randomSource: {
+      nextFloat: () => nextFloat.shift() ?? 0,
+    },
+  });
+
+  expect(generated.answerKey.bindings).toEqual({
+    base: 10,
+    count: 5,
+    unitValue: 20,
+    total: 110,
+  });
+});
