@@ -13,7 +13,9 @@ Domain and puzzle use-cases are framework-independent TypeScript. The Lit layer 
 
 ## Identity and meaning
 
-Use stable quantity IDs as references. Descriptive identifiers (e.g. `dronePower`) communicate meaning; academic symbols (`p`) are presentation metadata and may vary without changing the problem. Define problem data separately from the learner's submitted answer, checker diagnostics, and presentation state.
+Use stable quantity IDs as references. Canonical quantity IDs remain locale-independent; learner-facing descriptive variable names (e.g. English `dronePower` or Norwegian `droneEffekt`) are presentation/name-resolution metadata and may vary without changing the problem. Academic symbols (`p`) are separate presentation metadata and may also vary without changing the problem. Define problem data separately from the learner's submitted answer, checker diagnostics, localization resources, and presentation state.
+
+A named-expression puzzle resolves the active locale's variable names back to canonical quantity IDs before checking. Localized labels, nouns, units, prompts, story fragments, and feedback never become semantic identity. The DSL/debug representation continues to use stable canonical IDs so fixtures and replay remain language-neutral.
 
 A useful starting model (illustrative TypeScript, refine through tests):
 

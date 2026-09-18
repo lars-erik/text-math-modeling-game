@@ -28,4 +28,4 @@ Expose the same puzzle engine to different skins: procedural encounter chains, c
 
 ## Delivery and research
 
-Investigate mobile and keyboard accessibility, user testing, telemetry with consent, educator-facing tooling, localization, and educational studies once the graybox loop demonstrates acceptable usability. Treat these as separate design decisions with explicit validation work.
+Investigate mobile and keyboard accessibility, user testing, telemetry with consent, educator-facing tooling, broader locale/grammar coverage beyond the Phase 1 resource-map contract, and educational studies once the graybox loop demonstrates acceptable usability. Treat these as separate design decisions with explicit validation work.

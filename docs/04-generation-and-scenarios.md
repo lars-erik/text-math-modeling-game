@@ -2,7 +2,7 @@
 
 ## Two independent generators
 
-The **mathematical generator** produces a complete and valid semantic problem plus a private answer key. The **scenario generator** renders those fixed facts as a particular story. A scenario can change audience appeal and vocabulary while the mathematics and answer remain identical.
+The **mathematical generator** produces a complete and valid semantic problem plus a private answer key. The **scenario generator** renders those fixed facts as a particular story. A scenario can change audience appeal and vocabulary while the mathematics and answer remain identical. Locale is another presentation input: changing language changes story text and learner-facing names, not the semantic problem or answer key.
 
 ```
 requested concepts + constraints + seed
@@ -13,7 +13,9 @@ requested concepts + constraints + seed
            ↓
        validation
            ↓
- scenario binding + template
+ scenario binding + story plan
+           ↓
+ locale resource map + renderer
            ↓
      rendered story
 ```
@@ -91,6 +93,8 @@ Generation invariants:
 - The hidden answer meets the integer-solution constraint.
 - AST -> DSL -> AST preserves semantics.
 - Scenario selection leaves the mathematical model and answer unchanged.
+- Locale selection leaves the mathematical model, answer key, and semantic story plan unchanged.
+- Every supported locale provides the complete typed resource-key set required by its scenario.
 
 ## Structured scenario bindings
 
@@ -114,6 +118,54 @@ Creator roles:
 
 Use an explicit role map that preserves the equation structure across interest packs. Use coherent units and narrative: the fixed base applies once, each repeated unit applies `count` times, and the question identifies the hidden role.
 
+## Localized scenario resource maps
+
+Keep scenario semantics separate from language. A scenario first produces a deterministic **story plan** containing semantic keys for quantities, nouns, and sentence fragments. A locale renderer then resolves those keys through a language resource map and interpolates only validated fact-ledger values. Random selection chooses semantic variant keys before localization, so changing language does not choose a different mathematical story structure.
+
+Use Bellissima-style language modules: each supported locale lives in its own file and exports the same typed nested map. For example:
+
+```text
+features/scenarios/gaming-drone-power/
+  scenario.ts
+  lang/
+    en.ts
+    nb.ts
+    index.ts
+```
+
+The exact implementation shape should emerge from tests, but the Phase 1 resource contract includes stable keys for at least:
+
+```ts
+type ScenarioLocaleResources = {
+  quantities: {
+    basePower: { variableName: string; label: string };
+    droneCount: { variableName: string; label: string };
+    dronePower: { variableName: string; label: string };
+    totalPower: { variableName: string; label: string };
+  };
+  nouns: {
+    ship: { singular: string; plural: string };
+    drone: { singular: string; plural: string };
+  };
+  units: {
+    power: string;
+    powerPerDrone: string;
+  };
+  fragments: {
+    baseFact: { basicSystems: string };
+    countFact: { activeDrones: string };
+    totalFact: { combinedDraw: string };
+    question: { perDronePower: string };
+  };
+};
+```
+
+The map keys are canonical and identical across locale files; values are localized. `variableName` is the identifier shown to and accepted from the learner for named-expression puzzles. The parser resolves that localized name back to the scenario's canonical quantity ID before semantic checking. Noun forms and sentence fragments are data rather than conditionals embedded in the renderer. Extend the shared noun-form schema deliberately when a supported language needs additional grammatical forms.
+
+Generic puzzle UI text (commands, common prompts, feedback categories) uses the same per-locale-map pattern in the puzzle feature rather than being duplicated in every scenario. All learner-visible strings should come from a locale resource boundary even when Phase 1 initially exercises only a small subset.
+
+Phase 1 proves the contract with English (`en`) and Norwegian Bokmål (`nb`) resources for the first scenario. Add an exact key-parity/type test, approve representative rendered stories in both languages, and assert that locale changes preserve the canonical AST, answer key, chosen story-plan keys, and hidden role. Include locale in rendered-puzzle/session replay metadata whenever exact text reproduction depends on it; locale is not an input to mathematical generation.
+
 ## First handcrafted templates
 
 Gaming / technology:
@@ -132,7 +184,7 @@ The domain's numbers come from the generated AST and answer key, not hard-coded 
 
 ## Template testing
 
-Print a deterministic story and a fact ledger in an approval artifact. Test required quantities, values, dimensions, unknown role and equation separately through exact assertions. An approved prose output verifies wording and readability but is not the sole source of evidence that the story is mathematically faithful.
+Print a deterministic story and a fact ledger in an approval artifact. Test required quantities, values, dimensions, unknown role and equation separately through exact assertions. Approve representative output for each Phase 1 locale and verify that localized learner-facing variable names resolve to the same canonical quantities. An approved prose output verifies wording and readability but is not the sole source of evidence that the story is mathematically faithful.
 
 ## Later LLM adapter
 

@@ -42,7 +42,9 @@ Equation   := Expression "=" Expression
 
 Define correct operator precedence (`*` before `+`) and grouping. Whitespace is insignificant; an input such as `basePower+4*dronePower` is valid when the referenced quantities exist. Learner input initially uses explicit `*` multiplication (`4*p`); the notation printer may display `4p`. This keeps academic display and textual input parsing as separate concerns.
 
-Resolve `p` through a declared symbol mapping in academic-input puzzles. Resolve descriptive names through quantity IDs in named-input puzzles. Report ambiguous or unknown identifiers as parse/name-resolution feedback.
+Resolve `p` through a declared symbol mapping in academic-input puzzles. Resolve named-input identifiers through an explicit locale name map and then to canonical quantity IDs. For example, an English learner-facing `dronePower` and a Norwegian `droneEffekt` can resolve to the same semantic quantity. Report ambiguous or unknown identifiers as parse/name-resolution feedback. Keep the complete-problem DSL locale-neutral: it serializes canonical IDs rather than localized learner-facing names.
+
+The expression parser accepts its name resolver as data rather than hard-coding one language's identifiers. Tests prove that equivalent localized named equations resolve to the same canonical AST. Academic symbol resolution remains a separate map so changing language does not implicitly change mathematical notation.
 
 ## Required round-trips
 

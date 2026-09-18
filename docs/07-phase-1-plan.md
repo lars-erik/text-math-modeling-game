@@ -42,7 +42,8 @@
 **First red tests:** `totalPower = basePower + droneCount * dronePower` parses and evaluates; `(a+b)*c` and `a+b*c` have different ASTs; an undefined name produces a typed error.
 
 - Add a minimal Ohm learner grammar for identifiers, integers, `+`, `*`, `=`, parentheses.
-- Convert the grammar result into the canonical domain AST and resolve quantity IDs.
+- Convert the grammar result into the canonical domain AST and resolve learner-facing identifiers through an injected name map; keep canonical quantity IDs language-neutral.
+- Add one resolver test proving two locale name maps can resolve equivalent named equations to the same canonical AST, without introducing story rendering yet.
 - Compare normalized structure only to the extent shown by tests (e.g. commutative addition/multiplication); reject `count*(unit+base)` and provide targeted feedback.
 - Wire typed input through the use-case and approve correct, structural-error and parse-error transcripts.
 
@@ -73,23 +74,27 @@
 
 ## Milestone 6 — First deterministic story
 
-**First red approval:** rendering the reference problem with `gaming.drone-power` yields a readable story and corresponding fact ledger.
+**First red approval:** rendering the reference problem with `gaming.drone-power` and `locale=en` yields a readable story and corresponding fact ledger; rendering the same story plan with `locale=nb` preserves the same facts and semantic keys.
 
-- Bind mathematical roles to power/drone quantities, units and labels.
-- Implement a small template with correct singular/plural and unknown question.
+- Bind mathematical roles to power/drone quantities, units and canonical scenario keys.
+- Introduce a deterministic story plan made from semantic sentence-fragment and noun keys before any language rendering.
+- Add Bellissima-style per-locale resource modules (`en.ts`, `nb.ts`) with the same typed map for localized variable names, labels, noun forms, units and story fragments.
+- Render the story by resolving the story plan against the selected locale map and interpolating validated fact-ledger values.
+- Route localized variable names into the named-expression name resolver while retaining canonical quantity IDs internally.
+- Use the same locale-map pattern for learner-visible puzzle prompts/feedback rather than hard-coding English strings in UI/use-cases.
 - Show Story -> Quantities in the existing screen using constrained chips or selections.
-- Approve story + ledger and one use-case transcript; assert that the facts preserve the AST and correct hidden role.
+- Approve story + ledger in English and Norwegian Bokmål plus one use-case transcript; assert resource-key parity and that locale changes preserve the AST, answer key, selected story-plan keys and correct hidden role.
 
-**Acceptance:** the same generated case appears as coherent prose and a quantity-model puzzle; a learner can complete the transformation.
+**Acceptance:** the same generated case and deterministic story plan render as coherent English and Norwegian Bokmål prose, localized quantity/variable names resolve to the same semantic model, and a learner can complete the transformation.
 
 ## Milestone 7 — Second scenario and compositional request
 
 **First red test:** applying the creator/followers scenario to the same generated values preserves the normalized mathematical shape and answer key.
 
-- Add a role map and template with coherent follower/post units.
+- Add a role map and localized resource set with coherent follower/post units, using the same locale-resource contract established by the first scenario.
 - Expose requested concept list and scenario choice as generation inputs.
 - Compose the initial capability/constraint declarations rather than implementing concept-specific question strings.
-- Approve story outputs for both domains and property-test math invariance under a scenario change.
+- Approve story outputs for both domains/locales and property-test math invariance under both scenario and locale changes.
 
 **Acceptance:** one schema yields reproducible distinct stories; interest choice changes context rather than correctness.
 
@@ -97,7 +102,7 @@
 
 **First red test/approval:** a known-value substitution prints `210 = 30 + 4 * dronePower`; a LaTeX visitor produces correct precedence and symbol compression for `210 = 30 + 4p`.
 
-- Implement substitution of visible values only and a per-puzzle academic symbol map.
+- Implement substitution of visible values only and a per-puzzle academic symbol map; named-expression display/input continues to use the active locale's variable-name map.
 - Render output with KaTeX.
 - Extend the small input parser's name resolution to support the explicit academic symbol map using textual `4*p` input.
 - Add named -> notation and notation -> named puzzles; test both use-case transitions and approve their traces.
@@ -137,4 +142,4 @@
 
 ## Phase 1 release gate
 
-A seeded, validated problem can be generated as an AST, printed as canonical DSL/debug data, rendered in two deterministic contexts, transformed through story/quantity/named/academic nodes in more than one direction, submitted and checked semantically, and completed in a short accessible graybox session. Relevant mathematical properties and human-reviewed use-case outputs pass CI.
+A seeded, validated problem can be generated as an AST, printed as canonical DSL/debug data, rendered in two deterministic contexts and at least English/Norwegian Bokmål locale resources, transformed through story/quantity/named/academic nodes in more than one direction, submitted and checked semantically, and completed in a short accessible graybox session. Localized learner-facing variable names resolve to the same canonical quantities across languages. Relevant mathematical properties and human-reviewed use-case outputs pass CI.
