@@ -4,7 +4,9 @@ import type { PuzzleScreen, ScreenQuantity } from './start-puzzle';
 export function printScreen(screen: PuzzleScreen): string {
   const lines = [
     `puzzle ${screen.source.kind} -> ${screen.target.kind}`,
-    `replay seed=${screen.replay.seed} generator=${screen.replay.generatorVersion}`,
+    screen.replay
+      ? `replay seed=${screen.replay.seed} generator=${screen.replay.generatorVersion}`
+      : 'replay none',
     `prompt ${screen.target.prompt}`,
     'quantities',
     ...screen.source.quantities.map((quantity) => printQuantity(quantity)),

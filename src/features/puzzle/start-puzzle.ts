@@ -10,7 +10,7 @@ import type { LearnerAnswer } from './learner-answer';
 
 export type ScreenQuantity = {
   id: string;
-  role: QuantityRole;
+  role?: QuantityRole;
   given: QuantityGiven;
 };
 
@@ -27,7 +27,7 @@ export type PuzzleScreen = {
     kind: 'expression';
     value: string;
   };
-  replay: ProblemReplay;
+  replay?: ProblemReplay;
   submission?: {
     kind: 'named-equation';
     answerKind: LearnerAnswer['kind'];
@@ -97,6 +97,6 @@ export function startPuzzle(problem: Problem): PuzzleScreen {
       kind: 'expression',
       value: '',
     },
-    replay: { ...problem.replay },
+    replay: problem.replay ? { ...problem.replay } : undefined,
   };
 }
