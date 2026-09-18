@@ -1,7 +1,14 @@
 import { expect, test } from 'vitest';
 
-import { totalFromPartsProblem } from '../../problem-model/total-from-parts.fixture';
-import { bindDronePowerScenario, planDronePowerStory } from './scenario';
+import {
+  totalFromPartsAnswerKey,
+  totalFromPartsProblem,
+} from '../../problem-model/total-from-parts.fixture';
+import {
+  bindDronePowerAnswerKey,
+  bindDronePowerScenario,
+  planDronePowerStory,
+} from './scenario';
 
 test('binds the visible base fact to canonical drone-power semantics', () => {
   const binding = bindDronePowerScenario(totalFromPartsProblem);
@@ -68,4 +75,42 @@ test('plans the story with locale-independent semantic keys and fact references'
       nounKey: 'drone',
     },
   });
+});
+
+test('scenario binding preserves equation structure with canonical power quantity IDs', () => {
+  const binding = bindDronePowerScenario(totalFromPartsProblem);
+
+  expect(binding.problem.relation).toEqual({
+    kind: 'equation',
+    left: { kind: 'quantity', id: 'totalPower' },
+    right: {
+      kind: 'add',
+      left: { kind: 'quantity', id: 'basePower' },
+      right: {
+        kind: 'multiply',
+        left: { kind: 'quantity', id: 'droneCount' },
+        right: { kind: 'quantity', id: 'dronePower' },
+      },
+    },
+  });
+  expect(binding.problem.quantities.map(({ id, dimension }) => ({ id, dimension }))).toEqual([
+    { id: 'basePower', dimension: 'power' },
+    { id: 'droneCount', dimension: 'item' },
+    { id: 'dronePower', dimension: 'powerPerItem' },
+    { id: 'totalPower', dimension: 'power' },
+  ]);
+});
+
+test('binds the private answer key to canonical scenario IDs without exposing it as a fact', () => {
+  const binding = bindDronePowerScenario(totalFromPartsProblem);
+
+  expect(bindDronePowerAnswerKey(totalFromPartsAnswerKey, binding)).toEqual({
+    bindings: {
+      basePower: 30,
+      droneCount: 4,
+      dronePower: 45,
+      totalPower: 210,
+    },
+  });
+  expect(binding.facts.find((fact) => fact.id === 'dronePower')).not.toHaveProperty('value');
 });

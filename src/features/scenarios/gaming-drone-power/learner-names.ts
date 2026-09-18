@@ -11,7 +11,7 @@ export function createDronePowerLearnerNames(
   return Object.fromEntries(
     binding.facts.map((fact) => [
       resources.quantities[fact.id].variableName,
-      fact.sourceId,
+      fact.id,
     ]),
   );
 }

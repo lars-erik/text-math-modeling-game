@@ -19,7 +19,7 @@ test('resource-backed English and Norwegian equations resolve to the same canoni
   expect(english).toEqual(norwegian);
   expect(english).toMatchObject({
     kind: 'success',
-    relation: totalFromPartsProblem.relation,
+    relation: binding.problem.relation,
   });
 });
 
