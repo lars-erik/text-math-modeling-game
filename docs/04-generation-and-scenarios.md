@@ -83,6 +83,13 @@ A broader catalog can later add additive change, comparisons, ratios, two unknow
 
 Inject the random-number source. Use a stable documented algorithm or library, explicit numeric ranges, and deterministic ordering. The same seed, generator version, configuration and scenario ID produce an identical case. Print all replay fields with generated test failures. `fast-check` manages its own shrinkable test cases; record both the fast-check replay seed/path and the application's generation seed as appropriate.
 
+The `total-from-parts-v1` generator uses Mulberry32 and accepts unsigned 32-bit
+integer seeds (`0` through `4294967295`). This range is the replay contract:
+every accepted numeric seed maps to one initial RNG state, so larger safe
+integers that would be truncated by JavaScript bitwise operations are rejected.
+Restricting the accepted range does not change output for an already-supported
+seed and therefore does not require a generator-version change.
+
 Generation invariants:
 
 - All quantity references resolve, and quantity IDs are unique.

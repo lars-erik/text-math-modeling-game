@@ -111,6 +111,15 @@ test('rejects negative seeds so replayed inputs stay exact', () => {
   ).toThrow('non-negative');
 });
 
+test('rejects seeds outside the 32-bit Mulberry32 replay range', () => {
+  expect(() =>
+    generateTotalFromPartsCase({
+      seed: 2 ** 32,
+      config: generationConfig,
+    }),
+  ).toThrow('32-bit');
+});
+
 test('rejects reversed ranges with a range-specific error', () => {
   expect(() =>
     generateTotalFromPartsCase({

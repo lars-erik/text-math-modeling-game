@@ -2,6 +2,7 @@ import { totalFromParts } from '../problem-model/total-from-parts';
 import type { AnswerKey, ConceptId, Problem, ScenarioId } from '../problem-model/problem';
 
 export const totalFromPartsGeneratorVersion = 'total-from-parts-v1';
+export const maximumTotalFromPartsSeed = 0xffff_ffff;
 
 export type RandomSource = {
   nextFloat(): number;
@@ -46,7 +47,8 @@ export type GeneratedProblemCase = {
   };
 };
 
-const invalidSeedError = 'Generation seed must be a non-negative safe integer.';
+const invalidSeedError =
+  'Generation seed must be a non-negative 32-bit unsigned integer.';
 const invalidRangeError = 'Generation config range bounds must be positive safe integers with min <= max.';
 const unsafeTotalError =
   'Generation config must guarantee a positive safe integer result.';
@@ -126,7 +128,11 @@ function validateGenerationRequest(
   seed: number,
   config: TotalFromPartsGenerationConfig,
 ): void {
-  if (!Number.isSafeInteger(seed) || seed < 0) {
+  if (
+    !Number.isSafeInteger(seed) ||
+    seed < 0 ||
+    seed > maximumTotalFromPartsSeed
+  ) {
     throw new Error(invalidSeedError);
   }
 
