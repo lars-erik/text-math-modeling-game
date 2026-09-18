@@ -13,7 +13,9 @@ export function printScreen(screen: PuzzleScreen): string {
 
   if (screen.submission !== undefined) {
     lines.push(`submission ${screen.submission.kind}`);
-    lines.push(...indent(printRelation(screen.submission.relation)));
+    if (screen.submission.relation !== undefined) {
+      lines.push(...indent(printRelation(screen.submission.relation)));
+    }
   }
 
   if (screen.feedback !== undefined) {
