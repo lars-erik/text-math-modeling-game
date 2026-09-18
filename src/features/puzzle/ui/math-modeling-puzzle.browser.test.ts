@@ -1,6 +1,7 @@
 import { beforeEach, expect, test } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 
+import { startMathModelingApplication } from '../../../application';
 import {
   defaultTotalFromPartsGenerationConfig,
   generateTotalFromPartsCase,
@@ -8,7 +9,6 @@ import {
 import type { Problem } from '../../problem-model/problem';
 import type { PuzzleRegistry } from '../puzzle-definition';
 import { referencePuzzle } from '../reference-puzzle';
-import { createSeededPuzzle } from '../seeded-puzzle';
 import { MathModelingPuzzle } from './math-modeling-puzzle';
 
 const browserGlobal = globalThis as typeof globalThis & {
@@ -135,41 +135,51 @@ test('switches input providers from the mode menu and reflects the attribute', a
   expect(puzzle?.getAttribute('input-mode')).toBe('multiple-choice');
 });
 
-test('renders a fresh valid generated puzzle from a supplied seed', async () => {
-    const generated = generateTotalFromPartsCase({
-      seed: 17,
-      config: defaultTotalFromPartsGenerationConfig,
-    });
-    browserGlobal.mathModelingPuzzles = {
-      generated: createSeededPuzzle({ seed: 17 }),
-    };
-    document.body.innerHTML = `
-      <math-modeling-puzzle
-        puzzle="generated"
-        input-mode="text"
-      ></math-modeling-puzzle>
-    `;
+test('starts the real application with a generated puzzle from the URL seed', async () => {
+  const generated = generateTotalFromPartsCase({
+    seed: 17,
+    config: defaultTotalFromPartsGenerationConfig,
+  });
+  document.body.innerHTML = `
+    <math-modeling-puzzle
+      puzzle="reference"
+      input-mode="text"
+    ></math-modeling-puzzle>
+  `;
 
-    await expect
-      .element(page.getByText(`base = ${generated.answerKey.bindings.base}`))
-      .toBeVisible();
-    await expect
-      .element(page.getByText(`count = ${generated.answerKey.bindings.count}`))
-      .toBeVisible();
-    await expect
-      .element(page.getByText(`total = ${generated.answerKey.bindings.total}`))
-      .toBeVisible();
-    await expect.element(page.getByText('unitValue = ?')).toBeVisible();
+  startMathModelingApplication({ search: '?seed=17', root: document });
 
-    const input = page.getByLabelText('Named equation');
-    await userEvent.click(input);
-    await userEvent.keyboard('total = base + count * unitValue');
-    await userEvent.click(page.getByRole('button', { name: 'Check' }));
-    await expect
-      .element(page.getByRole('status'))
-      .toHaveTextContent('The equation matches the quantity model.');
+  const puzzle = document.querySelector('math-modeling-puzzle');
+  expect(puzzle?.getAttribute('puzzle')).toBe('generated');
+  expect(browserGlobal.mathModelingPuzzles.reference).toBe(referencePuzzle);
+  expect(browserGlobal.mathModelingPuzzles.generated?.problem.replay).toEqual({
+    seed: 17,
+    generatorVersion: 'total-from-parts-v1',
+  });
+  expect(browserGlobal.mathModelingPuzzles.generated).not.toHaveProperty(
+    'answerKey',
+  );
 
-    expect(document.body.textContent).not.toContain(
-      `unitValue = ${generated.answerKey.bindings.unitValue}`,
-    );
+  await expect
+    .element(page.getByText(`base = ${generated.answerKey.bindings.base}`))
+    .toBeVisible();
+  await expect
+    .element(page.getByText(`count = ${generated.answerKey.bindings.count}`))
+    .toBeVisible();
+  await expect
+    .element(page.getByText(`total = ${generated.answerKey.bindings.total}`))
+    .toBeVisible();
+  await expect.element(page.getByText('unitValue = ?')).toBeVisible();
+
+  const input = page.getByLabelText('Named equation');
+  await userEvent.click(input);
+  await userEvent.keyboard('total = base + count * unitValue');
+  await userEvent.click(page.getByRole('button', { name: 'Check' }));
+  await expect
+    .element(page.getByRole('status'))
+    .toHaveTextContent('The equation matches the quantity model.');
+
+  expect(document.body.textContent).not.toContain(
+    `unitValue = ${generated.answerKey.bindings.unitValue}`,
+  );
 });
