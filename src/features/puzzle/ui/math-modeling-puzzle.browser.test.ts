@@ -154,7 +154,7 @@ test('starts with a generated text scenario and puzzle menu by default', async (
     .toHaveValue('gaming.drone-power');
   await expect
     .element(page.getByRole('spinbutton', { name: 'Seed' }))
-    .toHaveValue('17');
+    .toHaveValue(17);
   await expect
     .element(page.getByRole('button', { name: 'Show puzzle' }))
     .toBeVisible();
@@ -218,7 +218,7 @@ test('replays a selected text scenario directly from the URL', async () => {
     .toHaveValue('creator.followers');
   await expect
     .element(page.getByRole('spinbutton', { name: 'Seed' }))
-    .toHaveValue('321');
+    .toHaveValue(321);
 });
 
 test('starts the real application with a generated puzzle from the URL seed', async () => {
@@ -336,7 +336,10 @@ test('switches story language and learner names without regenerating the problem
     <math-modeling-puzzle puzzle="generated" locale="en"></math-modeling-puzzle>
   `;
 
-  await userEvent.selectOptions(page.getByRole('combobox'), 'nb');
+  await userEvent.selectOptions(
+    page.getByRole('combobox', { name: 'Language' }),
+    'nb',
+  );
 
   await expect
     .element(page.getByRole('heading', { name: 'Fra fortelling til størrelser' }))
@@ -349,7 +352,7 @@ test('switches story language and learner names without regenerating the problem
     .toBeVisible();
   await expect
     .element(page.getByRole('spinbutton', { name: 'Frø' }))
-    .toHaveValue('17');
+    .toHaveValue(17);
   await expect
     .element(page.getByRole('button', { name: 'Vis oppgave' }))
     .toBeVisible();
