@@ -42,8 +42,8 @@ export const en = {
         `A ${noun} uses ${value} ${unit} for basic systems.`,
     },
     countFact: {
-      activeDrones: ({ count, noun }) =>
-        `${count} identical ${noun} are active.`,
+      activeDrones: ({ count, noun, isSingular }) =>
+        `${count} identical ${noun} ${isSingular ? 'is' : 'are'} active.`,
     },
     totalFact: {
       combinedDraw: ({ value, unit }) =>

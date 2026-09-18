@@ -35,6 +35,7 @@ export function renderDronePowerStory(
         return resources.fragments.countFact.activeDrones({
           count: resources.formatNumber(fact.value, true),
           noun: selectNoun(resources.nouns[sentence.nounKey], fact.value),
+          isSingular: fact.value === 1,
         });
 
       case 'totalFact.combinedDraw':

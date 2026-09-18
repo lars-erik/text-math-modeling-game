@@ -38,3 +38,22 @@ test('locale changes rendered wording without changing the deterministic StoryPl
     storySeed: firstPlan.seed,
   });
 });
+
+test('renders coherent singular noun and verb forms', () => {
+  const singularProblem = {
+    ...totalFromPartsProblem,
+    quantities: totalFromPartsProblem.quantities.map((quantity) =>
+      quantity.id === 'count'
+        ? { ...quantity, given: { kind: 'known' as const, value: 1 } }
+        : quantity.id === 'total'
+          ? { ...quantity, given: { kind: 'known' as const, value: 75 } }
+          : quantity,
+    ),
+  };
+  const facts = bindDronePowerScenario(singularProblem);
+  const plan = planDronePowerStory(facts, 17);
+
+  expect(renderDronePowerStory(facts, plan, 'en').text).toContain(
+    'One identical drone is active.',
+  );
+});

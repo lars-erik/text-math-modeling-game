@@ -34,7 +34,11 @@ export type ScenarioLocaleResources = {
       }) => string;
     };
     countFact: {
-      activeDrones: (values: { count: string; noun: string }) => string;
+      activeDrones: (values: {
+        count: string;
+        noun: string;
+        isSingular: boolean;
+      }) => string;
     };
     totalFact: {
       combinedDraw: (values: { value: string; unit: string }) => string;
