@@ -3,6 +3,7 @@ import { totalFromPartsProblem } from '../problem-model/total-from-parts';
 import type { PuzzleDefinition } from './puzzle-definition';
 
 export const referencePuzzle = {
+  kind: 'quantities-to-named-equation',
   choices: [
     {
       id: 'matching',

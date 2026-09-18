@@ -2,6 +2,7 @@ import { html, type TemplateResult } from 'lit';
 
 import type { PuzzleDefinition } from '../puzzle-definition';
 import type { PuzzleScreen } from '../start-puzzle';
+import type { PuzzleLocaleResources } from '../lang/contract';
 import './named-equation-choice-input';
 import './named-equation-text-input';
 
@@ -10,6 +11,7 @@ export type PuzzleInputMode = 'multiple-choice' | 'text';
 type PuzzleInputContext = {
   definition: PuzzleDefinition;
   screen: PuzzleScreen;
+  resources: PuzzleLocaleResources;
 };
 
 export type PuzzleInputProvider = {
@@ -20,20 +22,24 @@ export type PuzzleInputProvider = {
 export const puzzleInputProviders = {
   'multiple-choice': {
     label: 'Multiple choice',
-    render: ({ definition, screen }) => html`
+    render: ({ definition, screen, resources }) => html`
       <named-equation-choice-input
         .choices=${definition.choices}
         .selectedChoiceId=${screen.submission?.choiceId}
+        .legend=${resources.quantitiesToNamedEquation.choiceLegend}
+        .checkLabel=${resources.controls.check}
       ></named-equation-choice-input>
     `,
   },
   text: {
     label: 'Text input',
-    render: ({ screen }) => html`
+    render: ({ screen, resources }) => html`
       <named-equation-text-input
         .value=${screen.submission?.answerKind === 'text'
           ? screen.input.value
           : ''}
+        .inputLabel=${resources.quantitiesToNamedEquation.inputLabel}
+        .checkLabel=${resources.controls.check}
       ></named-equation-text-input>
     `,
   },

@@ -15,8 +15,15 @@ export function submitPuzzle(
   problem: Problem,
   answer: LearnerAnswer,
   names: LearnerNameSource,
+  text: {
+    prompt?: string;
+    accepted?: string;
+    groupingMismatch?: string;
+    reversedSides?: string;
+    unknownIdentifier?: (identifier: string, available: string) => string;
+  } = {},
 ): PuzzleScreen {
-  const screen = startPuzzle(problem);
+  const screen = startPuzzle(problem, text.prompt);
   const displayInput =
     answer.kind === 'text' ? answer.input : answer.label;
   const parsed =
@@ -33,7 +40,7 @@ export function submitPuzzle(
         answerKind: answer.kind,
         input: displayInput,
       },
-      feedback: formatDiagnostic(parsed),
+      feedback: formatDiagnostic(parsed, text.unknownIdentifier),
     };
   }
 
@@ -68,15 +75,18 @@ export function submitPuzzle(
     feedback: accepted
       ? {
           kind: 'accepted',
-          message: 'The equation matches the quantity model.',
+          message:
+            text.accepted ?? 'The equation matches the quantity model.',
           checkPolicy: 'normalized-structure',
           equationSides: namedEquationStructurePolicy.equationSides,
         }
       : {
           kind: 'structural-mismatch',
           message: sidesAreReversed
-            ? 'The equation sides are reversed; keep them in the requested order.'
-            : 'The equation grouping does not match the quantity model.',
+            ? (text.reversedSides ??
+              'The equation sides are reversed; keep them in the requested order.')
+            : (text.groupingMismatch ??
+              'The equation grouping does not match the quantity model.'),
           checkPolicy: 'normalized-structure',
           equationSides: namedEquationStructurePolicy.equationSides,
         },
@@ -85,6 +95,7 @@ export function submitPuzzle(
 
 function formatDiagnostic(
   diagnostic: NamedRelationDiagnostic,
+  unknownIdentifier?: (identifier: string, available: string) => string,
 ): NamedRelationDiagnostic {
   if (diagnostic.kind !== 'unknown-identifier') {
     return diagnostic;
@@ -93,6 +104,8 @@ function formatDiagnostic(
   const available = diagnostic.availableIdentifiers.join(', ');
   return {
     ...diagnostic,
-    message: `${diagnostic.message} Available identifiers: ${available}.`,
+    message:
+      unknownIdentifier?.(diagnostic.identifier, available) ??
+      `${diagnostic.message} Available identifiers: ${available}.`,
   };
 }
