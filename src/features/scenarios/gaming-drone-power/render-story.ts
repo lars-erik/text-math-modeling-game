@@ -33,7 +33,7 @@ export function renderDronePowerStory(
 
       case 'countFact.activeDrones':
         return resources.fragments.countFact.activeDrones({
-          count: resources.formatNumber(fact.value, true),
+          count: resources.formatNumber(fact.value, false),
           noun: selectNoun(resources.nouns[sentence.nounKey], fact.value),
           isSingular: fact.value === 1,
         });

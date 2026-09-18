@@ -42,12 +42,12 @@ export const en = {
         `A ${noun} uses ${value} ${unit} for basic systems.`,
     },
     countFact: {
-      activeDrones: ({ count, noun, isSingular }) =>
-        `${count} identical ${noun} ${isSingular ? 'is' : 'are'} active.`,
+      activeDrones: ({ count, noun }) =>
+        `It also powers ${count} identical active ${noun}.`,
     },
     totalFact: {
       combinedDraw: ({ value, unit }) =>
-        `Together they draw ${value} ${unit}.`,
+        `The ship and its drones draw ${value} ${unit} in total.`,
     },
     question: {
       perDronePower: ({ noun }) =>

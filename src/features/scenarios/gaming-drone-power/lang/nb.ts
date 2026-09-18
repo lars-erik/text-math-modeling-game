@@ -43,11 +43,11 @@ export const nb = {
     },
     countFact: {
       activeDrones: ({ count, noun }) =>
-        `${count} identiske ${noun} er aktive.`,
+        `Det driver også ${count} identiske aktive ${noun}.`,
     },
     totalFact: {
       combinedDraw: ({ value, unit }) =>
-        `Til sammen trekker de ${value} ${unit}.`,
+        `Skipet og dronene trekker til sammen ${value} ${unit}.`,
     },
     question: {
       perDronePower: ({ noun }) =>
