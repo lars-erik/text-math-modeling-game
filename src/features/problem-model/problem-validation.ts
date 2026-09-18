@@ -2,12 +2,14 @@ import {
   collectLiterals,
   collectReferences,
   evaluateRelation,
+  type Expression,
   type QuantityId,
 } from './expression';
 
-import { 
-    AnswerKey,
-    Problem 
+import {
+  type AnswerKey,
+  type Dimension,
+  type Problem,
 } from './problem';
 
 export type ProblemReferenceIssue = {
@@ -28,6 +30,23 @@ export type ProblemNumberIssue =
   | { kind: 'unsafe-replay-seed'; value: number }
   | { kind: 'unsafe-literal'; value: number };
 
+export type ProblemDimensionIssue =
+  | {
+      kind: 'incompatible-addition-dimensions';
+      left: Dimension;
+      right: Dimension;
+    }
+  | {
+      kind: 'incompatible-multiplication-dimensions';
+      left: Dimension;
+      right: Dimension;
+    }
+  | {
+      kind: 'incompatible-equation-dimensions';
+      left: Dimension;
+      right: Dimension;
+    };
+
 export type ProblemInvariantIssue =
   | { kind: 'duplicate-quantity-id'; id: QuantityId }
   | { kind: 'invalid-hidden-quantity-count'; count: number }
@@ -41,6 +60,7 @@ export type ProblemInvariantIssue =
 
 export type ProblemAstIssue =
   | ProblemReferenceIssue
+  | ProblemDimensionIssue
   | Extract<
       ProblemNumberIssue,
       { kind: 'unsafe-known-value' | 'unsafe-replay-seed' | 'unsafe-literal' }
@@ -69,6 +89,7 @@ type ProblemAstValidatorCode =
   | 'safe-known-values'
   | 'safe-replay-seed'
   | 'safe-literals'
+  | 'valid-dimensions'
   | 'unique-quantity-ids'
   | 'single-hidden-quantity';
 
@@ -253,6 +274,137 @@ function validateHiddenQuantityCount({
     : [{ kind: 'invalid-hidden-quantity-count', count: hiddenCount }];
 }
 
+function validateDimensions({
+  problem,
+}: ProblemAstValidationContext): readonly ProblemDimensionIssue[] {
+  const dimensionsById = new Map(
+    problem.quantities.map((quantity) => [quantity.id, quantity.dimension]),
+  );
+  const left = inferExpressionDimension(
+    problem.relation.left,
+    dimensionsById,
+  );
+  const right = inferExpressionDimension(
+    problem.relation.right,
+    dimensionsById,
+  );
+  const issues = [...left.issues, ...right.issues];
+
+  if (
+    left.dimension !== undefined &&
+    right.dimension !== undefined &&
+    left.dimension !== right.dimension
+  ) {
+    issues.push({
+      kind: 'incompatible-equation-dimensions',
+      left: left.dimension,
+      right: right.dimension,
+    });
+  }
+
+  return issues;
+}
+
+type DimensionInference = {
+  dimension?: Dimension;
+  issues: readonly ProblemDimensionIssue[];
+};
+
+function inferExpressionDimension(
+  expression: Expression,
+  dimensionsById: ReadonlyMap<QuantityId, Dimension>,
+): DimensionInference {
+  switch (expression.kind) {
+    case 'literal':
+      return { dimension: 'scalar', issues: [] };
+
+    case 'quantity':
+      return { dimension: dimensionsById.get(expression.id), issues: [] };
+
+    case 'multiply': {
+      const left = inferExpressionDimension(expression.left, dimensionsById);
+      const right = inferExpressionDimension(expression.right, dimensionsById);
+      const issues = [...left.issues, ...right.issues];
+
+      if (left.dimension === undefined || right.dimension === undefined) {
+        return { issues };
+      }
+
+      const productDimension = multiplyDimensions(
+        left.dimension,
+        right.dimension,
+      );
+      if (productDimension === undefined) {
+        issues.push({
+          kind: 'incompatible-multiplication-dimensions',
+          left: left.dimension,
+          right: right.dimension,
+        });
+        return { issues };
+      }
+
+      return { dimension: productDimension, issues };
+    }
+
+    case 'add': {
+      const left = inferExpressionDimension(expression.left, dimensionsById);
+      const right = inferExpressionDimension(expression.right, dimensionsById);
+      const issues = [...left.issues, ...right.issues];
+
+      if (
+        left.dimension !== undefined &&
+        right.dimension !== undefined &&
+        left.dimension !== right.dimension
+      ) {
+        issues.push({
+          kind: 'incompatible-addition-dimensions',
+          left: left.dimension,
+          right: right.dimension,
+        });
+        return { issues };
+      }
+
+      return {
+        dimension: left.dimension ?? right.dimension,
+        issues,
+      };
+    }
+  }
+}
+
+function multiplyDimensions(
+  left: Dimension,
+  right: Dimension,
+): Dimension | undefined {
+  if (left === 'scalar' && right === 'scalar') {
+    return 'scalar';
+  }
+
+  if (
+    (left === 'item' && right === 'scalar') ||
+    (left === 'scalar' && right === 'item')
+  ) {
+    return 'scalar';
+  }
+
+  if (
+    (left === 'item' && right === 'powerPerItem') ||
+    (left === 'powerPerItem' && right === 'item')
+  ) {
+    return 'power';
+  }
+
+  if (left === 'scalar') {
+    return right;
+  }
+
+  if (right === 'scalar') {
+    return left;
+  }
+
+  return undefined;
+}
+
 function validateSatisfiedRelation(
   context: ProblemConstraintValidationContext,
 ): readonly ProblemSolutionIssue[] {
@@ -345,6 +497,7 @@ const problemAstValidators: readonly ProblemValidator<
   { code: 'safe-known-values', validate: validateKnownNumberSafety },
   { code: 'safe-replay-seed', validate: validateReplaySeedNumberSafety },
   { code: 'safe-literals', validate: validateLiteralNumberSafety },
+  { code: 'valid-dimensions', validate: validateDimensions },
   { code: 'unique-quantity-ids', validate: validateUniqueQuantityIds },
   { code: 'single-hidden-quantity', validate: validateHiddenQuantityCount },
 ];

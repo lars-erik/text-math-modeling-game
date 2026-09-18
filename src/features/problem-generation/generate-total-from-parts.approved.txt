@@ -1,0 +1,102 @@
+replay {
+  "seed": 17,
+  "generatorVersion": "total-from-parts-v1",
+  "config": {
+    "base": {
+      "min": 10,
+      "max": 40
+    },
+    "count": {
+      "min": 2,
+      "max": 8
+    },
+    "unitValue": {
+      "min": 3,
+      "max": 20
+    },
+    "scenarioId": "gaming.drone-power",
+    "concepts": [
+      "arithmetic.addition",
+      "arithmetic.multiplication",
+      "algebra.variable",
+      "algebra.equation",
+      "linear.one-unknown"
+    ]
+  }
+}
+
+dsl
+problem total-from-parts-seed-17 {
+    concepts {
+        arithmetic.addition
+        arithmetic.multiplication
+        algebra.variable
+        algebra.equation
+        linear.one-unknown
+    }
+
+    quantity base: scalar role base = 30
+    quantity count: item role count = 3
+    quantity unitValue: scalar role per-item = ?
+    quantity total: scalar role total = 66
+
+    equation {
+        total = base + count * unitValue
+    }
+
+    scenario gaming.drone-power
+    symbol unitValue = p
+
+    replay {
+        seed 17
+        generator total-from-parts-v1
+    }
+}
+
+debug
+problem total-from-parts-seed-17
+scenario gaming.drone-power
+concepts arithmetic.addition, arithmetic.multiplication, algebra.variable, algebra.equation, linear.one-unknown
+quantities
+  quantity base dimension=scalar role=base visibility=known value=30
+  quantity count dimension=item role=count visibility=known value=3
+  quantity unitValue dimension=scalar role=per-item visibility=hidden value=?
+  quantity total dimension=scalar role=total visibility=known value=66
+relation
+  equation
+    quantity total
+    add
+      quantity base
+      multiply
+        quantity count
+        quantity unitValue
+replay seed=17 generator=total-from-parts-v1
+answer-key
+  unitValue = 12
+dsl
+  problem total-from-parts-seed-17 {
+      concepts {
+          arithmetic.addition
+          arithmetic.multiplication
+          algebra.variable
+          algebra.equation
+          linear.one-unknown
+      }
+  
+      quantity base: scalar role base = 30
+      quantity count: item role count = 3
+      quantity unitValue: scalar role per-item = ?
+      quantity total: scalar role total = 66
+  
+      equation {
+          total = base + count * unitValue
+      }
+  
+      scenario gaming.drone-power
+      symbol unitValue = p
+  
+      replay {
+          seed 17
+          generator total-from-parts-v1
+      }
+  }

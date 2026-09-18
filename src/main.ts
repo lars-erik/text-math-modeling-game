@@ -1,7 +1,8 @@
-import { referencePuzzle } from './features/puzzle/reference-puzzle';
+import { startMathModelingApplication } from './application';
 
-globalThis.mathModelingPuzzles = {
-  reference: referencePuzzle,
-};
+startMathModelingApplication({
+  search: globalThis.location.search,
+  root: document,
+});
 
 await import('./features/puzzle/ui/math-modeling-puzzle');

@@ -67,6 +67,14 @@ total = 30 + 4 * 45 = 210
 
 Hide `unitValue` in the first vertical slice. Later allow hiding `base`, `count`, or `total` after writing appropriate domain and pedagogy tests (including zero/non-integer cases). Preserve the complete answer key rather than solving randomly constructed equations to recover it.
 
+Before scenario binding, this mathematical family uses the abstract dimensions
+`scalar + item * scalar -> scalar`: `item` marks the repeated count and the
+second `scalar` is the abstract per-count value. The Phase 1 dimension validator
+also supports the concrete scenario rule `item * powerPerItem -> power` and
+rejects incompatible sums, products, and equation sides. Milestone 6 binds the
+abstract roles to concrete power/drone dimensions and units; the Milestone 5
+generator does not embed story-specific labels or units.
+
 The initial family trains the requested concept composition:
 
 ```
@@ -82,6 +90,13 @@ A broader catalog can later add additive change, comparisons, ratios, two unknow
 ## Determinism and replay
 
 Inject the random-number source. Use a stable documented algorithm or library, explicit numeric ranges, and deterministic ordering. The same seed, generator version, configuration and scenario ID produce an identical case. Print all replay fields with generated test failures. `fast-check` manages its own shrinkable test cases; record both the fast-check replay seed/path and the application's generation seed as appropriate.
+
+The `total-from-parts-v1` generator uses Mulberry32 and accepts unsigned 32-bit
+integer seeds (`0` through `4294967295`). This range is the replay contract:
+every accepted numeric seed maps to one initial RNG state, so larger safe
+integers that would be truncated by JavaScript bitwise operations are rejected.
+Restricting the accepted range does not change output for an already-supported
+seed and therefore does not require a generator-version change.
 
 Generation invariants:
 

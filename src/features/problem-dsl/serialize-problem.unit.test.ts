@@ -67,6 +67,11 @@ test('parenthesizes grouped addition so equation structure survives round-trip',
 test('preserves nested right-associated addition and multiplication trees through round-trip', () => {
   const rightAssociatedProblem = {
     ...totalFromPartsProblem,
+    quantities: totalFromPartsProblem.quantities.map((quantity) =>
+      quantity.id === 'count'
+        ? { ...quantity, dimension: 'scalar' as const }
+        : quantity,
+    ),
     relation: {
       kind: 'equation' as const,
       left: { kind: 'quantity' as const, id: 'total' },
