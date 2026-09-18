@@ -9,7 +9,7 @@ test('renders the reference English story from planned validated facts', () => {
   const plan = planDronePowerStory(facts, 17);
 
   expect(renderDronePowerStory(facts, plan, 'en')).toEqual({
-    text: 'A ship uses 30 MW for basic systems. Four identical drones are active. Together they draw 210 MW. How much power does one drone draw?',
+    text: 'A ship uses 30 MW for basic systems. It also powers four identical active drones. The ship and its drones draw 210 MW in total. How much power does one drone draw?',
     replay: {
       locale: 'en',
       scenarioId: 'gaming.drone-power',
@@ -27,7 +27,7 @@ test('locale changes rendered wording without changing the deterministic StoryPl
 
   expect(replayedPlan).toEqual(firstPlan);
   expect(norwegian.text).toBe(
-    'Et skip bruker 30 MW til grunnleggende systemer. Fire identiske droner er aktive. Til sammen trekker de 210 MW. Hvor mye effekt trekker én drone?',
+    'Et skip bruker 30 MW til grunnleggende systemer. Det driver også fire identiske aktive droner. Skipet og dronene trekker til sammen 210 MW. Hvor mye effekt trekker én drone?',
   );
   expect(norwegian.text).not.toBe(english.text);
   expect(english.text).not.toContain('45');
@@ -54,6 +54,6 @@ test('renders coherent singular noun and verb forms', () => {
   const plan = planDronePowerStory(facts, 17);
 
   expect(renderDronePowerStory(facts, plan, 'en').text).toContain(
-    'One identical drone is active.',
+    'It also powers one identical active drone.',
   );
 });

@@ -3,19 +3,63 @@ import {
   generateTotalFromPartsCase,
   type TotalFromPartsGenerationConfig,
 } from '../problem-generation/generate-total-from-parts';
+import type { ConceptId } from '../problem-model/problem';
 import type { PuzzleDefinition } from './puzzle-definition';
 import { bindDronePowerScenario } from '../scenarios/gaming-drone-power/scenario';
 import { createDronePowerStoryQuantitiesDefinition } from '../scenarios/gaming-drone-power/story-quantities-definition';
 import { createDronePowerNamedEquationDefinition } from '../scenarios/gaming-drone-power/named-equation-definition';
+import { bindCreatorFollowersScenario } from '../scenarios/creator-followers/scenario';
+import { createCreatorFollowersStoryQuantitiesDefinition } from '../scenarios/creator-followers/story-quantities-definition';
+import { createCreatorFollowersNamedEquationDefinition } from '../scenarios/creator-followers/named-equation-definition';
+
+export type SupportedScenarioId =
+  | 'gaming.drone-power'
+  | 'creator.followers';
 
 export function createSeededPuzzle({
   seed,
   config = defaultTotalFromPartsGenerationConfig,
+  scenarioId = config.scenarioId as SupportedScenarioId,
+  concepts = config.concepts,
 }: {
   seed: number;
   config?: TotalFromPartsGenerationConfig;
+  scenarioId?: SupportedScenarioId;
+  concepts?: readonly ConceptId[];
 }): PuzzleDefinition {
-  const generated = generateTotalFromPartsCase({ seed, config });
+  const generated = generateTotalFromPartsCase({
+    seed,
+    config: { ...config, scenarioId, concepts },
+  });
+
+  if (scenarioId === 'creator.followers') {
+    const binding = bindCreatorFollowersScenario(generated.problem);
+    const englishNamedEquation = createCreatorFollowersNamedEquationDefinition(
+      binding,
+      'en',
+    );
+
+    return {
+      kind: 'story-to-quantities',
+      problem: binding.problem,
+      storySeed: seed,
+      storyQuantities: {
+        createDefinition: (locale) =>
+          createCreatorFollowersStoryQuantitiesDefinition({
+            problem: generated.problem,
+            storySeed: seed,
+            locale,
+          }),
+      },
+      learnerNames: englishNamedEquation.learnerNames,
+      choices: englishNamedEquation.choices,
+      namedEquation: {
+        createDefinition: (locale) =>
+          createCreatorFollowersNamedEquationDefinition(binding, locale),
+      },
+    };
+  }
+
   const binding = bindDronePowerScenario(generated.problem);
   const englishNamedEquation = createDronePowerNamedEquationDefinition(
     binding,

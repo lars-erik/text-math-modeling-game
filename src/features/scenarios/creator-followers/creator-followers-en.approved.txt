@@ -1,0 +1,12 @@
+story scenario=creator.followers locale=en seed=17
+A creator starts with 30 followers. Each of four promoted posts gains the same number of followers. The creator finishes with 210 followers. How many followers does each post gain?
+plan
+  baseFact.startingAudience fact=startingFollowers noun=creator
+  countFact.promotedPosts fact=promotedPostCount noun=post
+  totalFact.finalAudience fact=finalFollowers
+  question.followersPerPost fact=followersPerPost noun=post
+facts
+  startingFollowers source=base role=base visibility=known value=30 dimension=followers unit=followers
+  promotedPostCount source=count role=count visibility=known value=4 dimension=item unit=posts
+  followersPerPost source=unitValue role=unitValue visibility=hidden value=? dimension=followersPerItem unit=followersPerPost
+  finalFollowers source=total role=total visibility=known value=210 dimension=followers unit=followers

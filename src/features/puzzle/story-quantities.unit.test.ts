@@ -18,7 +18,7 @@ test('starts with the rendered story and canonical localized quantity choices', 
 
   expect(screen.source).toEqual({
     kind: 'story',
-    text: 'A ship uses 30 MW for basic systems. Four identical drones are active. Together they draw 210 MW. How much power does one drone draw?',
+    text: 'A ship uses 30 MW for basic systems. It also powers four identical active drones. The ship and its drones draw 210 MW in total. How much power does one drone draw?',
   });
   expect(screen.target.choices).toContainEqual({
     id: 'dronePower',

@@ -2,7 +2,7 @@
 puzzle story -> quantities
 replay seed=0 generator=hand-built-v1 scenario=gaming.drone-power story-seed=17 locale=en
 source
-  A ship uses 30 MW for basic systems. Four identical drones are active. Together they draw 210 MW. How much power does one drone draw?
+  A ship uses 30 MW for basic systems. It also powers four identical active drones. The ship and its drones draw 210 MW in total. How much power does one drone draw?
 prompt Identify the known quantities and the unknown.
 choices
   basePower variable=basePower label="base power" value=30 MW
@@ -14,7 +14,7 @@ selection known=[] unknown=none
 puzzle story -> quantities
 replay seed=0 generator=hand-built-v1 scenario=gaming.drone-power story-seed=17 locale=en
 source
-  A ship uses 30 MW for basic systems. Four identical drones are active. Together they draw 210 MW. How much power does one drone draw?
+  A ship uses 30 MW for basic systems. It also powers four identical active drones. The ship and its drones draw 210 MW in total. How much power does one drone draw?
 prompt Identify the known quantities and the unknown.
 choices
   basePower variable=basePower label="base power" value=30 MW
@@ -27,7 +27,7 @@ feedback incorrect: Not quite. Review which values the story gives and which one
 puzzle story -> quantities
 replay seed=0 generator=hand-built-v1 scenario=gaming.drone-power story-seed=17 locale=en
 source
-  A ship uses 30 MW for basic systems. Four identical drones are active. Together they draw 210 MW. How much power does one drone draw?
+  A ship uses 30 MW for basic systems. It also powers four identical active drones. The ship and its drones draw 210 MW in total. How much power does one drone draw?
 prompt Identify the known quantities and the unknown.
 choices
   basePower variable=basePower label="base power" value=30 MW

@@ -394,6 +394,13 @@ function multiplyDimensions(
     return 'power';
   }
 
+  if (
+    (left === 'item' && right === 'followersPerItem') ||
+    (left === 'followersPerItem' && right === 'item')
+  ) {
+    return 'followers';
+  }
+
   if (left === 'scalar') {
     return right;
   }
