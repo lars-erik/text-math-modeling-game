@@ -29,12 +29,14 @@ import {
 } from './puzzle-input-providers';
 import './story-quantities-input';
 import './puzzle-shell';
+import './puzzle-menu';
 
 export class MathModelingPuzzle extends LitElement {
   static properties = {
     puzzleKey: { attribute: 'puzzle', type: String },
     inputMode: { attribute: 'input-mode', reflect: true, type: String },
     locale: { reflect: true, type: String },
+    puzzleRevision: { attribute: 'puzzle-revision', type: Number },
     screen: { state: true },
     storyScreen: { state: true },
   };
@@ -143,6 +145,7 @@ export class MathModelingPuzzle extends LitElement {
   declare puzzleKey: string;
   declare inputMode: string;
   declare locale: string;
+  declare puzzleRevision: number;
   private declare puzzleDefinition: PuzzleDefinition | undefined;
   private declare screen: PuzzleScreen | undefined;
   private declare storyDefinition: StoryQuantitiesPuzzleDefinition | undefined;
@@ -154,6 +157,7 @@ export class MathModelingPuzzle extends LitElement {
     this.puzzleKey = '';
     this.inputMode = 'text';
     this.locale = 'en';
+    this.puzzleRevision = 0;
     this.puzzleDefinition = undefined;
     this.screen = undefined;
     this.storyDefinition = undefined;
@@ -162,7 +166,11 @@ export class MathModelingPuzzle extends LitElement {
   }
 
   protected willUpdate(changedProperties: PropertyValues<this>): void {
-    if (changedProperties.has('puzzleKey') || changedProperties.has('locale')) {
+    if (
+      changedProperties.has('puzzleKey') ||
+      changedProperties.has('puzzleRevision') ||
+      changedProperties.has('locale')
+    ) {
       this.puzzleDefinition = findPuzzleDefinition(this.puzzleKey);
       if (
         this.puzzleDefinition?.kind === 'story-to-quantities' &&
@@ -366,6 +374,20 @@ export class MathModelingPuzzle extends LitElement {
             <option value="nb">${resources.language.nb}</option>
           </select>
         </label>
+        <puzzle-menu
+          slot="settings"
+          .seed=${replay?.seed ?? 17}
+          .scenarioId=${this.puzzleDefinition?.problem.scenarioId ===
+          'creator.followers'
+            ? 'creator.followers'
+            : 'gaming.drone-power'}
+          .menuLabel=${resources.puzzleMenu.label}
+          .scenarioLabel=${resources.puzzleMenu.scenario}
+          .dronePowerLabel=${resources.puzzleMenu.dronePower}
+          .creatorFollowersLabel=${resources.puzzleMenu.creatorFollowers}
+          .seedLabel=${resources.puzzleMenu.seed}
+          .showLabel=${resources.puzzleMenu.show}
+        ></puzzle-menu>
         <div slot="source">${source}</div>
         <div slot="input">${input}</div>
         ${replay === undefined

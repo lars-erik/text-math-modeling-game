@@ -12,6 +12,14 @@ export const en = {
     textInput: 'Text input',
     multipleChoice: 'Multiple choice',
   },
+  puzzleMenu: {
+    label: 'Puzzle menu',
+    scenario: 'Scenario',
+    dronePower: 'Spaceship and drones',
+    creatorFollowers: 'Creator and followers',
+    seed: 'Seed',
+    show: 'Show puzzle',
+  },
   common: {
     puzzle: 'Puzzle',
     source: 'Source',

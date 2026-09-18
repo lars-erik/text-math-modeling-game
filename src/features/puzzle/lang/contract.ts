@@ -10,6 +10,14 @@ export type PuzzleLocaleResources = {
     textInput: string;
     multipleChoice: string;
   };
+  puzzleMenu: {
+    label: string;
+    scenario: string;
+    dronePower: string;
+    creatorFollowers: string;
+    seed: string;
+    show: string;
+  };
   common: {
     puzzle: string;
     source: string;

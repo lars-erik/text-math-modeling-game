@@ -12,9 +12,18 @@ import { bindCreatorFollowersScenario } from '../scenarios/creator-followers/sce
 import { createCreatorFollowersStoryQuantitiesDefinition } from '../scenarios/creator-followers/story-quantities-definition';
 import { createCreatorFollowersNamedEquationDefinition } from '../scenarios/creator-followers/named-equation-definition';
 
-export type SupportedScenarioId =
-  | 'gaming.drone-power'
-  | 'creator.followers';
+export const supportedScenarioIds = [
+  'gaming.drone-power',
+  'creator.followers',
+] as const;
+
+export type SupportedScenarioId = (typeof supportedScenarioIds)[number];
+
+export function isSupportedScenarioId(
+  value: string,
+): value is SupportedScenarioId {
+  return supportedScenarioIds.some((scenarioId) => scenarioId === value);
+}
 
 export function createSeededPuzzle({
   seed,

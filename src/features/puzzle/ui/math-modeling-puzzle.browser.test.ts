@@ -136,6 +136,91 @@ test('switches input providers from the mode menu and reflects the attribute', a
   expect(puzzle?.getAttribute('input-mode')).toBe('multiple-choice');
 });
 
+test('starts with a generated text scenario and puzzle menu by default', async () => {
+  document.body.innerHTML = `
+    <math-modeling-puzzle
+      puzzle="reference"
+      input-mode="text"
+    ></math-modeling-puzzle>
+  `;
+
+  startMathModelingApplication({ search: '', root: document });
+
+  await expect
+    .element(page.getByRole('heading', { name: 'Story to quantities' }))
+    .toBeVisible();
+  await expect
+    .element(page.getByRole('combobox', { name: 'Scenario' }))
+    .toHaveValue('gaming.drone-power');
+  await expect
+    .element(page.getByRole('spinbutton', { name: 'Seed' }))
+    .toHaveValue('17');
+  await expect
+    .element(page.getByRole('button', { name: 'Show puzzle' }))
+    .toBeVisible();
+});
+
+test('loads the selected scenario and seed and exposes a replayable URL', async () => {
+  const replacedSearches: string[] = [];
+  document.body.innerHTML = `
+    <math-modeling-puzzle
+      puzzle="reference"
+      input-mode="text"
+    ></math-modeling-puzzle>
+  `;
+  startMathModelingApplication({
+    search: '',
+    root: document,
+    replaceSearch: (search) => replacedSearches.push(search),
+  });
+
+  await userEvent.selectOptions(
+    page.getByRole('combobox', { name: 'Scenario' }),
+    'creator.followers',
+  );
+  const seedInput = page.getByRole('spinbutton', { name: 'Seed' });
+  await userEvent.clear(seedInput);
+  await userEvent.fill(seedInput, '321');
+  await userEvent.click(page.getByRole('button', { name: 'Show puzzle' }));
+
+  await expect
+    .element(page.getByText(/A creator starts with \d+ followers/))
+    .toBeVisible();
+  expect(browserGlobal.mathModelingPuzzles.generated?.problem.scenarioId).toBe(
+    'creator.followers',
+  );
+  expect(browserGlobal.mathModelingPuzzles.generated?.problem.replay?.seed).toBe(
+    321,
+  );
+  expect(replacedSearches).toEqual([
+    '?seed=321&scenario=creator.followers',
+  ]);
+});
+
+test('replays a selected text scenario directly from the URL', async () => {
+  document.body.innerHTML = `
+    <math-modeling-puzzle
+      puzzle="reference"
+      input-mode="text"
+    ></math-modeling-puzzle>
+  `;
+
+  startMathModelingApplication({
+    search: '?seed=321&scenario=creator.followers',
+    root: document,
+  });
+
+  await expect
+    .element(page.getByText(/A creator starts with \d+ followers/))
+    .toBeVisible();
+  await expect
+    .element(page.getByRole('combobox', { name: 'Scenario' }))
+    .toHaveValue('creator.followers');
+  await expect
+    .element(page.getByRole('spinbutton', { name: 'Seed' }))
+    .toHaveValue('321');
+});
+
 test('starts the real application with a generated puzzle from the URL seed', async () => {
   const generated = generateTotalFromPartsCase({
     seed: 17,
@@ -261,6 +346,12 @@ test('switches story language and learner names without regenerating the problem
     .toBeVisible();
   await expect
     .element(page.getByRole('radio', { name: 'effekt per drone' }))
+    .toBeVisible();
+  await expect
+    .element(page.getByRole('spinbutton', { name: 'Frø' }))
+    .toHaveValue('17');
+  await expect
+    .element(page.getByRole('button', { name: 'Vis oppgave' }))
     .toBeVisible();
   expect(document.querySelector('math-modeling-puzzle')?.getAttribute('locale')).toBe('nb');
   expect(definition.problem).toBe(originalProblem);
