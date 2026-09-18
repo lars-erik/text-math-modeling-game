@@ -27,7 +27,7 @@ test('renders the same creator plan in Norwegian Bokmål without revealing the a
   const story = renderCreatorFollowersStory(binding, plan, 'nb');
 
   expect(story.text).toBe(
-    'En innholdsskaper starter med 30 følgere. Hvert av fire promoterte innlegg gir like mange nye følgere. Innholdsskaperen ender med 210 følgere. Hvor mange følgere gir hvert innlegg?',
+    'En innholdsskaper starter med 30 følgere. Fire promoterte innlegg gir like mange nye følgere hver. Innholdsskaperen ender med 210 følgere. Hvor mange følgere gir hvert innlegg?',
   );
   expect(story.text).not.toContain('45');
   expect(story.replay).toEqual({

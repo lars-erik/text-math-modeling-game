@@ -52,7 +52,7 @@ export const nb = {
     },
     countFact: {
       promotedPosts: ({ count, noun }) =>
-        `Hvert av ${count} promoterte ${noun} gir like mange nye følgere.`,
+        `${count.charAt(0).toUpperCase()}${count.slice(1)} promoterte ${noun} gir like mange nye følgere hver.`,
     },
     totalFact: {
       finalAudience: ({ value, unit }) =>
