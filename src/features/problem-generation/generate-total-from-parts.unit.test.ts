@@ -132,6 +132,18 @@ test('rejects reversed ranges with a range-specific error', () => {
   ).toThrow('range');
 });
 
+test('rejects requested concepts that the generated shape does not represent', () => {
+  expect(() =>
+    generateTotalFromPartsCase({
+      seed: 1,
+      config: {
+        ...generationConfig,
+        concepts: [...generationConfig.concepts, 'geometry.area'],
+      },
+    }),
+  ).toThrow('geometry.area');
+});
+
 test('accepts an injected random source for reproducible value selection', () => {
   const nextFloat = [
     0,

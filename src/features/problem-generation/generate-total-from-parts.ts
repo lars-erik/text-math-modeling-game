@@ -140,6 +140,16 @@ function validateGenerationRequest(
     validatePositiveIntegerRange(range);
   }
 
+  const supportedConcepts = new Set<ConceptId>(defaultTotalFromPartsConcepts);
+  const unsupportedConcepts = config.concepts.filter(
+    (concept) => !supportedConcepts.has(concept),
+  );
+  if (unsupportedConcepts.length > 0) {
+    throw new Error(
+      `Total-from-parts generation does not represent requested concepts: ${unsupportedConcepts.join(', ')}.`,
+    );
+  }
+
   const maxTotal =
     config.base.max + config.count.max * config.unitValue.max;
   if (!Number.isSafeInteger(maxTotal)) {
