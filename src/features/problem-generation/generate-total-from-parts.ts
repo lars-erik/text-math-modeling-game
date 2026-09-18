@@ -46,7 +46,10 @@ export type GeneratedProblemCase = {
   };
 };
 
-const safeIntegerError = 'Generation config must guarantee a positive safe integer result.';
+const invalidSeedError = 'Generation seed must be a safe integer.';
+const invalidRangeError = 'Generation config range bounds must be positive safe integers with min <= max.';
+const unsafeTotalError =
+  'Generation config must guarantee a positive safe integer result.';
 
 export function generateTotalFromPartsCase({
   seed,
@@ -123,7 +126,7 @@ function validateGenerationRequest(
   config: TotalFromPartsGenerationConfig,
 ): void {
   if (!Number.isSafeInteger(seed)) {
-    throw new Error(safeIntegerError);
+    throw new Error(invalidSeedError);
   }
 
   for (const range of [config.base, config.count, config.unitValue]) {
@@ -133,7 +136,7 @@ function validateGenerationRequest(
   const maxTotal =
     config.base.max + config.count.max * config.unitValue.max;
   if (!Number.isSafeInteger(maxTotal)) {
-    throw new Error(safeIntegerError);
+    throw new Error(unsafeTotalError);
   }
 }
 
@@ -171,7 +174,7 @@ function validatePositiveIntegerRange(range: PositiveIntegerRange): void {
     range.max <= 0 ||
     range.min > range.max
   ) {
-    throw new Error(safeIntegerError);
+    throw new Error(invalidRangeError);
   }
 }
 

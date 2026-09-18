@@ -93,6 +93,27 @@ test('rejects generation bounds that cannot guarantee safe integers', () => {
   ).toThrow('safe integer');
 });
 
+test('rejects an unsafe replay seed with a seed-specific error', () => {
+  expect(() =>
+    generateTotalFromPartsCase({
+      seed: Number.MAX_SAFE_INTEGER + 1,
+      config: generationConfig,
+    }),
+  ).toThrow('seed');
+});
+
+test('rejects reversed ranges with a range-specific error', () => {
+  expect(() =>
+    generateTotalFromPartsCase({
+      seed: 1,
+      config: {
+        ...generationConfig,
+        count: { min: 8, max: 2 },
+      },
+    }),
+  ).toThrow('range');
+});
+
 test('accepts an injected random source for reproducible value selection', () => {
   const nextFloat = [
     0,
