@@ -31,7 +31,7 @@ test('prints a fixed seeded generated case for review', () => {
     import.meta.url,
     'generate-total-from-parts',
     [
-      `replay ${JSON.stringify(generated.replay)}`,
+      `replay ${JSON.stringify(generated.replay, null, '  ')}`,
       '',
       'dsl',
       dsl.trimEnd(),
