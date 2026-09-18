@@ -1,0 +1,12 @@
+story scenario=gaming.drone-power locale=en seed=17
+A ship uses 30 MW for basic systems. Four identical drones are active. Together they draw 210 MW. How much power does one drone draw?
+plan
+  baseFact.basicSystems fact=basePower noun=ship
+  countFact.activeDrones fact=droneCount noun=drone
+  totalFact.combinedDraw fact=totalPower
+  question.perDronePower fact=dronePower noun=drone
+facts
+  basePower source=base role=base visibility=known value=30 dimension=power unit=power
+  droneCount source=count role=count visibility=known value=4 dimension=item unit=count
+  dronePower source=unitValue role=unitValue visibility=hidden value=? dimension=powerPerItem unit=powerPerDrone
+  totalPower source=total role=total visibility=known value=210 dimension=power unit=power

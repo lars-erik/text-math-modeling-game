@@ -1,0 +1,12 @@
+story scenario=gaming.drone-power locale=nb seed=17
+Et skip bruker 30 MW til grunnleggende systemer. Fire identiske droner er aktive. Til sammen trekker de 210 MW. Hvor mye effekt trekker én drone?
+plan
+  baseFact.basicSystems fact=basePower noun=ship
+  countFact.activeDrones fact=droneCount noun=drone
+  totalFact.combinedDraw fact=totalPower
+  question.perDronePower fact=dronePower noun=drone
+facts
+  basePower source=base role=base visibility=known value=30 dimension=power unit=power
+  droneCount source=count role=count visibility=known value=4 dimension=item unit=count
+  dronePower source=unitValue role=unitValue visibility=hidden value=? dimension=powerPerItem unit=powerPerDrone
+  totalPower source=total role=total visibility=known value=210 dimension=power unit=power
