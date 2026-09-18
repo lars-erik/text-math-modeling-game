@@ -63,7 +63,7 @@ The GitHub Actions workflow uploads `src/test-results/` as an artifact even when
 ## CI/CD
 
 - Workflow: `.github/workflows/ci-pages.yml`
-- Current trigger branches: `pr` and `main` for push/pull request events (adjust branch filters when promoting to your long-term default flow).
+- Current trigger branches: `main` plus a temporary `pr` testing branch for push/pull request events (remove `pr` after rollout).
 - CI job runs:
   1. `npm ci`
   2. `npm run browser:install`
