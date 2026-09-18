@@ -294,3 +294,102 @@ test('keeps the named-equation puzzle consistent with the selected locale', asyn
     .element(page.getByRole('status'))
     .toHaveTextContent('Likningen stemmer med modellen for størrelsene.');
 });
+
+test('switches language in the named-equation shell without regenerating the problem', async () => {
+  const generated = createSeededPuzzle({ seed: 17 });
+  const originalProblem = generated.problem;
+  browserGlobal.mathModelingPuzzles = {
+    named: { ...generated, kind: 'quantities-to-named-equation' },
+  };
+  document.body.innerHTML = `
+    <math-modeling-puzzle
+      puzzle="named"
+      locale="en"
+      input-mode="text"
+    ></math-modeling-puzzle>
+  `;
+
+  await userEvent.selectOptions(
+    page.getByRole('combobox', { name: 'Language' }),
+    'nb',
+  );
+
+  await expect
+    .element(
+      page.getByRole('heading', {
+        name: 'Fra størrelser til navngitt likning',
+      }),
+    )
+    .toBeVisible();
+  await expect.element(page.getByText('grunnEffekt = 30')).toBeVisible();
+  expect(generated.problem).toBe(originalProblem);
+  expect(generated.problem.replay).toEqual({
+    seed: 17,
+    generatorVersion: 'total-from-parts-v1',
+  });
+});
+
+test('uses the same labelled puzzle shell for both puzzle kinds', async () => {
+  const generated = createSeededPuzzle({ seed: 17 });
+  browserGlobal.mathModelingPuzzles = {
+    story: generated,
+    named: { ...generated, kind: 'quantities-to-named-equation' },
+  };
+
+  for (const puzzleKey of ['story', 'named']) {
+    document.body.innerHTML = `
+      <math-modeling-puzzle
+        puzzle="${puzzleKey}"
+        locale="en"
+        input-mode="text"
+      ></math-modeling-puzzle>
+    `;
+
+    await expect.element(page.getByRole('main')).toBeVisible();
+    await expect
+      .element(page.getByRole('heading', { name: 'Source' }))
+      .toBeVisible();
+    await expect
+      .element(page.getByRole('heading', { name: 'Target' }))
+      .toBeVisible();
+    await expect
+      .element(page.getByRole('heading', { name: 'Feedback' }))
+      .toBeVisible();
+    await expect
+      .element(page.getByRole('combobox', { name: 'Language' }))
+      .toBeVisible();
+  }
+});
+
+test('keeps the story puzzle usable without horizontal scrolling at a narrow viewport', async () => {
+  await page.viewport(360, 800);
+  browserGlobal.mathModelingPuzzles = {
+    generated: createSeededPuzzle({ seed: 17 }),
+  };
+  document.body.innerHTML = `
+    <math-modeling-puzzle puzzle="generated" locale="en"></math-modeling-puzzle>
+  `;
+
+  await userEvent.click(
+    page.getByRole('checkbox', { name: 'base power: 30 MW' }),
+  );
+  await userEvent.click(
+    page.getByRole('checkbox', { name: 'number of drones: 3 drones' }),
+  );
+  await userEvent.click(
+    page.getByRole('checkbox', { name: 'total power: 66 MW' }),
+  );
+  await userEvent.click(
+    page.getByRole('radio', { name: 'power per drone' }),
+  );
+  await userEvent.click(page.getByRole('button', { name: 'Check' }));
+
+  await expect
+    .element(page.getByRole('status'))
+    .toHaveTextContent('The quantities match the story.');
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+    document.documentElement.clientWidth,
+  );
+
+  await page.viewport(1280, 720);
+});

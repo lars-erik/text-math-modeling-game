@@ -6,13 +6,21 @@ export type PuzzleLocaleResources = {
   };
   controls: {
     check: string;
+    inputMode: string;
     textInput: string;
     multipleChoice: string;
   };
   common: {
+    puzzle: string;
     source: string;
+    target: string;
     quantities: string;
     feedback: string;
+    replay: string;
+    seed: string;
+    generatorVersion: string;
+    scenario: string;
+    storySeed: string;
   };
   storyToQuantities: {
     heading: string;
