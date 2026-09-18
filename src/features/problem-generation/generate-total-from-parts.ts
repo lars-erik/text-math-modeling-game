@@ -155,7 +155,12 @@ function nextInteger(
   randomSource: RandomSource,
   range: PositiveIntegerRange,
 ): number {
-  return Math.floor(randomSource.nextFloat() * (range.max - range.min + 1)) + range.min;
+  const nextFloat = randomSource.nextFloat();
+  if (nextFloat < 0 || nextFloat >= 1 || !Number.isFinite(nextFloat)) {
+    throw new Error('Random sources must return values in [0, 1).');
+  }
+
+  return Math.floor(nextFloat * (range.max - range.min + 1)) + range.min;
 }
 
 function validatePositiveIntegerRange(range: PositiveIntegerRange): void {

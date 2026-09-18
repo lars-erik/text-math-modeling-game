@@ -114,3 +114,15 @@ test('accepts an injected random source for reproducible value selection', () =>
     total: 110,
   });
 });
+
+test('rejects injected random values outside the supported range', () => {
+  expect(() =>
+    generateTotalFromPartsCase({
+      seed: 123,
+      config: generationConfig,
+      randomSource: {
+        nextFloat: () => 1,
+      },
+    }),
+  ).toThrow('[0, 1)');
+});
