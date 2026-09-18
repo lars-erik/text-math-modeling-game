@@ -9,8 +9,8 @@
     "dev": "vite",
     "test": "npm run test:node && npm run test:browser",
     "test:approval": "vitest run --config vitest.config.ts testing/approval-tooling.test.ts",
-    "test:browser": "node tools/browser.mjs test",
-    "test:node": "vitest run --config vitest.config.ts",
+    "test:browser": "node tools/browser.mjs test --reporter=default --reporter=junit --outputFile.junit=./test-results/browser/junit.xml --reporter=html --outputFile.html=./test-results/browser/index.html",
+    "test:node": "vitest run --config vitest.config.ts --reporter=default --reporter=junit --outputFile.junit=./test-results/node/junit.xml --reporter=html --outputFile.html=./test-results/node/index.html",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
