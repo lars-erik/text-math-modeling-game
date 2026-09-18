@@ -2,8 +2,6 @@ name: CI and Pages
 
 on:
   push:
-    branches:
-      - main
 
 permissions:
   contents: read
@@ -70,7 +68,7 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: ci
-    if: ${{ needs.ci.result == 'success' }}
+    if: ${{ needs.ci.result == 'success' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     permissions:
       pages: write
