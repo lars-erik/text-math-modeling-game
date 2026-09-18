@@ -102,6 +102,15 @@ test('rejects an unsafe replay seed with a seed-specific error', () => {
   ).toThrow('seed');
 });
 
+test('rejects negative seeds so replayed inputs stay exact', () => {
+  expect(() =>
+    generateTotalFromPartsCase({
+      seed: -1,
+      config: generationConfig,
+    }),
+  ).toThrow('non-negative');
+});
+
 test('rejects reversed ranges with a range-specific error', () => {
   expect(() =>
     generateTotalFromPartsCase({

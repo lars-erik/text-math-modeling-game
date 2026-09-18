@@ -46,7 +46,7 @@ export type GeneratedProblemCase = {
   };
 };
 
-const invalidSeedError = 'Generation seed must be a safe integer.';
+const invalidSeedError = 'Generation seed must be a non-negative safe integer.';
 const invalidRangeError = 'Generation config range bounds must be positive safe integers with min <= max.';
 const unsafeTotalError =
   'Generation config must guarantee a positive safe integer result.';
@@ -125,7 +125,7 @@ function validateGenerationRequest(
   seed: number,
   config: TotalFromPartsGenerationConfig,
 ): void {
-  if (!Number.isSafeInteger(seed)) {
+  if (!Number.isSafeInteger(seed) || seed < 0) {
     throw new Error(invalidSeedError);
   }
 
