@@ -6,7 +6,7 @@ export const problemGrammar = ohm.grammar(String.raw`
 
     Concepts = "concepts" "{" metadataIdentifier* "}"
     Quantity = "quantity" identifier ":" dimension Role? "=" Given
-    Role = "role" metadataIdentifier
+    Role = "role" role
     Given
       = "?"      -- hidden
       | integer  -- known
@@ -16,6 +16,7 @@ export const problemGrammar = ohm.grammar(String.raw`
     Replay = "replay" "{" "seed" integer "generator" metadataIdentifier "}"
 
     dimension = "powerPerItem" | "power" | "item" | "scalar"
+    role = "per-item" | "base" | "count" | "total"
     equationText = (~"}" any)*
     metadataIdentifier = letter (alnum | "-" | ".")*
     identifier = letter alnum*

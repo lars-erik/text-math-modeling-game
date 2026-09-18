@@ -13,6 +13,9 @@ import {
 export type ProblemReferenceIssue = {
   kind: 'undefined-quantity';
   id: QuantityId;
+} | {
+  kind: 'undefined-academic-symbol-quantity';
+  id: QuantityId;
 };
 
 export type ProblemSolutionIssue =
@@ -58,6 +61,7 @@ export type ProblemConstraintCode =
 
 type ProblemAstValidatorCode =
   | 'defined-quantity-references'
+  | 'defined-academic-symbol-quantities'
   | 'safe-known-values'
   | 'safe-literals'
   | 'unique-quantity-ids'
@@ -136,6 +140,19 @@ function validateUndefinedQuantityReferences({
   return collectReferences(problem.relation)
     .filter((id) => !declaredIds.has(id))
     .map((id) => ({ kind: 'undefined-quantity', id }));
+}
+
+function validateAcademicSymbolQuantities({
+  problem,
+}: ProblemAstValidationContext): readonly ProblemReferenceIssue[] {
+  const declaredIds = new Set(problem.quantities.map((quantity) => quantity.id));
+
+  return Object.keys(problem.academicSymbols)
+    .filter((id) => !declaredIds.has(id))
+    .map((id) => ({
+      kind: 'undefined-academic-symbol-quantity',
+      id,
+    }));
 }
 
 function validateKnownNumberSafety({
@@ -303,6 +320,10 @@ const problemAstValidators: readonly ProblemValidator<
   ProblemAstIssue
 >[] = [
   { code: 'defined-quantity-references', validate: validateUndefinedQuantityReferences },
+  {
+    code: 'defined-academic-symbol-quantities',
+    validate: validateAcademicSymbolQuantities,
+  },
   { code: 'safe-known-values', validate: validateKnownNumberSafety },
   { code: 'safe-literals', validate: validateLiteralNumberSafety },
   { code: 'unique-quantity-ids', validate: validateUniqueQuantityIds },

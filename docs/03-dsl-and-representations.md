@@ -33,6 +33,42 @@ problem drone-power {
 
 Treat dotted concept/scenario names and dashed problem IDs as identifiers in the metadata grammar. Expression identifiers remain separately lexed and resolved to quantity IDs. Symbols have explicit mappings. Start with this single fixture and evolve syntax from tests.
 
+### Milestone 4 metadata and canonical formatting
+
+The required problem data is the canonical problem ID, ordered concept IDs,
+quantity definitions (canonical ID, dimension, and known/hidden state), one
+equation, a canonical scenario ID, and zero or more academic symbol mappings.
+The initial dimension vocabulary is `item`, `power`, `powerPerItem`, and
+`scalar`. Localized names, labels, units, prose resources, story plans, and the
+private answer key are not part of this DSL.
+
+Generator replay is optional. A generated or replayable problem writes it after
+the symbol mappings:
+
+```text
+    replay {
+        seed 0
+        generator hand-built-v1
+    }
+```
+
+The parser does not create replay metadata when this block is absent. The
+transitional Phase 1 quantity role is likewise optional and, when present, is
+written between the dimension and value as `role base`, `role count`,
+`role per-item`, or `role total`. This preserves existing screen metadata until
+a later scenario role-map milestone replaces it.
+
+Canonical serialization uses this section order: problem header, concepts,
+quantities in domain order, equation, scenario, symbol mappings sorted by
+quantity ID, optional replay, closing brace. It uses four spaces per indent,
+one space around expression operators, the minimum parentheses needed to
+reconstruct the exact expression tree, LF line endings, and one final newline.
+Concept and quantity array order is preserved because those arrays are authored
+presentation order; map-shaped symbol metadata is sorted. Serialization is
+defined for domain-valid problems. Known facts are printed as integers and the
+single hidden quantity as `?`; a private answer binding is never accepted or
+printed by `serializeProblem`.
+
 ## Expression grammar: first increment
 
 ```
