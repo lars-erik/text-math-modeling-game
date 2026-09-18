@@ -45,11 +45,6 @@ jobs:
         run: npm test
 
       - name: Build
-        if: ${{ !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
-        run: npm run build
-
-      - name: Build for GitHub Pages
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: npm run build -- --base=/text-math-modeling-game/
 
       - name: Upload test reports
@@ -62,7 +57,7 @@ jobs:
           retention-days: 14
 
       - name: Upload Pages artifact
-        if: ${{ success() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        if: ${{ success() }}
         uses: actions/upload-pages-artifact@v4
         with:
           path: src/dist
@@ -70,7 +65,7 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: ci
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    if: ${{ needs.ci.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       pages: write

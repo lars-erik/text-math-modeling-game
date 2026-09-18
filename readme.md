@@ -69,8 +69,8 @@ The GitHub Actions workflow uploads `src/test-results/` as an artifact even when
   2. `npm run browser:install`
   3. `npm run typecheck`
   4. `npm test`
-  5. `npm run build` (or `npm run build -- --base=/text-math-modeling-game/` on `main` pushes for Pages)
-- Deployment runs only on `main` pushes after CI succeeds, using the official `upload-pages-artifact` + `deploy-pages` actions flow.
+  5. `npm run build -- --base=/text-math-modeling-game/`
+- Deployment runs after successful CI in the current temporary branch setup, using the official `upload-pages-artifact` + `deploy-pages` actions flow. Switch this back to `main`-only after merge.
 
 Expected GitHub Pages URL: `https://lars-erik.github.io/text-math-modeling-game/`
 
