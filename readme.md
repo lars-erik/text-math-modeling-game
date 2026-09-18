@@ -57,8 +57,16 @@ Approval tests write deterministic `*.received.*` files when a baseline is missi
 
 - `src/test-results/node/junit.xml` and `src/test-results/node/index.html`
 - `src/test-results/browser/junit.xml` and `src/test-results/browser/index.html`
+- `src/test-results/browser/screenshots/` with fresh wide and mobile puzzle PNGs
 
-The GitHub Actions workflow uploads `src/test-results/` as an artifact even when tests fail, so CI logs stay useful while still providing downloadable machine-readable and HTML reports.
+Selected browser views also use Vitest's Playwright-backed screenshot matcher.
+Their committed `__screenshots__` PNGs are visual approval baselines. Review
+baseline changes like the text approvals; CI emits expected, actual and diff images
+when the rendered result exceeds the configured tolerance.
+
+The GitHub Actions workflow uploads `src/test-results/` and the committed or newly
+received visual baselines as an artifact even when tests fail, so CI logs stay useful
+while still providing downloadable reports and screenshots.
 
 ## CI/CD
 
