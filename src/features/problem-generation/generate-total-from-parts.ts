@@ -54,17 +54,18 @@ const unsafeTotalError =
 export function generateTotalFromPartsCase({
   seed,
   config,
-  randomSource = createMulberry32Random(seed),
+  randomSource,
 }: {
   seed: number;
   config: TotalFromPartsGenerationConfig;
   randomSource?: RandomSource;
 }): GeneratedProblemCase {
   validateGenerationRequest(seed, config);
+  const resolvedRandomSource = randomSource ?? createMulberry32Random(seed);
 
-  const base = nextInteger(randomSource, config.base);
-  const count = nextInteger(randomSource, config.count);
-  const unitValue = nextInteger(randomSource, config.unitValue);
+  const base = nextInteger(resolvedRandomSource, config.base);
+  const count = nextInteger(resolvedRandomSource, config.count);
+  const unitValue = nextInteger(resolvedRandomSource, config.unitValue);
   const total = base + count * unitValue;
 
   return {
