@@ -1,0 +1,83 @@
+name: CI and Pages
+
+on:
+  push:
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  ci:
+    name: Validate and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24.12.0
+          cache: npm
+          cache-dependency-path: src/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install browser binaries
+        run: npm run browser:install
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build -- --base=/text-math-modeling-game/
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ github.run_id }}
+          path: src/test-results/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Publish test results in run UI
+        if: always()
+        uses: dorny/test-reporter@v2
+        with:
+          name: Vitest results
+          path: src/test-results/**/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Upload Pages artifact
+        if: ${{ success() }}
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: src/dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: ci
+    if: ${{ needs.ci.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

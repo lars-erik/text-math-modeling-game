@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const action = process.argv[2];
+const extraArgs = process.argv.slice(3);
 const packageRoot = fileURLToPath(new URL('../', import.meta.url));
 const environment = {
   ...process.env,
@@ -14,7 +15,7 @@ const commands = {
     entry: new URL('../node_modules/playwright/cli.js', import.meta.url),
   },
   test: {
-    args: ['run', '--config', 'vitest.browser.config.ts'],
+    args: ['run', '--config', 'vitest.browser.config.ts', ...extraArgs],
     entry: new URL('../node_modules/vitest/vitest.mjs', import.meta.url),
   },
 };
