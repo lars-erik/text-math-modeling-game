@@ -3,3 +3,4 @@ dist/
 .approval_tests_temp/
 .vitest/
 *.received.*
+src/test-results/

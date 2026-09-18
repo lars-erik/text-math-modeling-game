@@ -1,6 +1,6 @@
 # Text Math Modeling Game — specification package
 
-**Status:** planning baseline, 17 September 2026. **Scope:** Phase 1 only has implementation milestones; later phases are architectural direction.
+**Status:** planning baseline with CI/CD automation, 17 September 2026. **Scope:** Phase 1 only has implementation milestones; later phases are architectural direction.
 
 Build a test-driven web puzzle for translating between natural-language situations, quantity models, named expressions, substituted expressions, and academic notation. The same deterministic semantic problem powers every representation.
 
@@ -42,7 +42,7 @@ The implementation package is rooted in `src/` so the repository can add other t
 
 ```powershell
 cd src
-npm install
+npm ci
 npm run browser:install
 npm run typecheck
 npm test
@@ -52,3 +52,26 @@ npm run build
 Approval tests write deterministic `*.received.*` files when a baseline is missing or changed. Received files are ignored by Git. Inspect the console diff and received file before manually promoting it to the corresponding committed `*.approved.*` file. Tests and CI never update approved files automatically.
 
 `browser:install` keeps Playwright's Chromium binaries under `src/node_modules`; it does not write them to the user-level Playwright cache. `npm test` runs both the Node approval suite and the headless Chromium interaction suite.
+
+`npm test` also writes Vitest reports under `src/test-results/`:
+
+- `src/test-results/node/junit.xml` and `src/test-results/node/index.html`
+- `src/test-results/browser/junit.xml` and `src/test-results/browser/index.html`
+
+The GitHub Actions workflow uploads `src/test-results/` as an artifact even when tests fail, so CI logs stay useful while still providing downloadable machine-readable and HTML reports.
+
+## CI/CD
+
+- Workflow: `.github/workflows/ci-pages.yml`
+- Current trigger branches: `pr` and `main` for push/pull request events (adjust branch filters when promoting to your long-term default flow).
+- CI job runs:
+  1. `npm ci`
+  2. `npm run browser:install`
+  3. `npm run typecheck`
+  4. `npm test`
+  5. `npm run build` (or `npm run build -- --base=/text-math-modeling-game/` on `main` pushes for Pages)
+- Deployment runs only on `main` pushes after CI succeeds, using the official `upload-pages-artifact` + `deploy-pages` actions flow.
+
+Expected GitHub Pages URL: `https://lars-erik.github.io/text-math-modeling-game/`
+
+One-time repository setting: in **Settings → Pages**, set **Source** to **GitHub Actions**.
