@@ -1,6 +1,7 @@
 import type { PuzzleRegistry } from './features/puzzle/puzzle-definition';
 import { referencePuzzle } from './features/puzzle/reference-puzzle';
 import { createSeededPuzzle } from './features/puzzle/seeded-puzzle';
+import { defaultTotalFromPartsConcepts } from './features/problem-generation/generate-total-from-parts';
 
 export const generatedPuzzleKey = 'generated';
 
@@ -18,7 +19,11 @@ export function startMathModelingApplication({
 
   if (seedText !== null) {
     const seed = parseSeed(seedText);
-    registry[generatedPuzzleKey] = createSeededPuzzle({ seed });
+    registry[generatedPuzzleKey] = createSeededPuzzle({
+      seed,
+      scenarioId: 'gaming.drone-power',
+      concepts: defaultTotalFromPartsConcepts,
+    });
     root
       .querySelector('math-modeling-puzzle')
       ?.setAttribute('puzzle', generatedPuzzleKey);

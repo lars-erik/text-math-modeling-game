@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 
 import { relationsHaveNormalizedStructure } from '../../problem-model/normalized-structure';
+import { validateProblemAst } from '../../problem-model/problem-validation';
 import {
   totalFromPartsAnswerKey,
   totalFromPartsProblem,
@@ -52,6 +53,24 @@ test('binds creator semantics while preserving mathematical shape and private va
   expect(binding.facts.find((fact) => fact.id === 'followersPerPost')).not.toHaveProperty(
     'value',
   );
+});
+
+test('binds follower and per-post dimensions into a valid relation', () => {
+  const binding = bindCreatorFollowersScenario(totalFromPartsProblem);
+
+  expect(
+    binding.problem.quantities.map(({ id, dimension }) => ({ id, dimension })),
+  ).toEqual([
+    { id: 'startingFollowers', dimension: 'followers' },
+    { id: 'promotedPostCount', dimension: 'item' },
+    { id: 'followersPerPost', dimension: 'followersPerItem' },
+    { id: 'finalFollowers', dimension: 'followers' },
+  ]);
+  expect(
+    validateProblemAst(binding.problem).filter((issue) =>
+      issue.kind.includes('dimension'),
+    ),
+  ).toEqual([]);
 });
 
 test('plans creator prose with locale-independent semantic keys', () => {

@@ -45,7 +45,7 @@ const roleMap = {
   base: {
     id: 'startingFollowers',
     role: 'base',
-    dimension: 'scalar',
+    dimension: 'followers',
     unitKey: 'followers',
   },
   count: {
@@ -57,13 +57,13 @@ const roleMap = {
   'per-item': {
     id: 'followersPerPost',
     role: 'unitValue',
-    dimension: 'scalar',
+    dimension: 'followersPerItem',
     unitKey: 'followersPerPost',
   },
   total: {
     id: 'finalFollowers',
     role: 'total',
-    dimension: 'scalar',
+    dimension: 'followers',
     unitKey: 'followers',
   },
 } as const;
