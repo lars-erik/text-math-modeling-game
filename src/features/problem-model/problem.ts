@@ -6,13 +6,19 @@ import {
 
 export type QuantityRole = 'base' | 'count' | 'per-item' | 'total';
 
+export type ConceptId = string;
+export type Dimension = 'item' | 'power' | 'powerPerItem' | 'scalar';
+export type ProblemId = string;
+export type ScenarioId = string;
+
 export type QuantityGiven =
   | { kind: 'known'; value: number }
   | { kind: 'hidden' };
 
 export type Quantity = {
   id: QuantityId;
-  role: QuantityRole;
+  dimension: Dimension;
+  role?: QuantityRole;
   given: QuantityGiven;
 };
 
@@ -26,9 +32,13 @@ export type ProblemReplay = {
 };
 
 export type Problem = {
+  id: ProblemId;
+  concepts: readonly ConceptId[];
   quantities: readonly Quantity[];
   relation: Relation;
-  replay: ProblemReplay;
+  scenarioId: ScenarioId;
+  academicSymbols: Readonly<Record<QuantityId, string>>;
+  replay?: ProblemReplay;
 };
 
 export function getVisibleBindings(problem: Problem): Bindings {
