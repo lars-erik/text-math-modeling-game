@@ -63,14 +63,15 @@ The GitHub Actions workflow uploads `src/test-results/` as an artifact even when
 ## CI/CD
 
 - Workflow: `.github/workflows/ci-pages.yml`
-- Current trigger branches: `main`, a temporary `pr` testing branch, and the temporary `copilot/add-github-actions-ci-cd` branch used as the current main stand-in (remove temporary branches after rollout).
+- Current trigger: every push on every branch (temporary broad setup; narrow this after rollout).
 - CI job runs:
   1. `npm ci`
   2. `npm run browser:install`
   3. `npm run typecheck`
   4. `npm test`
   5. `npm run build -- --base=/text-math-modeling-game/`
-- Deployment runs after successful **push-event** CI in the current temporary branch setup, using the official `upload-pages-artifact` + `deploy-pages` actions flow. Switch this back to `main`-only after merge.
+- Deployment runs after successful CI in the current temporary branch setup, using the official `upload-pages-artifact` + `deploy-pages` actions flow. Switch this back to `main`-only after merge.
+- Test reports are both uploaded as artifacts and published in the GitHub Actions run UI from JUnit XML (`dorny/test-reporter`).
 
 Expected GitHub Pages URL: `https://lars-erik.github.io/text-math-modeling-game/`
 

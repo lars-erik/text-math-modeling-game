@@ -2,17 +2,10 @@ name: CI and Pages
 
 on:
   push:
-    branches:
-      - pr
-      - main
-      - copilot/add-github-actions-ci-cd
-  pull_request:
-    branches:
-      - pr
-      - main
 
 permissions:
   contents: read
+  checks: write
 
 jobs:
   ci:
@@ -57,8 +50,17 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+      - name: Publish test results in run UI
+        if: always()
+        uses: dorny/test-reporter@v2
+        with:
+          name: Vitest results
+          path: src/test-results/**/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
       - name: Upload Pages artifact
-        if: ${{ success() && github.event_name == 'push' }}
+        if: ${{ success() }}
         uses: actions/upload-pages-artifact@v4
         with:
           path: src/dist
@@ -66,7 +68,7 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: ci
-    if: ${{ needs.ci.result == 'success' && github.event_name == 'push' }}
+    if: ${{ needs.ci.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       pages: write
