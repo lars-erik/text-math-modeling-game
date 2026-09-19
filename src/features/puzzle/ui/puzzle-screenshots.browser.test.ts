@@ -23,7 +23,9 @@ test('approves the wide drone-power puzzle shell', async () => {
   window.scrollTo(0, 0);
   const puzzle = page.getByRole('main');
   await expect.element(puzzle).toBeVisible();
-  expect(page).toMatchScreenshot({screenshotOptions:{fullPage:true}});
+  await expect(page).toMatchScreenshot('drone-power-wide', {
+    screenshotOptions: { fullPage: true },
+  });
 });
 
 test('approves the narrow Norwegian creator puzzle shell', async () => {
@@ -45,7 +47,9 @@ test('approves the narrow Norwegian creator puzzle shell', async () => {
   window.scrollTo(0, 0);
   const puzzle = page.getByRole('main');
   await expect.element(puzzle).toBeVisible();
-  expect(page).toMatchScreenshot({screenshotOptions:{fullPage:true}});
+  await expect(page).toMatchScreenshot('creator-narrow-nb', {
+    screenshotOptions: { fullPage: true },
+  });
 });
 
 test('approves academic notation rendered with the pluggable KaTeX adapter', async () => {
@@ -73,5 +77,7 @@ test('approves academic notation rendered with the pluggable KaTeX adapter', asy
   const puzzle = page.getByRole('main');
   await expect.element(puzzle).toBeVisible();
   await expect.element(page.getByLabelText('67 = 25 + 6p')).toBeVisible();
-  expect(page).toMatchScreenshot({ screenshotOptions: { fullPage: true } });
+  await expect(page).toMatchScreenshot('academic-notation-creator-nb', {
+    screenshotOptions: { fullPage: true },
+  });
 });
