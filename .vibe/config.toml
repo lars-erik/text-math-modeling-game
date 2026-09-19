@@ -1,0 +1,10 @@
+# Vibe/Devstral configuration
+active_model = "mistral-medium"
+
+[[models]]
+name = "mistral-medium"
+reasoning_effort = "high"
+
+[tools]
+allow_all = false
+allowed_tools = ["code_interpreter", "web_search"]
