@@ -1,0 +1,39 @@
+=== Start ===
+puzzle academic-notation -> named-equation
+replay seed=0 generator=hand-built-v1 theme=gaming.drone-power story-seed=0 locale=en
+prompt Write the relationship using the named quantities.
+quantities
+  basePower [base] = 30
+  droneCount [count] = 4
+  dronePower [per-item] = ?
+  totalPower [total] = 210
+academic-input 210 = 30 + 4*p
+academic-display 210 = 30 + 4p
+symbols
+  p = dronePower
+input named = ""
+=== Submit ===
+puzzle academic-notation -> named-equation
+replay seed=0 generator=hand-built-v1 theme=gaming.drone-power story-seed=0 locale=en
+prompt Write the relationship using the named quantities.
+quantities
+  basePower [base] = 30
+  droneCount [count] = 4
+  dronePower [per-item] = ?
+  totalPower [total] = 210
+academic-input 210 = 30 + 4*p
+academic-display 210 = 30 + 4p
+symbols
+  p = dronePower
+input named = "totalPower = basePower + droneCount * dronePower"
+submission named-equation
+  answer-kind text
+  equation
+    quantity total
+    add
+      quantity base
+      multiply
+        quantity count
+        quantity unitValue
+check normalized-structure equation-sides=ordered
+feedback accepted: The named equation matches the relationship.

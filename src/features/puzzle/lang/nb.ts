@@ -20,6 +20,8 @@ export const nb = {
     task: 'Oppgavetype',
     storyToQuantities: 'Fra fortelling til størrelser',
     quantitiesToNamedEquation: 'Fra størrelser til navngitt likning',
+    namedEquationToAcademicNotation: 'Fra navngitt likning til akademisk notasjon',
+    academicNotationToNamedEquation: 'Fra akademisk notasjon til navngitt likning',
     seed: 'Frø',
     show: 'Vis oppgave',
   },
@@ -51,6 +53,26 @@ export const nb = {
     accepted: 'Likningen stemmer med modellen for størrelsene.',
     groupingMismatch: 'Grupperingen i likningen stemmer ikke med modellen for størrelsene.',
     reversedSides: 'Sidene i likningen er byttet om; behold den etterspurte rekkefølgen.',
+    unknownIdentifier: (identifier, available) =>
+      `Ukjent navn ${JSON.stringify(identifier)}. Tilgjengelige navn: ${available}.`,
+  },
+  namedEquationToAcademicNotation: {
+    heading: 'Fra navngitt likning til akademisk notasjon',
+    prompt: 'Skriv sammenhengen med de akademiske symbolene.',
+    inputLabel: 'Akademisk notasjon',
+    symbolKey: 'Symbolforklaring',
+    accepted: 'Den akademiske notasjonen stemmer med sammenhengen.',
+    groupingMismatch: 'Den akademiske notasjonen stemmer ikke med sammenhengen.',
+    unknownIdentifier: (identifier, available) =>
+      `Ukjent symbol ${JSON.stringify(identifier)}. Tilgjengelige symboler: ${available}.`,
+  },
+  academicNotationToNamedEquation: {
+    heading: 'Fra akademisk notasjon til navngitt likning',
+    prompt: 'Skriv sammenhengen med de navngitte størrelsene.',
+    inputLabel: 'Navngitt likning',
+    symbolKey: 'Symbolforklaring',
+    accepted: 'Den navngitte likningen stemmer med sammenhengen.',
+    groupingMismatch: 'Den navngitte likningen stemmer ikke med sammenhengen.',
     unknownIdentifier: (identifier, available) =>
       `Ukjent navn ${JSON.stringify(identifier)}. Tilgjengelige navn: ${available}.`,
   },

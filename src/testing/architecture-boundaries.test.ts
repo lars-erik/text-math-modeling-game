@@ -16,12 +16,17 @@ const excludedDirectories = new Set([
 const testOnlyPathPattern = /(?:^|\/)(?:__tests__|__screenshots__)\//;
 const testOnlyFilePattern = /\.(?:test|fixture)(?:\.ts)?$/;
 const domainFilePattern =
-  /^features\/(?:problem-model|problem-dsl|named-expression|problem-generation|themes|puzzle\/modes)\//;
+  /^features\/(?:problem-model|problem-dsl|named-expression|problem-generation|representations|themes|puzzle\/modes)\//;
 const modeFilePattern = /^features\/puzzle\/modes\//;
 const themeModulePattern = /^features\/themes(?:\/|$)/;
+const themeFilePattern = /^features\/themes\//;
+const puzzleModulePattern = /^features\/puzzle(?:\/|$)/;
 const uiModulePattern = /^features\/puzzle\/ui(?:\/|$)/;
 const testOnlyPackagePattern =
   /^(?:vitest|@vitest\/[^/]+|approvals|playwright|@playwright\/[^/]+|fast-check|@fast-check\/[^/]+)(?:\/|$)/;
+const katexPackagePattern = /^katex(?:\/|$)/;
+const katexAdapterFile =
+  'features/puzzle/ui/katex-academic-display-adapter.ts';
 
 type ProductionImports = {
   file: string;
@@ -173,11 +178,50 @@ test('mode modules do not import theme modules', () => {
   );
 });
 
+test('theme production modules do not import puzzle modules', () => {
+  expectNoViolations(
+    'Theme production modules must remain reusable without importing features/puzzle/**:',
+    violationLines(
+      productionImports.filter(({ file }) => themeFilePattern.test(file)),
+      (file, specifier) =>
+        puzzleModulePattern.test(resolveSpecifier(file, specifier)),
+    ),
+  );
+});
+
 test('production code does not import test-only packages', () => {
   expectNoViolations(
     'Production modules must not import test-only packages (vitest, playwright, approvals, fast-check):',
     violationLines(productionImports, (_file, specifier) =>
       testOnlyPackagePattern.test(specifier),
     ),
+  );
+});
+
+test('only the pluggable UI adapter imports KaTeX', () => {
+  expectNoViolations(
+    'KaTeX must remain outside the semantic, representation, Mode, and screen-model layers:',
+    violationLines(
+      productionImports.filter(({ file }) => file !== katexAdapterFile),
+      (_file, specifier) => katexPackagePattern.test(specifier),
+    ),
+  );
+});
+
+test('the academic display adapter contract is AST-based', () => {
+  const adapterContractFile = join(
+    sourceRoot,
+    'features/puzzle/ui/academic-display-adapter.ts',
+  );
+  const source = readFileSync(adapterContractFile, 'utf8');
+  expect(source).toContain(
+    'render: (\n    relation: Relation,\n    symbols: AcademicSymbolMap,\n    target: HTMLElement,\n  ) => void;',
+  );
+  expect(source).not.toMatch(/render:\s*\(\s*source\s*:/);
+  expect(source).toMatch(
+    /import type \{ Relation \} from '..\/..\/problem-model\/expression';/,
+  );
+  expect(source).toMatch(
+    /import type \{ AcademicSymbolMap \} from '..\/..\/representations\/academic-symbol-map';/,
   );
 });

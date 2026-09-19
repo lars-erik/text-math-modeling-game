@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 import { startMathModelingApplication } from '../../../application';
 import { MathModelingPuzzle } from './math-modeling-puzzle';
+import { katexAcademicDisplayAdapter } from './katex-academic-display-adapter';
 import './math-modeling-puzzle';
 
 function mountPuzzle(search: string): MathModelingPuzzle {
@@ -22,7 +23,9 @@ function mountPuzzle(search: string): MathModelingPuzzle {
   });
   const element = document.querySelector('math-modeling-puzzle');
   expect(element).toBeInstanceOf(MathModelingPuzzle);
-  return element as MathModelingPuzzle;
+  const puzzle = element as MathModelingPuzzle;
+  puzzle.academicDisplayAdapter = katexAcademicDisplayAdapter;
+  return puzzle;
 }
 
 function shellText(puzzle: MathModelingPuzzle): string {
@@ -137,4 +140,81 @@ test('replays the same problem from the URL state', async () => {
     ).map((item) => item.textContent),
   ).toEqual(firstQuantities);
   expect(second.shadowRoot?.textContent).toContain('67');
+});
+
+test('completes named equation to academic notation and renders the accepted relation with KaTeX', async () => {
+  const puzzle = mountPuzzle(
+    '?seed=321&scenario=creator.followers&task=named-equation-to-academic-notation&locale=nb',
+  );
+  await puzzle.updateComplete;
+
+  expect(shellText(puzzle)).toContain(
+    'Fra navngitt likning til akademisk notasjon',
+  );
+  expect(storyOf(puzzle).length).toBeGreaterThan(0);
+  expect(puzzle.shadowRoot?.textContent).toContain(
+    '67 = 25 + 6 * foelgerePerInnlegg',
+  );
+  expect(puzzle.shadowRoot?.textContent).toContain('foelgerePerInnlegg');
+
+  const inputComponent = puzzle.shadowRoot?.querySelector(
+    'named-equation-text-input',
+  ) as (HTMLElement & { updateComplete: Promise<unknown> }) | null;
+  expect(inputComponent).not.toBeNull();
+  await inputComponent!.updateComplete;
+  const input = inputComponent!.shadowRoot?.querySelector('input');
+  expect(input).not.toBeNull();
+  input!.value = '67 = 25 + 6p';
+  inputComponent!.shadowRoot?.querySelector('form')?.requestSubmit();
+  await puzzle.updateComplete;
+
+  expect(shellText(puzzle)).toContain(
+    'Den akademiske notasjonen stemmer med sammenhengen.',
+  );
+  const display = puzzle.shadowRoot?.querySelector(
+    'academic-notation-display',
+  ) as (HTMLElement & { updateComplete: Promise<unknown> }) | null;
+  expect(display).not.toBeNull();
+  await display!.updateComplete;
+  expect(display!.shadowRoot?.querySelector('.katex')).not.toBeNull();
+  expect(display!.shadowRoot?.querySelector('.output')?.getAttribute('aria-label')).toBe(
+    '67 = 25 + 6p',
+  );
+});
+
+test('replays academic notation to named equation and accepts Theme-localized names', async () => {
+  const search =
+    '?seed=321&scenario=creator.followers&task=academic-notation-to-named-equation&locale=nb';
+  const puzzle = mountPuzzle(search);
+  await puzzle.updateComplete;
+
+  expect(shellText(puzzle)).toContain(
+    'Fra akademisk notasjon til navngitt likning',
+  );
+  expect(storyOf(puzzle).length).toBeGreaterThan(0);
+  const sourceDisplay = puzzle.shadowRoot?.querySelector(
+    'academic-notation-display',
+  ) as (HTMLElement & { updateComplete: Promise<unknown> }) | null;
+  expect(sourceDisplay).not.toBeNull();
+  await sourceDisplay!.updateComplete;
+  expect(sourceDisplay!.shadowRoot?.querySelector('.katex')).not.toBeNull();
+  expect(sourceDisplay!.shadowRoot?.querySelector('.output')?.getAttribute('aria-label')).toBe(
+    '67 = 25 + 6p',
+  );
+
+  const inputComponent = puzzle.shadowRoot?.querySelector(
+    'named-equation-text-input',
+  ) as (HTMLElement & { updateComplete: Promise<unknown> }) | null;
+  expect(inputComponent).not.toBeNull();
+  await inputComponent!.updateComplete;
+  const input = inputComponent!.shadowRoot?.querySelector('input');
+  expect(input).not.toBeNull();
+  input!.value =
+    'sluttFoelgere = startFoelgere + promoterteInnlegg * foelgerePerInnlegg';
+  inputComponent!.shadowRoot?.querySelector('form')?.requestSubmit();
+  await puzzle.updateComplete;
+
+  expect(shellText(puzzle)).toContain(
+    'Den navngitte likningen stemmer med sammenhengen.',
+  );
 });

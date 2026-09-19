@@ -6,10 +6,13 @@ import type { Problem } from '../../problem-model/problem';
 import type { QuantityId, Relation } from '../../problem-model/expression';
 import type { LearnerAnswer } from '../learner-answer';
 import type { PuzzleLocale } from '../lang';
+import type { AcademicSymbolMap } from '../../representations/academic-symbol-map';
 
 export const modeIds = [
   'story-to-quantities',
   'quantities-to-named-equation',
+  'named-equation-to-academic-notation',
+  'academic-notation-to-named-equation',
 ] as const;
 
 export type ModeId = (typeof modeIds)[number];
@@ -73,6 +76,11 @@ export type ModeSubmission =
       input: string;
       choiceId?: string;
       relation?: Relation;
+    }
+  | {
+      kind: 'academic-notation';
+      input: string;
+      relation?: Relation;
     };
 
 export type StoryToQuantitiesState = {
@@ -98,9 +106,33 @@ export type QuantitiesToNamedEquationState = {
   input: { kind: 'expression'; value: string };
 };
 
+export type NamedEquationToAcademicNotationState = {
+  modeId: 'named-equation-to-academic-notation';
+  source: { kind: 'named-equation'; relation: Relation };
+  target: {
+    kind: 'academic-notation';
+    prompt: string;
+    symbols: AcademicSymbolMap;
+  };
+  input: { kind: 'expression'; value: string };
+};
+
+export type AcademicNotationToNamedEquationState = {
+  modeId: 'academic-notation-to-named-equation';
+  source: {
+    kind: 'academic-notation';
+    relation: Relation;
+    symbols: AcademicSymbolMap;
+  };
+  target: { kind: 'named-equation'; prompt: string };
+  input: { kind: 'expression'; value: string };
+};
+
 export type ModeState =
   | StoryToQuantitiesState
-  | QuantitiesToNamedEquationState;
+  | QuantitiesToNamedEquationState
+  | NamedEquationToAcademicNotationState
+  | AcademicNotationToNamedEquationState;
 
 export type ModeResult = {
   state: ModeState;

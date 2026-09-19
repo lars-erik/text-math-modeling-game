@@ -121,6 +121,13 @@ const semantics = namedExpressionGrammar.createSemantics().addOperation<ParsedNo
         right: right.toAst(),
       };
     },
+    MultiplyExpression_juxtapose(left, right) {
+      return {
+        kind: 'multiply',
+        left: left.toAst(),
+        right: right.toAst(),
+      };
+    },
     MultiplyExpression(expression) {
       return expression.toAst();
     },

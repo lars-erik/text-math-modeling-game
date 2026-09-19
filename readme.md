@@ -1,6 +1,6 @@
 # Text Math Modeling Game — specification package
 
-**Status:** Phase 1 implementation in progress, 19 September 2026. Milestones 0–7 behavior and the responsive graybox UI foundation exist, but the Milestone 7.5 architecture is being corrected under issue #19 before academic notation work continues. Later phases remain architectural direction rather than implementation scope.
+**Status:** Phase 1 implementation in progress, 19 September 2026. Milestones 0–8 behavior and the responsive graybox UI foundation exist. Later phases remain architectural direction rather than implementation scope.
 
 Build a test-driven web puzzle for translating between natural-language situations, quantity models, named expressions, substituted expressions, and academic notation. The same deterministic semantic problem powers every representation.
 
@@ -38,14 +38,16 @@ A seeded generator constructs valid cases by design and keeps the complete answe
 
 Both scenarios support English and Norwegian Bokmål resources while preserving the same semantic relationship and answer values.
 
-The real application exposes both implemented learner transformations:
+The real application exposes four implemented learner transformations:
 
 - Story → Quantities
 - Quantities → Named Equation
+- Named Equation → Academic Notation
+- Academic Notation → Named Equation
 
-Named equations are parsed back into the canonical domain AST and checked structurally rather than by raw string comparison. The browser UI has a shared responsive shell, scenario/task/seed/locale controls, accessible interaction tests, and selected visual screenshot approvals. Its URL reproduces all four selections, for example `?seed=321&scenario=creator.followers&task=quantities-to-named-equation&locale=nb`.
+Named and academic equations are parsed back into the canonical domain AST and checked structurally rather than by raw string comparison. Academic display uses a replaceable KaTeX adapter while the AST remains authoritative. The browser UI has a shared responsive shell, scenario/task/seed/locale controls, accessible interaction tests, and selected visual screenshot approvals. Its URL reproduces all four selections, for example `?seed=321&scenario=creator.followers&task=named-equation-to-academic-notation&locale=nb`.
 
-The current implementation still contains scenario-bound/task-specific coupling that issue #19 is removing. The intended contract is one canonical mathematical Problem composed independently with a Theme and a Mode; switching Theme, Mode, locale or input provider must not regenerate or rewrite the Problem. Milestone 8 waits behind that correction.
+One canonical mathematical Problem composes independently with a Theme and a Mode; switching Theme, Mode, locale or input provider does not regenerate or rewrite the Problem. See the [Milestone 8 architecture note](docs/milestone-8-architecture.md) for the new representation and display boundaries.
 
 ## Architectural invariant
 
