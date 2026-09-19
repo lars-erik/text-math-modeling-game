@@ -41,6 +41,12 @@ next()
 
 Each command should have a deterministic use-case printer. Favor actions that can be tested without mounting the UI. Initially a new puzzle and a single hint may be minimal; the first complete slice focuses on `start` and `submit`.
 
+The browser application composes the generated/scenario-bound modeling case with
+the selected representation edge. Its replay URL carries the complete learner-facing
+selection as `seed`, `scenario`, `task`, and `locale`. Changing only `task` or `locale`
+reuses the current modeling case; changing `seed` or `scenario` creates the requested
+deterministic case.
+
 ## First five puzzle types
 
 ### A. Story -> quantities

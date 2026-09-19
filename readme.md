@@ -1,6 +1,6 @@
 # Text Math Modeling Game — specification package
 
-**Status:** Phase 1 implementation in progress, 19 September 2026. Milestones 0–7 and the responsive graybox UI foundation are implemented; Milestone 7.5 is the next architecture/UI step before academic notation. Later phases remain architectural direction rather than implementation scope.
+**Status:** Phase 1 implementation in progress, 19 September 2026. Milestones 0–7.5 and the responsive graybox UI foundation are implemented; academic notation is next. Later phases remain architectural direction rather than implementation scope.
 
 Build a test-driven web puzzle for translating between natural-language situations, quantity models, named expressions, substituted expressions, and academic notation. The same deterministic semantic problem powers every representation.
 
@@ -33,24 +33,24 @@ A seeded generator constructs valid cases by design and keeps the complete answe
 
 Both scenarios support English and Norwegian Bokmål resources while preserving the same semantic relationship and answer values.
 
-The implemented learner transformations are:
+The real application exposes both implemented learner transformations:
 
 - Story → Quantities
 - Quantities → Named Equation
 
-Named equations are parsed back into the canonical domain AST and checked structurally rather than by raw string comparison. The browser UI has a shared responsive shell, scenario/seed controls, accessible interaction tests, and selected visual screenshot approvals.
+Named equations are parsed back into the canonical domain AST and checked structurally rather than by raw string comparison. The browser UI has a shared responsive shell, scenario/task/seed/locale controls, accessible interaction tests, and selected visual screenshot approvals. Its URL reproduces all four selections, for example `?seed=321&scenario=creator.followers&task=quantities-to-named-equation&locale=nb`.
 
-The next step is [Milestone 7.5](https://github.com/lars-erik/text-math-modeling-game/issues/13): separate the generated/scenario-bound modeling case from the selected puzzle task, expose both existing task types through the real application menu, and make seed + scenario + task + locale fully replayable through the URL. Milestone 8 then adds substitution and academic notation.
+The generated/scenario-bound `ModelingCase` is composed with a separate `PuzzleTask`, so switching task or locale reuses the same mathematical case. The next step is Milestone 8: substitution and academic notation.
 
 ## Architectural invariant
 
 ```
 Generator ──────┐
-DSL parser ─────┼──> semantic Problem AST ──> puzzle/use-case ──> screen model
-                │            │                      │                  │
-                │            ├──> DSL/LaTeX printers └──> trace printer  ├──> Lit view
-                │            └──> scenario renderer                     └──> approval
-                └── DSL serializer (AST → text)
+DSL parser ─────┼──> semantic Problem AST ──> ModelingCase + PuzzleTask
+                │            │                            │
+                │            ├──> DSL/LaTeX printers      └──> use-case ──> screen model
+                │            └──> scenario renderer                         ├──> Lit view
+                └── DSL serializer (AST → text)                             └──> approval
 ```
 
 The domain remains usable from tests and command-line tooling without a browser. All generated cases are reproducible with seed + generator version/configuration. The test suite includes exact invariants, property tests, human-reviewed text approvals, browser interaction tests, and selected screenshot approvals.

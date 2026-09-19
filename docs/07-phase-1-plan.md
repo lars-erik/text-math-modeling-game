@@ -98,6 +98,22 @@
 
 **Acceptance:** one schema yields reproducible distinct stories; interest choice changes context rather than correctness.
 
+## Milestone 7.5 — Modeling-case/task composition and replay UI
+
+**First red test:** starting the real application with an explicit
+`task=quantities-to-named-equation` selects that task without cloning and mutating a
+story puzzle definition.
+
+- Separate the generated/scenario-bound `ModelingCase` from the selected `PuzzleTask`.
+- Compose both implemented representation edges from the same modeling case.
+- Expose scenario, task, seed and locale through localized UI controls.
+- Persist all four selections in the URL and restore them on reload.
+- Reuse the current modeling case when task or locale changes.
+
+**Acceptance:** both implemented task flows run through the real application start
+path; complete URLs replay the learner-facing state without exposing the private
+answer key.
+
 ## Milestone 8 — Substitution and academic display
 
 **First red test/approval:** a known-value substitution prints `210 = 30 + 4 * dronePower`; a LaTeX visitor produces correct precedence and symbol compression for `210 = 30 + 4p`.

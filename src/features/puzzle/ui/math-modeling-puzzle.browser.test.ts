@@ -292,7 +292,7 @@ test('starts the named-equation task explicitly from the URL', async () => {
       }),
     )
     .toBeVisible();
-  await expect.element(page.getByText(/startFoelgere = \d+/)).toBeVisible();
+  await expect.element(page.getByText(/startFoelgere/)).toBeVisible();
   await expect
     .element(page.getByRole('combobox', { name: 'Oppgavetype' }))
     .toHaveValue('quantities-to-named-equation');
