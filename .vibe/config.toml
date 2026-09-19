@@ -1,10 +1,8 @@
-# Vibe/Devstral configuration
-active_model = "mistral-medium"
+# Project-level Mistral Vibe settings.
+# Model/provider choice and credentials belong to the user's ~/.vibe configuration.
+# Keep coding, shell and Git tools available; Vibe manages their permissions.
 
-[[models]]
-name = "mistral-medium"
-reasoning_effort = "high"
-
-[tools]
-allow_all = false
-allowed_tools = ["code_interpreter", "web_search"]
+[[mcp_servers]]
+name = "context7"
+transport = "streamable-http"
+url = "https://mcp.context7.com/mcp"
