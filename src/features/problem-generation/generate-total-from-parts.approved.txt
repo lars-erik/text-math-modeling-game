@@ -43,7 +43,6 @@ problem total-from-parts-seed-17 {
         total = base + count * unitValue
     }
 
-    symbol unitValue = p
 
     replay {
         seed 17
@@ -89,7 +88,6 @@ dsl
           total = base + count * unitValue
       }
   
-      symbol unitValue = p
   
       replay {
           seed 17

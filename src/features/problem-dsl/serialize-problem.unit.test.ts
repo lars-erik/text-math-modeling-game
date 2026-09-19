@@ -109,21 +109,6 @@ test('preserves nested right-associated addition and multiplication trees throug
   });
 });
 
-test('orders symbol mappings canonically and serializes deterministically', () => {
-  const problemWithUnorderedSymbols = {
-    ...totalFromPartsProblem,
-    academicSymbols: { total: 't', base: 'b' },
-  };
-
-  const first = serializeProblem(problemWithUnorderedSymbols);
-  const second = serializeProblem(problemWithUnorderedSymbols);
-
-  expect(first).toBe(second);
-  expect(first.indexOf('    symbol base = b\n')).toBeLessThan(
-    first.indexOf('    symbol total = t\n'),
-  );
-});
-
 test('serializes learner-visible facts without leaking a colocated private answer key', () => {
   const runtimeValueWithPrivateData = {
     ...totalFromPartsProblem,

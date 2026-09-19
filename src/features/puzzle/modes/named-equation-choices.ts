@@ -1,51 +1,47 @@
-import type { Relation } from '../../problem-model/expression';
-import type { SkinPresentation } from '../../skins';
-import type { NamedEquationChoice } from '../learner-answer';
+import type { Expression, Relation } from '../../problem-model/expression';
+import type { Problem } from '../../problem-model/problem';
 
-export function createNamedEquationChoices(
-  relation: Relation,
-  skin: SkinPresentation,
-): readonly NamedEquationChoice[] {
-  const namesByRole = new Map(
-    skin.facts.map((fact) => [fact.role, fact.variableName]),
-  );
-  const base = requireRoleName(namesByRole, 'base');
-  const count = requireRoleName(namesByRole, 'count');
-  const unit = requireRoleName(namesByRole, 'per-item');
-  const total = requireRoleName(namesByRole, 'total');
+export type NamedEquationChoiceSeed = {
+  id: string;
+  relation: Relation;
+};
+
+export function createNamedEquationChoiceSeeds(
+  problem: Problem,
+): readonly NamedEquationChoiceSeed[] {
   return [
+    { id: 'matching', relation: problem.relation },
     {
-      id: 'matching',
-      label: `${total} = ${base} + ${count} * ${unit}`,
-      relation,
-    },
-    {
-      id: 'base-per-item',
-      label: `${total} = ${count} * (${base} + ${unit})`,
-      relation: {
-        kind: 'equation',
-        left: { kind: 'quantity', id: 'total' },
-        right: {
-          kind: 'multiply',
-          left: { kind: 'quantity', id: 'count' },
-          right: {
-            kind: 'add',
-            left: { kind: 'quantity', id: 'base' },
-            right: { kind: 'quantity', id: 'unitValue' },
-          },
-        },
-      },
+      id: 'factor-into-group',
+      relation: regroupRelation(problem.relation),
     },
   ];
 }
 
-function requireRoleName(
-  namesByRole: ReadonlyMap<string, string>,
-  role: string,
-): string {
-  const name = namesByRole.get(role);
-  if (name === undefined) {
-    throw new Error(`Named-equation choices need a quantity with role ${role}.`);
+function regroupRelation(relation: Relation): Relation {
+  return {
+    kind: 'equation',
+    left: relation.left,
+    right: factorMultiplyIntoAddition(relation.right),
+  };
+}
+
+function factorMultiplyIntoAddition(expression: Expression): Expression {
+  if (
+    expression.kind !== 'add' ||
+    expression.right.kind !== 'multiply' ||
+    expression.left.kind === 'multiply'
+  ) {
+    return expression;
   }
-  return name;
+  const multiply = expression.right;
+  return {
+    kind: 'multiply',
+    left: multiply.left,
+    right: {
+      kind: 'add',
+      left: expression.left,
+      right: multiply.right,
+    },
+  };
 }

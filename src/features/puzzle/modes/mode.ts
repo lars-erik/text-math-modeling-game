@@ -1,7 +1,9 @@
-import type { SourceRange } from '../../named-expression';
-import type { Relation } from '../../problem-model/expression';
-import type { Problem, ProblemReplay } from '../../problem-model/problem';
-import type { SkinPresentation } from '../../skins';
+import type {
+  LearnerNameSource,
+  SourceRange,
+} from '../../named-expression';
+import type { Problem } from '../../problem-model/problem';
+import type { QuantityId } from '../../problem-model/expression';
 import type { LearnerAnswer } from '../learner-answer';
 import type { PuzzleLocale } from '../lang';
 
@@ -58,30 +60,27 @@ export type PuzzleFeedback =
   | { kind: 'incorrect'; message: string }
   | { kind: 'quantity-selection-accepted'; message: string };
 
-export type ScreenQuantity = {
-  id: string;
-  skinQuantityId: string;
-  label: string;
-  variableName: string;
-  displayValue: string;
-  role: string;
-  given: { kind: 'known'; value: number } | { kind: 'hidden' };
+export type QuantitySelection = {
+  knownIds: readonly QuantityId[];
+  unknownId?: QuantityId;
 };
 
-export type StoryToQuantitiesScreen = {
+export type StoryToQuantitiesState = {
   modeId: 'story-to-quantities';
   source: { kind: 'story' };
   target: {
     kind: 'quantities';
-    prompt: string;
-    quantities: readonly ScreenQuantity[];
+    quantityIds: readonly QuantityId[];
   };
   input: { kind: 'quantity-selection' } & QuantitySelection;
 };
 
-export type QuantitiesToNamedEquationScreen = {
+export type QuantitiesToNamedEquationState = {
   modeId: 'quantities-to-named-equation';
-  source: { kind: 'quantities'; quantities: readonly ScreenQuantity[] };
+  source: {
+    kind: 'quantities';
+    quantityIds: readonly QuantityId[];
+  };
   target: {
     kind: 'named-equation';
     prompt: string;
@@ -89,51 +88,27 @@ export type QuantitiesToNamedEquationScreen = {
   input: { kind: 'expression'; value: string };
 };
 
-export type PuzzleScreen = {
-  screen: StoryToQuantitiesScreen | QuantitiesToNamedEquationScreen;
-  context: {
-    locale: PuzzleLocale;
-    skinId: string;
-    story: string;
-    quantities: readonly ScreenQuantity[];
-    replay?: ProblemReplay & {
-      locale: PuzzleLocale;
-      skinId: string;
-      storySeed: number;
-    };
-  };
-  submission?: PuzzleSubmission;
+export type ModeState =
+  | StoryToQuantitiesState
+  | QuantitiesToNamedEquationState;
+
+export type ModeResult = {
+  state: ModeState;
   feedback?: PuzzleFeedback;
 };
 
-export type QuantitySelection = {
-  knownIds: readonly string[];
-  unknownId?: string;
-};
-
-export type PuzzleSubmission =
-  | { kind: 'quantity-selection' } & QuantitySelection
-  | {
-      kind: 'named-equation';
-      answerKind: LearnerAnswer['kind'];
-      input: string;
-      choiceId?: string;
-      relation?: Relation;
-    };
-
 export type ModeStartOptions = {
   problem: Problem;
-  skin: SkinPresentation;
   locale: PuzzleLocale;
-  replay?: ProblemReplay;
 };
 
 export type ModeSubmitOptions = ModeStartOptions & {
   answer: LearnerAnswer | QuantitySelection;
+  names: LearnerNameSource;
 };
 
 export type Mode = {
   id: ModeId;
-  start: (options: ModeStartOptions) => PuzzleScreen;
-  submit: (options: ModeSubmitOptions) => PuzzleScreen;
+  start: (options: ModeStartOptions) => ModeResult;
+  submit: (options: ModeSubmitOptions) => ModeResult;
 };

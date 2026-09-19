@@ -50,7 +50,6 @@ export const totalFromPartsProblem = {
     },
   ],
   relation: totalFromParts,
-  academicSymbols: { unitValue: 'p' },
   replay: {
     seed: 0,
     generatorVersion: 'hand-built-v1',

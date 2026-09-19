@@ -99,7 +99,6 @@ export function generateTotalFromPartsCase({
         },
       ],
       relation: totalFromParts,
-      academicSymbols: { unitValue: 'p' },
       replay: {
         seed,
         generatorVersion: totalFromPartsGeneratorVersion,

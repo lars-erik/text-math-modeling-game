@@ -88,7 +88,7 @@ test('switches tasks and input modes while the story stays visible and the math 
   ]);
 
   const distractorRadio = choiceInput!.shadowRoot?.querySelector(
-    'input[value="base-per-item"]',
+    'input[value="factor-into-group"]',
   ) as HTMLInputElement | null;
   expect(distractorRadio).not.toBeNull();
   distractorRadio!.checked = true;

@@ -1,9 +1,7 @@
 import { css, html, LitElement } from 'lit';
 
-import type {
-  QuantitySelection,
-  StoryToQuantitiesScreen,
-} from '../modes/mode';
+import type { StoryToQuantitiesScreen } from '../compose-puzzle';
+import type { QuantitySelection } from '../modes/mode';
 
 export class StoryQuantitiesInput extends LitElement {
   static properties = {

@@ -5,13 +5,14 @@ import {
   type PropertyValues,
   type TemplateResult,
 } from 'lit';
-import { composePuzzle } from '../compose-puzzle';
-import { createNamedEquationChoices } from '../modes/named-equation-choices';
-import { modes } from '../modes';
-import type {
-  PuzzleScreen,
-  QuantitySelection,
-} from '../modes/mode';
+import {
+  composePuzzle,
+  createNamedEquationChoices,
+  presentSkin,
+  submitPuzzle,
+  type PuzzleScreen,
+} from '../compose-puzzle';
+import type { QuantitySelection } from '../modes/mode';
 import type { LearnerAnswer } from '../learner-answer';
 import {
   isPuzzleLocale,
@@ -22,15 +23,18 @@ import {
   puzzleSelectionRequestEvent,
   type PuzzleSelectionRequest,
 } from '../puzzle-request';
-import { isSkinId, skins } from '../../skins';
-import type { SkinPresentation } from '../../skins';
+import { isSkinId } from '../../skins';
 import type { Problem } from '../../problem-model/problem';
 import { isModeId, type ModeId } from '../modes/mode';
 import {
   generateTotalFromPartsCase,
   defaultTotalFromPartsGenerationConfig,
 } from '../../problem-generation/generate-total-from-parts';
-import { isPuzzleInputMode, puzzleInputProviders, type PuzzleInputMode } from './puzzle-input-providers';
+import {
+  isPuzzleInputMode,
+  puzzleInputProviders,
+  type PuzzleInputMode,
+} from './puzzle-input-providers';
 import './story-quantities-input';
 import './puzzle-shell';
 import './puzzle-menu';
@@ -140,7 +144,6 @@ export class MathModelingPuzzle extends LitElement {
   declare locale: string;
   private declare screen: PuzzleScreen | undefined;
   private declare generatedProblem: Problem;
-  private declare skinPresentation: SkinPresentation | undefined;
 
   constructor() {
     super();
@@ -150,47 +153,33 @@ export class MathModelingPuzzle extends LitElement {
     this.inputMode = 'text';
     this.locale = 'en';
     this.screen = undefined;
-    const generated = generateTotalFromPartsCase({
-      seed: 17,
-      config: defaultTotalFromPartsGenerationConfig,
-    });
-    this.generatedProblem = generated.problem;
-    this.skinPresentation = undefined;
+    this.generatedProblem = generateCase(17);
   }
 
   protected willUpdate(changedProperties: PropertyValues<this>): void {
+    if (changedProperties.has('seed')) {
+      this.generatedProblem = generateCase(Number(this.seed));
+    }
     if (
       changedProperties.has('seed') ||
       changedProperties.has('skinId') ||
       changedProperties.has('modeId') ||
       changedProperties.has('locale')
     ) {
-      const seed = Number(this.seed);
-      this.generatedProblem = generateTotalFromPartsCase({
-        seed: Number.isSafeInteger(seed) ? seed : 17,
-        config: defaultTotalFromPartsGenerationConfig,
-      }).problem;
-      this.skinPresentation =
-        isSkinId(this.skinId) && isPuzzleLocale(this.locale)
-          ? skins[this.skinId].present({
-              problem: this.generatedProblem,
-              locale: this.locale,
-              storySeed: Number.isSafeInteger(seed) ? seed : 17,
-            })
-          : undefined;
       this.screen = this.composeCurrentScreen();
     }
   }
 
   private composeCurrentScreen(): PuzzleScreen | undefined {
-    if (this.skinPresentation === undefined) {
+    if (!isSkinId(this.skinId) || !isPuzzleLocale(this.locale)) {
       return undefined;
     }
     return composePuzzle({
       problem: this.generatedProblem,
-      skinId: this.skinPresentation.skinId,
+      skinId: this.skinId,
       modeId: isModeId(this.modeId) ? this.modeId : 'story-to-quantities',
-      locale: isPuzzleLocale(this.locale) ? this.locale : 'en',
+      locale: this.locale,
+      storySeed: Number(this.seed),
     });
   }
 
@@ -260,14 +249,19 @@ export class MathModelingPuzzle extends LitElement {
       </p>`;
     }
     const screen = this.screen;
-    if (screen === undefined || this.skinPresentation === undefined) {
+    if (screen === undefined || !isSkinId(this.skinId)) {
       return html``;
     }
     const resources = puzzleResources[locale];
     const inputProvider = puzzleInputProviders[this.inputMode];
     const choices = createNamedEquationChoices(
-      this.generatedProblem.relation,
-      this.skinPresentation,
+      this.generatedProblem,
+      presentSkin(
+        this.skinId,
+        this.generatedProblem,
+        locale,
+        Number(this.seed),
+      ),
     );
     return html`<div @puzzle-answer=${this.handleAnswer}>
       <nav aria-label=${resources.controls.inputMode}>
@@ -299,17 +293,16 @@ export class MathModelingPuzzle extends LitElement {
     if (
       !isSkinId(this.skinId) ||
       !isModeId(this.modeId) ||
-      !isPuzzleLocale(this.locale) ||
-      this.skinPresentation === undefined
+      !isPuzzleLocale(this.locale)
     ) {
       return;
     }
-    const mode = modes[this.modeId];
-    this.screen = mode.submit({
+    this.screen = submitPuzzle({
       problem: this.generatedProblem,
-      skin: this.skinPresentation,
+      skinId: this.skinId,
+      modeId: this.modeId,
       locale: this.locale,
-      replay: this.generatedProblem.replay,
+      storySeed: Number(this.seed),
       answer,
     });
   }
@@ -424,6 +417,14 @@ export class MathModelingPuzzle extends LitElement {
       </puzzle-shell>
     `;
   }
+}
+
+function generateCase(seed: number): Problem {
+  const parsed = Number.isSafeInteger(seed) ? seed : 17;
+  return generateTotalFromPartsCase({
+    seed: parsed,
+    config: defaultTotalFromPartsGenerationConfig,
+  }).problem;
 }
 
 if (customElements.get('math-modeling-puzzle') === undefined) {

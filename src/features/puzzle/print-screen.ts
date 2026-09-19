@@ -1,5 +1,5 @@
 import { printRelation } from '../problem-model/print-relation';
-import type { PuzzleScreen } from './modes/mode';
+import type { PuzzleScreen } from './compose-puzzle';
 
 export function printScreen(puzzleScreen: PuzzleScreen): string {
   const { screen, context } = puzzleScreen;
@@ -29,6 +29,9 @@ export function printScreen(puzzleScreen: PuzzleScreen): string {
     lines.push(`submission ${submission.kind}`);
     if (submission.kind === 'named-equation') {
       lines.push(`  answer-kind ${submission.answerKind}`);
+      if (submission.choiceId !== undefined) {
+        lines.push(`  choice ${submission.choiceId}`);
+      }
       if (submission.relation !== undefined) {
         lines.push(...indent(printRelation(submission.relation)));
       }
@@ -56,7 +59,9 @@ export function printScreen(puzzleScreen: PuzzleScreen): string {
   return `${lines.join('\n')}\n`;
 }
 
-function printQuantity(quantity: PuzzleScreen['context']['quantities'][number]): string {
+function printQuantity(
+  quantity: PuzzleScreen['context']['quantities'][number],
+): string {
   const value =
     quantity.given.kind === 'known' ? String(quantity.given.value) : '?';
   return `  ${quantity.skinQuantityId} [${quantity.role}] = ${value}`;

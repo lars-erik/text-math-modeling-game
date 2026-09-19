@@ -2,7 +2,7 @@ import * as ohm from 'ohm-js';
 
 export const problemGrammar = ohm.grammar(String.raw`
   ProblemDsl {
-    Problem = "problem" metadataIdentifier "{" Concepts Quantity* Equation Symbol* Replay? "}"
+    Problem = "problem" metadataIdentifier "{" Concepts Quantity* Equation Replay? "}"
 
     Concepts = "concepts" "{" metadataIdentifier* "}"
     Quantity = "quantity" identifier ":" dimension Role? "=" Given
@@ -11,7 +11,6 @@ export const problemGrammar = ohm.grammar(String.raw`
       = "?"      -- hidden
       | integer  -- known
     Equation = "equation" "{" equationText "}"
-    Symbol = "symbol" identifier "=" identifier
     Replay = "replay" "{" "seed" integer "generator" metadataIdentifier "}"
 
     dimension = "amountPerItem" | "amount" | "item" | "scalar"

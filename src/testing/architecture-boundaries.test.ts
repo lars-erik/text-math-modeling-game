@@ -17,6 +17,8 @@ const testOnlyPathPattern = /(?:^|\/)(?:__tests__|__screenshots__)\//;
 const testOnlyFilePattern = /\.(?:test|fixture)(?:\.ts)?$/;
 const domainFilePattern =
   /^features\/(?:problem-model|problem-dsl|named-expression|problem-generation|skins|puzzle\/modes)\//;
+const modeFilePattern = /^features\/puzzle\/modes\//;
+const skinModulePattern = /^features\/skins(?:\/|$)/;
 const uiModulePattern = /^features\/puzzle\/ui(?:\/|$)/;
 const testOnlyPackagePattern =
   /^(?:vitest|@vitest\/[^/]+|approvals|playwright|@playwright\/[^/]+|fast-check|@fast-check\/[^/]+)(?:\/|$)/;
@@ -157,6 +159,16 @@ test('domain modules do not import Lit or UI modules', () => {
     violationLines(
       productionImports.filter(({ file }) => domainFilePattern.test(file)),
       isUiImport,
+    ),
+  );
+});
+
+test('mode modules do not import skin modules', () => {
+  expectNoViolations(
+    'Mode modules must work with canonical quantity IDs only and must not import concrete Skin implementations:',
+    violationLines(
+      productionImports.filter(({ file }) => modeFilePattern.test(file)),
+      (_file, specifier) => skinModulePattern.test(resolveSpecifier(_file, specifier)),
     ),
   );
 });

@@ -33,7 +33,6 @@ dsl
           total = base + count * unitValue
       }
   
-      symbol unitValue = p
   
       replay {
           seed 0
@@ -77,7 +76,6 @@ dsl
           total = base + count * unitValue
       }
   
-      symbol unitValue = p
   
       replay {
           seed 0

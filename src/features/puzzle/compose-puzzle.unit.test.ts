@@ -3,22 +3,34 @@ import {
   defaultTotalFromPartsGenerationConfig,
   generateTotalFromPartsCase,
 } from '../problem-generation/generate-total-from-parts';
-import { composePuzzle } from './compose-puzzle';
-import { createNamedEquationChoices } from './modes/named-equation-choices';
-import { modes } from './modes';
-import type { PuzzleScreen } from './modes/mode';
+import { serializeProblem } from '../problem-dsl';
+import {
+  composePuzzle,
+  createNamedEquationChoices,
+  presentSkin,
+  submitPuzzle,
+  type PuzzleScreen,
+} from './compose-puzzle';
+import { createNamedEquationChoiceSeeds } from './modes/named-equation-choices';
+import { modes, modeIds } from './modes';
+import { relationsHaveNormalizedStructure } from '../problem-model/normalized-structure';
+import { namedEquationStructurePolicy } from '../problem-model/normalized-structure';
 import { skins, skinIds } from '../skins';
 import type { PuzzleLocale } from './lang';
 
 const locales: readonly PuzzleLocale[] = ['en', 'nb'];
-const modeIds = ['story-to-quantities', 'quantities-to-named-equation'] as const;
 
-
-test('one canonical Problem, DSL, and answer key serve every skin and mode in both locales', () => {
-  const generated = generateTotalFromPartsCase({
+function generateCase() {
+  return generateTotalFromPartsCase({
     seed: 321,
     config: defaultTotalFromPartsGenerationConfig,
   });
+}
+
+test('one canonical Problem, DSL, and answer key serve every skin and mode in both locales', () => {
+  const generated = generateCase();
+  const problemBefore = structuredClone(generated.problem);
+  const dslBefore = serializeProblem(generated.problem);
   for (const skinId of skinIds) {
     for (const locale of locales) {
       for (const modeId of modeIds) {
@@ -45,52 +57,75 @@ test('one canonical Problem, DSL, and answer key serve every skin and mode in bo
           (quantity) => quantity.given.kind === 'hidden',
         );
         expect(hidden?.displayValue).toBe('?');
+        expect(hidden?.id).toBe('unitValue');
       }
+    }
+  }
+  expect(generated.problem).toEqual(problemBefore);
+  expect(serializeProblem(generated.problem)).toBe(dslBefore);
+});
+
+test('mode state depends only on the canonical Problem and locale', () => {
+  const generated = generateCase();
+  for (const locale of locales) {
+    for (const modeId of modeIds) {
+      const { state } = modes[modeId].start({
+        problem: generated.problem,
+        locale,
+      });
+      expect(JSON.stringify(state)).not.toContain('skin');
+      const quantityIds =
+        state.modeId === 'story-to-quantities'
+          ? state.target.quantityIds
+          : state.source.quantityIds;
+      expect([...quantityIds]).toEqual(
+        generated.problem.quantities.map((quantity) => quantity.id),
+      );
     }
   }
 });
 
-test('skin and mode composition is order-independent', () => {
-  const generated = generateTotalFromPartsCase({
-    seed: 321,
-    config: defaultTotalFromPartsGenerationConfig,
-  });
+test('composition is order-independent: mode first, then skin', () => {
+  const generated = generateCase();
   for (const skinId of skinIds) {
     for (const modeId of modeIds) {
       for (const locale of locales) {
-        const skinFirst = composePuzzle({
+        const modeFirstState = modes[modeId].start({
+          problem: generated.problem,
+          locale,
+        });
+        const screen = composePuzzle({
           problem: generated.problem,
           skinId,
           modeId,
           locale,
         });
-        const modeFirst = modes[modeId].start({
-          problem: generated.problem,
-          skin: skins[skinId].present({
-            problem: generated.problem,
-            locale,
-            storySeed: 321,
-          }),
+        expect(modeFirstState.state.modeId).toBe(screen.screen.modeId);
+        const presentation = presentSkin(
+          skinId,
+          generated.problem,
           locale,
-          replay: generated.problem.replay,
-        });
-        expect(modeFirst).toEqual(skinFirst);
+          321,
+        );
+        expect(screen.context.story).toBe(presentation.story.text);
+        expect(screen.context.quantities.map((quantity) => quantity.id)).toEqual(
+          presentation.facts.map((fact) => fact.canonicalId),
+        );
+        expect(composePuzzle({
+          problem: generated.problem,
+          skinId,
+          modeId,
+          locale,
+        })).toEqual(screen);
       }
     }
   }
 });
 
 test('both skins present the exact same canonical relation and bindings by role', () => {
-  const generated = generateTotalFromPartsCase({
-    seed: 321,
-    config: defaultTotalFromPartsGenerationConfig,
-  });
+  const generated = generateCase();
   const byRole = (skinId: (typeof skinIds)[number], locale: PuzzleLocale) => {
-    const presentation = skins[skinId].present({
-      problem: generated.problem,
-      locale,
-      storySeed: 321,
-    });
+    const presentation = presentSkin(skinId, generated.problem, locale, 321);
     return presentation.facts.map((fact) => ({
       role: fact.role,
       visibility: fact.visibility,
@@ -105,66 +140,81 @@ test('both skins present the exact same canonical relation and bindings by role'
   }
 });
 
-test('named-equation choices share canonical math across skins and locales', () => {
-  const generated = generateTotalFromPartsCase({
-    seed: 321,
-    config: defaultTotalFromPartsGenerationConfig,
-  });
-  for (const skinId of skinIds) {
-    for (const locale of locales) {
-      const skin = skins[skinId].present({
-        problem: generated.problem,
-        locale,
-        storySeed: 321,
-      });
+test('named-equation choice relations are canonical and identical across skins', () => {
+  const generated = generateCase();
+  const seeds = createNamedEquationChoiceSeeds(generated.problem);
+  expect(seeds.map((seed) => seed.id)).toEqual([
+    'matching',
+    'factor-into-group',
+  ]);
+  const matching = seeds.find((seed) => seed.id === 'matching');
+  expect(matching?.relation).toEqual(generated.problem.relation);
+  const distractor = seeds.find((seed) => seed.id === 'factor-into-group');
+  expect(distractor).toBeDefined();
+  expect(
+    relationsHaveNormalizedStructure(
+      generated.problem.relation,
+      distractor!.relation,
+      namedEquationStructurePolicy,
+    ),
+  ).toBe(false);
+  for (const locale of locales) {
+    for (const skinId of skinIds) {
       const choices = createNamedEquationChoices(
-        generated.problem.relation,
-        skin,
+        generated.problem,
+        presentSkin(skinId, generated.problem, locale, 321),
       );
-      expect(choices.map((choice) => choice.id)).toEqual([
-        'matching',
-        'base-per-item',
-      ]);
-      const matching = choices.find((choice) => choice.id === 'matching');
-      expect(matching?.relation).toEqual(generated.problem.relation);
-      for (const choice of choices) {
-        if (choice.id === 'matching') {
-          continue;
-        }
-        expect(choice.relation).not.toEqual(generated.problem.relation);
-        expect(choice.label).not.toBe(matching?.label);
-      }
+      expect(choices.map((choice) => choice.relation)).toEqual(
+        seeds.map((seed) => seed.relation),
+      );
+      expect(new Set(choices.map((choice) => choice.label)).size).toBe(
+        choices.length,
+      );
     }
   }
 });
 
-test('the same story text serves both modes and both input modes', () => {
-  const generated = generateTotalFromPartsCase({
-    seed: 321,
-    config: defaultTotalFromPartsGenerationConfig,
-  });
-  const screenOf = (
-    modeId: (typeof modeIds)[number],
-  ): PuzzleScreen =>
-    composePuzzle({
-      problem: generated.problem,
-      skinId: 'gaming.drone-power',
-      modeId,
-      locale: 'en',
-    });
-  const storyScreen = screenOf('story-to-quantities');
-  const namedScreen = screenOf('quantities-to-named-equation');
-  expect(storyScreen.context.story).toBe(namedScreen.context.story);
-  const textSubmission = modes['quantities-to-named-equation'].submit({
+test('the same story and problem serve both modes and both input providers', () => {
+  const generated = generateCase();
+  const problemBefore = structuredClone(generated.problem);
+  const storyScreen: PuzzleScreen = composePuzzle({
     problem: generated.problem,
-    skin: skins['gaming.drone-power'].present({
-      problem: generated.problem,
-      locale: 'en',
-      storySeed: 321,
-    }),
+    skinId: 'gaming.drone-power',
+    modeId: 'story-to-quantities',
     locale: 'en',
-    replay: generated.problem.replay,
-    answer: { kind: 'text', input: 'total = base + count * unitValue' },
   });
+  const namedScreen = composePuzzle({
+    problem: generated.problem,
+    skinId: 'gaming.drone-power',
+    modeId: 'quantities-to-named-equation',
+    locale: 'en',
+  });
+  expect(namedScreen.context.story).toBe(storyScreen.context.story);
+  const textSubmission = submitPuzzle({
+    problem: generated.problem,
+    skinId: 'gaming.drone-power',
+    modeId: 'quantities-to-named-equation',
+    locale: 'en',
+    answer: { kind: 'text', input: 'totalPower = basePower + droneCount * dronePower' },
+  });
+  expect(textSubmission.feedback?.kind).toBe('accepted');
   expect(textSubmission.context.story).toBe(storyScreen.context.story);
+  const distractor = createNamedEquationChoiceSeeds(generated.problem).find(
+    (seed) => seed.id === 'factor-into-group',
+  );
+  const choiceSubmission = submitPuzzle({
+    problem: generated.problem,
+    skinId: 'gaming.drone-power',
+    modeId: 'quantities-to-named-equation',
+    locale: 'en',
+    answer: {
+      kind: 'relation-choice',
+      choiceId: 'factor-into-group',
+      label: 'distractor',
+      relation: distractor!.relation,
+    },
+  });
+  expect(choiceSubmission.feedback?.kind).toBe('structural-mismatch');
+  expect(choiceSubmission.context.story).toBe(storyScreen.context.story);
+  expect(generated.problem).toEqual(problemBefore);
 });

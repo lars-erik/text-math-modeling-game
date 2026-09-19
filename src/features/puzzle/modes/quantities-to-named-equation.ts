@@ -1,50 +1,38 @@
 import {
   parseNamedRelation,
-  type LearnerNameSource,
-  type NamedRelationDiagnostic,
 } from '../../named-expression';
 import {
   namedEquationStructurePolicy,
   relationsHaveNormalizedStructure,
 } from '../../problem-model/normalized-structure';
-import type { Relation } from '../../problem-model/expression';
 import { puzzleResources } from '../lang';
 import type { LearnerAnswer as PuzzleLearnerAnswer } from '../learner-answer';
 import type {
   Mode,
+  ModeResult,
   ModeStartOptions,
   ModeSubmitOptions,
   PuzzleFeedback,
-  PuzzleScreen,
+  QuantitiesToNamedEquationState,
 } from './mode';
-import { createNamedEquationChoices } from './named-equation-choices';
-import { toScreenQuantities } from './screen-quantities';
 
 export const quantitiesToNamedEquationMode: Mode = {
   id: 'quantities-to-named-equation',
-  start(options: ModeStartOptions): PuzzleScreen {
-    return compose(options, { input: '' });
+  start(options: ModeStartOptions): ModeResult {
+    return { state: composeState(options, '') };
   },
-  submit(options: ModeSubmitOptions): PuzzleScreen {
+  submit(options: ModeSubmitOptions): ModeResult {
     const answer = options.answer as PuzzleLearnerAnswer;
     const displayInput = answer.kind === 'text' ? answer.input : answer.label;
-    const parsed = answer.kind === 'text'
-      ? parseNamedRelation(answer.input, options.skin.learnerNames)
-      : { kind: 'success' as const, relation: answer.relation };
-    const screen = compose(options, { input: displayInput });
-    if (parsed.kind !== 'success' && answer.kind === 'text') {
+    const parsed =
+      answer.kind === 'text'
+        ? parseNamedRelation(answer.input, options.names)
+        : ({ kind: 'success' as const, relation: answer.relation } as const);
+    if (parsed.kind !== 'success') {
       return {
-        ...screen,
-        submission: {
-          kind: 'named-equation',
-          answerKind: answer.kind,
-          input: displayInput,
-        },
+        state: composeState(options, displayInput),
         feedback: parsed as PuzzleFeedback,
       };
-    }
-    if (parsed.kind !== 'success') {
-      return screen;
     }
     const accepted = relationsHaveNormalizedStructure(
       options.problem.relation,
@@ -59,16 +47,7 @@ export const quantitiesToNamedEquationMode: Mode = {
       });
     const resources = puzzleResources[options.locale].quantitiesToNamedEquation;
     return {
-      ...screen,
-      submission: {
-        kind: 'named-equation',
-        answerKind: answer.kind,
-        input: displayInput,
-        ...(answer.kind === 'relation-choice'
-          ? { choiceId: answer.choiceId }
-          : {}),
-        relation: parsed.relation,
-      },
+      state: composeState(options, displayInput),
       feedback: accepted
         ? {
             kind: 'accepted',
@@ -88,38 +67,21 @@ export const quantitiesToNamedEquationMode: Mode = {
   },
 };
 
-function compose(
+function composeState(
   options: ModeStartOptions,
-  input: { input: string },
-): PuzzleScreen {
+  input: string,
+): QuantitiesToNamedEquationState {
   const resources = puzzleResources[options.locale].quantitiesToNamedEquation;
-  const screenQuantities = toScreenQuantities(options.skin);
   return {
-    screen: {
-      modeId: 'quantities-to-named-equation',
-      source: { kind: 'quantities', quantities: screenQuantities },
-      target: {
-        kind: 'named-equation',
-        prompt: resources.prompt,
-      },
-      input: { kind: 'expression', value: input.input },
+    modeId: 'quantities-to-named-equation',
+    source: {
+      kind: 'quantities',
+      quantityIds: options.problem.quantities.map((quantity) => quantity.id),
     },
-    context: {
-      locale: options.locale,
-      skinId: options.skin.skinId,
-      story: options.skin.story.text,
-      quantities: screenQuantities,
-      replay: options.problem.replay
-        ? {
-            ...options.problem.replay,
-            locale: options.locale,
-            skinId: options.skin.skinId,
-            storySeed: options.skin.story.storySeed,
-          }
-        : undefined,
+    target: {
+      kind: 'named-equation',
+      prompt: resources.prompt,
     },
+    input: { kind: 'expression', value: input },
   };
 }
-
-export { createNamedEquationChoices };
-export type { LearnerNameSource, NamedRelationDiagnostic };

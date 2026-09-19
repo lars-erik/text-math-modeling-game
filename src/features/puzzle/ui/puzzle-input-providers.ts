@@ -1,6 +1,6 @@
 import { html, type TemplateResult } from 'lit';
 import type { NamedEquationChoice } from '../learner-answer';
-import type { PuzzleScreen } from '../modes/mode';
+import type { PuzzleScreen } from '../compose-puzzle';
 import type { PuzzleLocaleResources } from '../lang/contract';
 import './named-equation-choice-input';
 import './named-equation-text-input';

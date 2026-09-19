@@ -49,7 +49,6 @@ test('parses the complete reference problem DSL into the domain model', () => {
           },
         },
       },
-      academicSymbols: { unitValue: 'p' },
     },
   });
 });
@@ -110,33 +109,6 @@ test('reports malformed equation syntax in complete DSL source coordinates', () 
       start: { offset: invalidOffset, line: 15, column: 32 },
       end: { offset: invalidOffset, line: 15, column: 32 },
     },
-  });
-});
-
-test('rejects an academic symbol mapping for an undefined quantity', () => {
-  const undefinedSymbolDsl = referenceProblemDsl.replace(
-    'symbol unitValue = p',
-    'symbol missingValue = p',
-  );
-
-  expect(parseProblem(undefinedSymbolDsl)).toEqual({
-    kind: 'invalid-problem',
-    issues: [
-      { kind: 'undefined-academic-symbol-quantity', id: 'missingValue' },
-    ],
-  });
-});
-
-test('returns a typed diagnostic instead of discarding a duplicate symbol mapping', () => {
-  const duplicateSymbolDsl = referenceProblemDsl.replace(
-    '    symbol unitValue = p\n',
-    '    symbol unitValue = p\n    symbol unitValue = q\n',
-  );
-
-  expect(parseProblem(duplicateSymbolDsl)).toEqual({
-    kind: 'duplicate-symbol-mapping',
-    quantityId: 'unitValue',
-    symbols: ['p', 'q'],
   });
 });
 

@@ -41,7 +41,6 @@ export type Problem = {
   concepts: readonly ConceptId[];
   quantities: readonly Quantity[];
   relation: Relation;
-  academicSymbols: Readonly<Record<QuantityId, string>>;
   replay?: ProblemReplay;
 };
 

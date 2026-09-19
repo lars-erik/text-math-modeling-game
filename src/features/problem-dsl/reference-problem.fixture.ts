@@ -15,6 +15,5 @@ export const referenceProblemDsl = `problem total-from-parts {
         total = base + count * unitValue
     }
 
-    symbol unitValue = p
 }
 `;

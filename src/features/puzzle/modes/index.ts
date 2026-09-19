@@ -3,20 +3,21 @@ export {
   modeIds,
   type Mode,
   type ModeId,
+  type ModeResult,
   type ModeStartOptions,
   type ModeSubmitOptions,
+  type ModeState,
   type PuzzleFeedback,
-  type PuzzleScreen,
-  type PuzzleSubmission,
   type QuantitySelection,
-  type ScreenQuantity,
-  type StoryToQuantitiesScreen,
-  type QuantitiesToNamedEquationScreen,
+  type StoryToQuantitiesState,
+  type QuantitiesToNamedEquationState,
 } from './mode';
 export { storyToQuantitiesMode } from './story-to-quantities';
 export { quantitiesToNamedEquationMode } from './quantities-to-named-equation';
-export { createNamedEquationChoices } from './named-equation-choices';
-export { toScreenQuantities } from './screen-quantities';
+export {
+  createNamedEquationChoiceSeeds,
+  type NamedEquationChoiceSeed,
+} from './named-equation-choices';
 import type { Mode, ModeId } from './mode';
 import { storyToQuantitiesMode } from './story-to-quantities';
 import { quantitiesToNamedEquationMode } from './quantities-to-named-equation';
