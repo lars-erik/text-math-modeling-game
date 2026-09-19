@@ -1,26 +1,27 @@
-# Procedural generation and scenarios
+# Procedural generation and skins
 
-## Two independent generators
+## Independent mathematical generation and Skin projection
 
-The **mathematical generator** produces a complete and valid semantic problem plus a private answer key. The **scenario generator** renders those fixed facts as a particular story. A scenario can change audience appeal and vocabulary while the mathematics and answer remain identical. Locale is another presentation input: changing language changes story text and learner-facing names, not the semantic problem or answer key.
+The **mathematical generator** produces a complete canonical `Problem` plus a private `AnswerKey`. A **Skin** projects those fixed canonical facts into a story, contextual labels/names/units and locale-specific wording. Skin selection never changes the Problem or AnswerKey.
 
-```
+```text
 requested concepts + constraints + seed
-           ↓
+           |
+           v
     composable math plan
-           ↓
-     AST + answer key
-           ↓
-       validation
-           ↓
- scenario binding + story plan
-           ↓
- locale resource map + renderer
-           ↓
-     rendered story
+           |
+           v
+ canonical Problem + private AnswerKey
+           |
+           +-------------> Mode
+           |
+           +-------------> Skin + locale + story seed
+                                |
+                                v
+                         SkinPresentation
 ```
 
-Mathematical generation constructs an AST directly. The DSL serializer exposes that AST for fixtures, review, and replay.
+Mathematical generation constructs the AST directly. The canonical DSL exposes only that mathematical AST/replay. Learner-facing replay records Skin, Mode and locale separately.
 
 ## Initial compositional design
 
@@ -38,17 +39,23 @@ interface GenerationRequest {
     maxSolution: number;
     positiveValues: true;
   };
-  scenarioId: string;
 }
 
 interface GeneratedCase {
-  problem: Problem;       // learner-visible facts and semantic relationship
-  answerKey: AnswerKey;  // complete hidden bindings, for checking/debug
-  replay: ReplayToken;   // seed, generator version, config/scenario ID
+  problem: Problem;      // canonical learner-visible mathematics
+  answerKey: AnswerKey; // complete hidden bindings, for checking/debug only
+  replay: MathReplayToken; // seed, generator version, mathematical config
+}
+
+interface PuzzleSelection {
+  skinId: string;
+  mode: PuzzleMode;
+  locale: PuzzleLocale;
+  storySeed: number;
 }
 ```
 
-Compose distinct responsibilities as needed by concrete tests: `ShapeGenerator`, `ValueGenerator`, `UnknownSelector`, `ConstraintValidator`, `ScenarioBinder`. A small pure function may satisfy several responsibilities at first; extract reusable interfaces when a second shape requires them. Allow multiple concepts to contribute to one schema: addition and multiplication may both shape the same generated relation.
+Compose mathematical responsibilities as needed by concrete tests: `ShapeGenerator`, `ValueGenerator`, `UnknownSelector`, and `ConstraintValidator`. Skin projection is outside mathematical generation. A small pure function may satisfy several mathematical responsibilities at first; extract reusable interfaces when a second mathematical shape requires them. Allow multiple concepts to contribute to one schema: addition and multiplication may both shape the same generated relation.
 
 ## First equation family
 
@@ -67,13 +74,7 @@ total = 30 + 4 * 45 = 210
 
 Hide `unitValue` in the first vertical slice. Later allow hiding `base`, `count`, or `total` after writing appropriate domain and pedagogy tests (including zero/non-integer cases). Preserve the complete answer key rather than solving randomly constructed equations to recover it.
 
-Before scenario binding, this mathematical family uses the abstract dimensions
-`scalar + item * scalar -> scalar`: `item` marks the repeated count and the
-second `scalar` is the abstract per-count value. The Phase 1 dimension validator
-also supports the concrete scenario rule `item * powerPerItem -> power` and
-rejects incompatible sums, products, and equation sides. Milestone 6 binds the
-abstract roles to concrete power/drone dimensions and units; the Milestone 5
-generator does not embed story-specific labels or units.
+The mathematical family uses generic roles/dimensions such as `scalar + item * scalar -> scalar`: `item` marks the repeated count and the second `scalar` is the abstract per-count value. Concrete Skin concepts such as MW/drone or followers/post are presentation/unit semantics validated by the Skin; they do not rewrite the canonical Problem's IDs, relation or generic dimensions.
 
 The initial family trains the requested concept composition:
 
@@ -89,7 +90,7 @@ A broader catalog can later add additive change, comparisons, ratios, two unknow
 
 ## Determinism and replay
 
-Inject the random-number source. Use a stable documented algorithm or library, explicit numeric ranges, and deterministic ordering. The same seed, generator version, configuration and scenario ID produce an identical case. Print all replay fields with generated test failures. `fast-check` manages its own shrinkable test cases; record both the fast-check replay seed/path and the application's generation seed as appropriate.
+Inject the random-number source. Use a stable documented algorithm or library, explicit numeric ranges, and deterministic ordering. The same seed, generator version and mathematical configuration produce an identical canonical case regardless of Skin, Mode or locale. Print mathematical replay fields with generated test failures. `fast-check` manages its own shrinkable test cases; record both the fast-check replay seed/path and the application's generation seed as appropriate.
 
 The `total-from-parts-v1` generator uses Mulberry32 and accepts unsigned 32-bit
 integer seeds (`0` through `4294967295`). This range is the replay contract:
@@ -107,13 +108,14 @@ Generation invariants:
 - Every generated answer key satisfies the relation.
 - The hidden answer meets the integer-solution constraint.
 - AST -> DSL -> AST preserves semantics.
-- Scenario selection leaves the mathematical model and answer unchanged.
-- Locale selection leaves the mathematical model, answer key, and semantic story plan unchanged.
+- Skin selection leaves the exact canonical Problem/DSL/relation and AnswerKey unchanged.
+- Mode selection leaves the exact canonical Problem/DSL/relation and AnswerKey unchanged.
+- Locale selection leaves the exact canonical Problem, AnswerKey, and semantic Skin story plan unchanged.
 - Every supported locale provides the complete typed resource-key set required by its scenario.
 
-## Structured scenario bindings
+## Structured Skin projections
 
-The shape has roles: `base`, `count`, `unitValue`, `total`. A scenario gives the roles meaningful identifiers, labels, dimensions/units, and natural language.
+The shape has canonical IDs/roles: `base`, `count`, `unitValue`, `total`. A Skin gives those roles contextual learner-facing names, labels, units and natural language while retaining the canonical IDs as semantic identity.
 
 ```
 Shape: total = base + count * unitValue
@@ -131,11 +133,13 @@ Creator roles:
   total      -> finalFollowers (followers)
 ```
 
-Use an explicit role map that preserves the equation structure across interest packs. Use coherent units and narrative: the fixed base applies once, each repeated unit applies `count` times, and the question identifies the hidden role.
+Use an explicit presentation map keyed by canonical IDs/roles. `basePower` and `startingFollowers` are learner-facing names, not replacements for canonical `base`; similarly for the other roles. Use coherent units and narrative: the fixed base applies once, each repeated unit applies `count` times, and the question identifies the hidden role.
 
-## Localized scenario resource maps
+A Skin adapter returns presentation data, not `{ problem: Problem }`. It never renames AST references, rewrites relations, changes mathematical replay, or creates task-specific definitions. The same `SkinPresentation` is reusable by every Mode.
 
-Keep scenario semantics separate from language. A scenario first produces a deterministic **story plan** containing semantic keys for quantities, nouns, and sentence fragments. A locale renderer then resolves those keys through a language resource map and interpolates only validated fact-ledger values. Random selection chooses semantic variant keys before localization, so changing language does not choose a different mathematical story structure.
+## Localized Skin resource maps
+
+Keep Skin semantics separate from language. A Skin first produces a deterministic **story plan** containing semantic keys for quantities, nouns, and sentence fragments. A locale renderer then resolves those keys through a language resource map and interpolates only validated fact-ledger values. Random selection chooses semantic variant keys before localization, so changing language does not choose a different mathematical story structure.
 
 Use Bellissima-style language modules: each supported locale lives in its own file and exports the same typed nested map. For example:
 
@@ -175,7 +179,7 @@ type ScenarioLocaleResources = {
 };
 ```
 
-The map keys are canonical and identical across locale files; values are localized. `variableName` is the identifier shown to and accepted from the learner for named-expression puzzles. The parser resolves that localized name back to the scenario's canonical quantity ID before semantic checking. Noun forms and sentence fragments are data rather than conditionals embedded in the renderer. Extend the shared noun-form schema deliberately when a supported language needs additional grammatical forms.
+The map keys are stable Skin resource keys while semantic quantity references point back to canonical Problem IDs; values are localized. `variableName` is the identifier shown to and accepted from the learner for named-expression puzzles. The parser resolves that localized name back to the Problem's canonical quantity ID before semantic checking. Noun forms and sentence fragments are data rather than conditionals embedded in the renderer. Extend the shared noun-form schema deliberately when a supported language needs additional grammatical forms.
 
 Generic puzzle UI text (commands, common prompts, feedback categories) uses the same per-locale-map pattern in the puzzle feature rather than being duplicated in every scenario. All learner-visible strings should come from a locale resource boundary even when Phase 1 initially exercises only a small subset.
 
@@ -199,8 +203,8 @@ The domain's numbers come from the generated AST and answer key, not hard-coded 
 
 ## Template testing
 
-Print a deterministic story and a fact ledger in an approval artifact. Test required quantities, values, dimensions, unknown role and equation separately through exact assertions. Approve representative output for each Phase 1 locale and verify that localized learner-facing variable names resolve to the same canonical quantities. An approved prose output verifies wording and readability but is not the sole source of evidence that the story is mathematically faithful.
+Print a deterministic story and a fact ledger in an approval artifact. Test required quantities, values, contextual units, unknown role and relation separately through exact assertions. Approve representative output for each Phase 1 locale and verify that localized learner-facing variable names resolve to the same canonical quantities. Also assert exact deep equality of the canonical Problem before and after every Skin projection; normalized arithmetic equivalence alone is insufficient. An approved prose output verifies wording and readability but is not the sole source of evidence that the story is mathematically faithful.
 
 ## Later LLM adapter
 
-Retain a `StoryGenerator` interface that accepts validated facts and returns story text and structured metadata. An eventual language model receives a locked fact ledger and interest setting. Treat its text as untrusted until a validation/review process confirms that it preserved facts, mathematical relationships, units, and the question. The semantic AST/answer key remains authoritative. Phase 1 uses deterministic templates; the LLM path is an architectural seam.
+Retain a `StoryGenerator`/Skin interface that accepts the immutable canonical Problem plus validated presentation facts and returns story text and structured metadata. An eventual language model receives a locked fact ledger and interest setting. Treat its text as untrusted until a validation/review process confirms that it preserved facts, mathematical relationships, units, and the question. The semantic AST/answer key remains authoritative. Phase 1 uses deterministic templates; the LLM path is an architectural seam.

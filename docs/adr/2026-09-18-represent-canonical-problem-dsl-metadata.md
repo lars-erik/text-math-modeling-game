@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded in part by `2026-09-19-compose-problem-skin-mode-independently.md`.
 
 ## Context and problem statement
 
@@ -39,7 +39,9 @@ numeric bindings, including the hidden value, belong to the separate
 
 Use option 3.
 
-`Problem` requires a canonical problem ID, ordered concept IDs, quantities,
+> Historical note: the scenario-related and academic-presentation portions of this decision are superseded. Canonical `Problem`/DSL no longer owns Skin/scenario identity, theme-shaped names/dimensions, or academic presentation symbols. The separate AnswerKey and optional mathematical replay decisions below remain valid.
+
+The original decision stated that `Problem` required a canonical problem ID, ordered concept IDs, quantities,
 the relation, a canonical scenario ID, and an academic-symbol map. Each
 quantity requires a canonical ID, a minimal Phase 1 dimension, and its
 learner-visible known/hidden state. IDs and dimensions are language-independent
@@ -65,8 +67,7 @@ is represented only as `?`.
 ## Consequences
 
 - Hand-authored and generated problems use the same `Problem` type.
-- The canonical fixture round-trips all of its metadata without depending on a
-  locale.
+- The historical fixture round-tripped its then-supported metadata without depending on a locale; the current canonical fixture is additionally Skin/theme-independent.
 - Generated problems can retain exact replay data without forcing fabricated
   replay metadata onto authored problems.
 - Serializing or logging a `Problem` cannot reveal a hidden answer binding.

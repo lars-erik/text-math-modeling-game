@@ -1,6 +1,12 @@
-# Working agreement for Codex, Copilot and other agents.
+# Source implementation working agreement
 
-Read `../readme.md` and the relevant `../docs/` document before editing. Treat the Phase 1 plan as the implementation scope and the future roadmap as context.
+Follow `../AGENTS.md` first. Read `../readme.md`, `../docs/architecture-contract.md`, and the relevant `../docs/` document before editing. Treat the Phase 1 plan as implementation scope only where it agrees with the architecture contract and accepted ADRs.
+
+## Architecture preflight
+
+Before changing domain/problem types, mathematical generation, DSL, skins/scenarios, puzzle modes/tasks, `PuzzleScreen`, or application composition, follow `../.agents/skills/architecture-guardian/SKILL.md`. Codex may auto-discover the skill; Copilot, Mistral and other agents must apply the same checklist manually.
+
+Do not begin the normal red/green loop until the change has an explicit axis owner (Problem, Skin, Mode, or Composition/UI) and an independence invariant. A rename or wrapper around an already coupled object does not satisfy this preflight.
 
 ## Working rhythm
 
@@ -22,8 +28,9 @@ Prefer affirmative requirements and acceptance criteria over prohibition lists. 
 ## System boundaries
 
 - Keep semantic types, validation, generation, and checking framework-independent.
-- Generate a domain AST, then serialize it into DSL; parse user input back into the same domain AST.
-- Keep problem facts and hidden answers authoritative; story templates and academic notation are views.
+- Generate a canonical, theme-free and mode-free domain AST, then serialize it into DSL; parse user input back into the same domain AST.
+- Keep problem facts and hidden answers authoritative; skins, story templates, learner-facing names and academic notation are views.
+- Keep Skin and Mode as orthogonal axes. A Skin never rewrites/returns `Problem` or owns task-specific factories; a Mode never imports a concrete Skin; only application/composition selects both.
 - Keep mathematical equivalence, expected structure, and pedagogical intent distinguishable.
 - Use explicit seeded random sources and print replay details with failures.
 - Keep UI state and transitions accessible through pure use-case interfaces and stable printers.

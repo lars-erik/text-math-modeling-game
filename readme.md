@@ -1,22 +1,23 @@
 # Text Math Modeling Game — specification package
 
-**Status:** Phase 1 implementation in progress, 19 September 2026. Milestones 0–7.5 and the responsive graybox UI foundation are implemented; academic notation is next. Later phases remain architectural direction rather than implementation scope.
+**Status:** Phase 1 implementation in progress, 19 September 2026. Milestones 0–7 behavior and the responsive graybox UI foundation exist, but the Milestone 7.5 architecture is being corrected under issue #19 before academic notation work continues. Later phases remain architectural direction rather than implementation scope.
 
 Build a test-driven web puzzle for translating between natural-language situations, quantity models, named expressions, substituted expressions, and academic notation. The same deterministic semantic problem powers every representation.
 
 ## Reading order
 
 1. [Product and learning loop](docs/01-product-and-learning-loop.md) — intent, representation graph, initial use cases.
-2. [Architecture and semantic domain](docs/02-architecture-and-domain.md) — AST, quantities, operations, validation, checking.
-3. [DSL and representations](docs/03-dsl-and-representations.md) — editable syntax, parsing, serialization, notation.
-4. [Procedural generation and scenarios](docs/04-generation-and-scenarios.md) — composable concept generators, seeds, story templates.
-5. [Graybox puzzles and UI](docs/05-graybox-core-loop.md) — initial exercises, two-way traversal, screen contract.
-6. [TDD and approval testing](docs/06-testing-and-approvals.md) — golden masters, use-case printers, properties, DOM testing.
-7. [Phase 1 execution plan](docs/07-phase-1-plan.md) — small red/green/refactor milestones and acceptance criteria.
-8. [Future roadmap](docs/08-future-roadmap.md) — architecture boundaries only.
-9. [Technology decisions](docs/09-technology-decisions.md) — Lit, Svelte, Vue, React; Vite/Bun; parser and renderer trade-offs.
+2. [Problem × Skin × Mode architecture contract](docs/architecture-contract.md) — authoritative ownership, dependency and composition rules.
+3. [Architecture and semantic domain](docs/02-architecture-and-domain.md) — AST, quantities, operations, validation, checking.
+4. [DSL and representations](docs/03-dsl-and-representations.md) — canonical syntax, parsing, serialization, notation adapters.
+5. [Procedural generation and skins](docs/04-generation-and-scenarios.md) — composable math generation, seeds, Skin/story templates.
+6. [Graybox puzzles and UI](docs/05-graybox-core-loop.md) — initial Modes, two-way traversal, screen contract.
+7. [TDD and approval testing](docs/06-testing-and-approvals.md) — golden masters, architecture invariants, use-case printers, properties, DOM testing.
+8. [Phase 1 execution plan](docs/07-phase-1-plan.md) — small red/green/refactor milestones and acceptance criteria.
+9. [Future roadmap](docs/08-future-roadmap.md) — architecture boundaries only.
+10. [Technology decisions](docs/09-technology-decisions.md) — Lit, Svelte, Vue, React; Vite/Bun; parser and renderer trade-offs.
 
-[Codex working agreement](src/AGENTS.md) specifies how an implementation agent should proceed.
+[Project agent agreement](AGENTS.md) defines architecture preflight for all agents; [source working agreement](src/AGENTS.md) adds the implementation TDD rhythm.
 
 ## Current vertical slice
 
@@ -40,22 +41,32 @@ The real application exposes both implemented learner transformations:
 
 Named equations are parsed back into the canonical domain AST and checked structurally rather than by raw string comparison. The browser UI has a shared responsive shell, scenario/task/seed/locale controls, accessible interaction tests, and selected visual screenshot approvals. Its URL reproduces all four selections, for example `?seed=321&scenario=creator.followers&task=quantities-to-named-equation&locale=nb`.
 
-The generated/scenario-bound `ModelingCase` is composed with a separate `PuzzleTask`, so switching task or locale reuses the same mathematical case. The next step is Milestone 8: substitution and academic notation.
+The current implementation still contains scenario-bound/task-specific coupling that issue #19 is removing. The intended contract is one canonical mathematical Problem composed independently with a Skin and a Mode; switching Skin, Mode, locale or input provider must not regenerate or rewrite the Problem. Milestone 8 waits behind that correction.
 
 ## Architectural invariant
 
-```
-Generator ──────┐
-DSL parser ─────┼──> semantic Problem AST ──> ModelingCase + PuzzleTask
-                │            │                            │
-                │            ├──> DSL/LaTeX printers      └──> use-case ──> screen model
-                │            └──> scenario renderer                         ├──> Lit view
-                └── DSL serializer (AST → text)                             └──> approval
+```text
+                  Puzzle Generator
+                         |
+                         v
+                  canonical Problem
+                    /         \
+                   /           \
+                Skin           Mode
+                   \           /
+                    \         /
+                     Composer
+                        |
+                        v
+                   PuzzleScreen
+                        |
+                        v
+                      Lit UI
 ```
 
-The domain remains usable from tests and command-line tooling without a browser. All generated cases are reproducible with seed + generator version/configuration. The test suite includes exact invariants, property tests, human-reviewed text approvals, browser interaction tests, and selected screenshot approvals.
+Problem, Skin and Mode are independent axes. Skin may present canonical facts as drones, followers or another theme without changing canonical quantity IDs/relation/DSL. Mode determines the representation edge without knowing which concrete Skin is active. The composer is the first layer allowed to select both.
 
-The private `AnswerKey` remains separate from learner-visible problem and browser state. Scenario and locale changes are tested to preserve the underlying mathematical model and answer values.
+The private `AnswerKey` remains separate from learner-visible Problem and browser state. Architecture tests should prove exact Problem identity and supported Skin × Mode × locale composition, not only equivalent arithmetic results.
 
 ## Development
 
@@ -99,7 +110,7 @@ while still providing downloadable reports and screenshots.
 ## CI/CD
 
 - Workflow: `.github/workflows/ci-pages.yml`
-- Validation runs on every push so feature branches receive the same checks as `main`.
+- Validation runs on application/configuration pushes so feature branches receive the same checks as `main`; documentation-only (`*.md`) and repository-agent-skill-only pushes are ignored by the app build workflow.
 - CI runs:
   1. `npm ci`
   2. `npm run browser:install`

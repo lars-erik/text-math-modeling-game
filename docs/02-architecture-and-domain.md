@@ -1,21 +1,26 @@
 # Architecture and semantic domain
 
+`docs/architecture-contract.md` is the authoritative boundary contract. This document describes the mathematical domain inside that contract.
+
 ## Dependency direction
 
-```
-Vite / Lit UI -> puzzle application/use-cases -> domain AST + semantic operations
-                                          -> generators -> domain AST
-DSL adapter <------------------------------> domain AST
-Story adapter / LaTeX printer / trace printer <- domain AST and screen model
+```text
+problem model / math generation / canonical DSL
+                    |
+                    +------> Skin adapters
+                    |
+                    +------> Mode use-cases
+                              \
+                               +--> composer/application --> PuzzleScreen --> Lit UI
 ```
 
-Domain and puzzle use-cases are framework-independent TypeScript. The Lit layer renders the screen model and dispatches user actions. Adapters supply DSL parsing, story templates, and notation. All public operations use domain types rather than parser-tree, HTML, or KaTeX objects.
+Domain and Mode use-cases are framework-independent TypeScript. Skins and Modes are orthogonal peers over one canonical `Problem`; they do not import each other. The Lit layer renders the composed screen model and dispatches user actions. All public domain operations use domain types rather than parser-tree, HTML, KaTeX, concrete Skin, or concrete Mode objects.
 
 ## Identity and meaning
 
-Use stable quantity IDs as references. Canonical quantity IDs remain locale-independent; learner-facing descriptive variable names (e.g. English `dronePower` or Norwegian `droneEffekt`) are presentation/name-resolution metadata and may vary without changing the problem. Academic symbols (`p`) are separate presentation metadata and may also vary without changing the problem. Define problem data separately from the learner's submitted answer, checker diagnostics, localization resources, and presentation state.
+Use stable, theme-free quantity IDs such as `base`, `count`, `unitValue`, and `total` as references. Learner-facing descriptive names such as `dronePower`, `followersPerPost`, or localized equivalents are Skin presentation/name-resolution metadata and may vary without changing the problem. Academic symbols are notation/Mode presentation metadata and may also vary without changing the problem. Define problem data separately from Skin, Mode, submitted answer, checker diagnostics, localization resources, and presentation state.
 
-A named-expression puzzle resolves the active locale's variable names back to canonical quantity IDs before checking. Localized labels, nouns, units, prompts, story fragments, and feedback never become semantic identity. The DSL/debug representation continues to use stable canonical IDs so fixtures and replay remain language-neutral.
+A named-expression puzzle resolves the active Skin/locale variable names back to canonical quantity IDs before checking. Localized labels, contextual dimensions/units, nouns, prompts, story fragments, symbols, and feedback never become canonical mathematical identity. The DSL/debug representation uses stable canonical IDs so fixtures and mathematical replay remain theme- and language-neutral.
 
 A useful starting model (illustrative TypeScript, refine through tests):
 
@@ -33,8 +38,8 @@ type Relation = { kind: 'equation'; left: Expr; right: Expr };
 
 type Quantity = {
   id: QuantityId;
-  label: string;
-  dimension: Dimension;
+  role?: 'base' | 'count' | 'per-item' | 'total';
+  dimension: GenericDimension;
   given: { kind: 'known'; value: number } | { kind: 'hidden' };
 };
 
@@ -43,9 +48,7 @@ type Problem = {
   concepts: readonly ConceptId[];
   quantities: readonly Quantity[];
   relation: Relation;
-  scenarioId: string;
-  academicSymbols: Readonly<Record<QuantityId, string>>;
-  replay: { seed: number; generatorVersion: string };
+  replay?: { seed: number; generatorVersion: string };
 };
 ```
 
@@ -61,15 +64,9 @@ Use integer-safe, bounded Phase 1 generation. JavaScript numbers are acceptable 
 
 ## Dimensions and quantity roles
 
-Define a small dimension representation that can express a total, a count, and a per-item rate. Prefer typed dimensions over asserting that all counts are identical to dimensionless values; e.g. `MW/drone * drone -> MW` is the long-term interpretation. Initial Phase 1 can implement a minimal safe subset for addition and multiplication, with dimensions such as `power`, `item`, `powerPerItem`, `money`, `moneyPerItem`, and `scalar`, or a small base-exponent system. Write validity cases before choosing the representation.
+Keep canonical mathematical dimensions generic enough to describe the reusable shape without naming a theme. Contextual dimensions and units such as MW, drones, followers, posts, MW/drone or followers/post belong to the active Skin presentation and can be validated there against canonical roles.
 
-Test initial rules:
-
-- `basePower + droneCount * dronePower` evaluates to a power total.
-- `basePower + droneCount` is rejected as dimensionally incompatible.
-- A count multiplied by power per drone yields power.
-
-Scenario mappings must assign coherent quantity labels and units to the roles and carry them through feedback.
+Test canonical rules using canonical IDs/roles, for example that the reusable relation is structurally valid and that incompatible generic dimensions are rejected. Separately test each Skin's unit/fact ledger for contextual consistency. A Skin must not make its concrete dimensions authoritative by rewriting the canonical `Problem`.
 
 ## Semantic operations
 
@@ -112,12 +109,15 @@ type PuzzleCommand =
   | { kind: 'next' };
 
 type PuzzleScreen = {
-  source: { kind: string; content: unknown };
-  target: { kind: string; prompt: string };
-  input: { kind: 'expression' | 'quantities' | 'choice'; value?: string };
-  feedback?: { kind: string; message: string };
-  replay: { seed: number; puzzleIndex: number };
+  context: {
+    story: string;
+    replay: { seed: number; skin: string; mode: string; locale: string };
+  };
+  task:
+    | StoryToQuantitiesScreen
+    | QuantitiesToNamedEquationScreen
+    | FutureModeScreen;
 };
 ```
 
-Refine these types from the first use-case printer. The printer renders screen data, and Lit renders the same data with interactive accessible controls.
+The shared context belongs outside any one task's `source` representation. Refine the discriminated task union from use-case tests. The printer renders the same composed screen data that Lit renders with interactive accessible controls.

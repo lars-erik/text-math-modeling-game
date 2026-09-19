@@ -12,6 +12,20 @@ Every small behavior starts from a failing test. Implement the smallest solution
 
 Approval tests exercise **production printers invoked on actual use-case output**. They are not handwritten expected text masquerading as integration tests. An approved result is a reviewed characterization, not proof that every numeric property is correct.
 
+## Architecture evidence
+
+Architecture boundaries need executable evidence in addition to import rules and prose. For changes touching Problem, Skin, Mode or composition, add the smallest relevant checks from this set:
+
+1. **Canonical identity:** generate one Problem, project every Skin and build every Mode, then assert the original Problem remains deeply equal to its pre-composition value.
+2. **Cross-product composition:** exercise every supported Skin × Mode × locale combination (and input providers where applicable) over one canonical Problem.
+3. **Semantic reuse:** assert the same canonical relation/DSL and private AnswerKey are reused across those combinations; do not settle for equal arithmetic results or normalized-shape equality.
+4. **Dependency boundaries:** statically verify that generation/DSL do not import Skins or Modes, Skins do not import Modes, Modes do not import concrete Skins, and generic UI does not import concrete Skin implementations.
+5. **Answer privacy:** verify no hidden AnswerKey binding appears in browser registry or PuzzleScreen output.
+6. **Order independence:** where composition APIs allow Skin and Mode preparation in either order, assert equivalent composed semantics.
+
+When the second implementation appears on an axis, use it as an abstraction test. A second Skin or Mode should extend a registry/contract and cross-product test rather than copy a branch from the first implementation.
+
+Approval files remain useful for human review of wording and complete use-case output, but they are not architectural evidence by themselves.
 ## ApprovalTests package integration
 
 Begin with the open-source Node package `approvals`. Prove that the installed version works in the selected Node/Vitest/ESM setup with a tiny spike (one `.approved.txt` file, one intentionally changed output, inspect diff, restore). Isolate its API behind a local helper such as `verifyApproval(name, text)` so the rest of the suite has no package-specific coupling. Pick a noninteractive CI reporter and stable test-specific directory. The official Node project documents `verify`, reporters, generated approved/received files, and TypeScript declarations.
@@ -83,9 +97,9 @@ Once the UI exists, mount the Lit component in browser tests; await its complete
 - Generator with fixed seed produces identical case and transcript.
 - A generated answer key always satisfies the relation.
 - Every Phase 1 generated case has one hidden quantity and integer solution.
-- Changing scenario changes text/labels while retaining the shape and numeric bindings.
+- Changing Skin changes story/names/units while retaining the exact canonical Problem/DSL/relation and AnswerKey.
 - DSL serialization/parsing round-trips with stable printer output.
-- Renaming quantity IDs plus consistent references leaves the evaluation result unchanged.
+- Learner-facing Skin names can change while canonical quantity IDs and relation references remain unchanged.
 - User input `count*unit + base` is eligible for normalized-structure matching against `base + count*unit`.
 - A fully grounded arithmetic task accepts an equivalent result under `equivalent-value`; a named-modelling task uses its structural/pedagogical policy.
 
