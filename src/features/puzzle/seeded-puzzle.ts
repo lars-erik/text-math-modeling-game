@@ -4,7 +4,7 @@ import {
   type TotalFromPartsGenerationConfig,
 } from '../problem-generation/generate-total-from-parts';
 import type { ConceptId } from '../problem-model/problem';
-import type { PuzzleDefinition } from './puzzle-definition';
+import type { ModelingCase } from './puzzle-definition';
 import { bindDronePowerScenario } from '../scenarios/gaming-drone-power/scenario';
 import { createDronePowerStoryQuantitiesDefinition } from '../scenarios/gaming-drone-power/story-quantities-definition';
 import { createDronePowerNamedEquationDefinition } from '../scenarios/gaming-drone-power/named-equation-definition';
@@ -25,7 +25,7 @@ export function isSupportedScenarioId(
   return supportedScenarioIds.some((scenarioId) => scenarioId === value);
 }
 
-export function createSeededPuzzle({
+export function createSeededModelingCase({
   seed,
   config = defaultTotalFromPartsGenerationConfig,
   scenarioId = config.scenarioId as SupportedScenarioId,
@@ -35,7 +35,7 @@ export function createSeededPuzzle({
   config?: TotalFromPartsGenerationConfig;
   scenarioId?: SupportedScenarioId;
   concepts?: readonly ConceptId[];
-}): PuzzleDefinition {
+}): ModelingCase {
   const generated = generateTotalFromPartsCase({
     seed,
     config: { ...config, scenarioId, concepts },
@@ -49,7 +49,6 @@ export function createSeededPuzzle({
     );
 
     return {
-      kind: 'story-to-quantities',
       problem: binding.problem,
       storySeed: seed,
       storyQuantities: {
@@ -76,7 +75,6 @@ export function createSeededPuzzle({
   );
 
   return {
-    kind: 'story-to-quantities',
     problem: binding.problem,
     storySeed: seed,
     storyQuantities: {

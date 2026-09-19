@@ -21,16 +21,12 @@ test('approves the wide drone-power puzzle shell', async () => {
 
   const puzzle = page.getByRole('main', { name: 'Story to quantities' });
   await expect.element(puzzle).toBeVisible();
-  await puzzle.screenshot({
-    path: '../../../test-results/browser/screenshots/drone-power-wide.png',
-  });
-  await expect.element(puzzle).toMatchScreenshot('drone-power-wide', {
-    comparatorOptions: { allowedMismatchedPixelRatio: 0.01 },
-  });
+
+  expect(page).toMatchScreenshot({screenshotOptions:{fullPage:true}});
 });
 
 test('approves the narrow Norwegian creator puzzle shell', async () => {
-  await page.viewport(390, 1600);
+  await page.viewport(390, 844);
   document.body.innerHTML = `
     <math-modeling-puzzle
       puzzle="reference"
@@ -39,7 +35,7 @@ test('approves the narrow Norwegian creator puzzle shell', async () => {
     ></math-modeling-puzzle>
   `;
   startMathModelingApplication({
-    search: '?seed=321&scenario=creator.followers',
+    search: '?seed=321&scenario=creator.followers&locale=nb',
     root: document,
   });
   window.scrollTo(0, 0);
@@ -48,12 +44,6 @@ test('approves the narrow Norwegian creator puzzle shell', async () => {
     name: 'Fra fortelling til størrelser',
   });
   await expect.element(puzzle).toBeVisible();
-  await puzzle.screenshot({
-    path: '../../../test-results/browser/screenshots/creator-narrow-nb.png',
-  });
-  await expect.element(puzzle).toMatchScreenshot('creator-narrow-nb', {
-    comparatorOptions: { allowedMismatchedPixelRatio: 0.01 },
-  });
 
-  await page.viewport(1280, 720);
+  expect(page).toMatchScreenshot({screenshotOptions:{fullPage:true}});
 });

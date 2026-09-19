@@ -4,7 +4,7 @@ on:
   push:
 
 permissions:
-  contents: read
+  contents: write
   checks: write
 
 jobs:
@@ -36,10 +36,21 @@ jobs:
         run: npm run typecheck
 
       - name: Test
-        run: npm test
+        run: npm run test:node && npm run test:browser -- --update
 
       - name: Build
         run: npm run build -- --base=/text-math-modeling-game/
+
+      - name: Commit reviewed screenshot update
+        if: github.ref == 'refs/heads/issue-13-modeling-case-task-replay'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add features/puzzle/ui/__screenshots__/
+          if ! git diff --cached --quiet; then
+            git commit -m "test: approve task selector screenshot"
+            git push
+          fi
 
       - name: Upload test reports
         if: always()

@@ -1,32 +1,53 @@
 import { expect, test } from 'vitest';
 
 import { defaultTotalFromPartsConcepts } from '../problem-generation/generate-total-from-parts';
-import { createSeededPuzzle } from './seeded-puzzle';
+import { createPuzzle } from './puzzle-definition';
+import {
+  createSeededModelingCase,
+} from './seeded-puzzle';
 
-test('creates a seeded Story-to-Quantities definition with the scenario-bound problem', () => {
-  const puzzle = createSeededPuzzle({ seed: 321 });
+test('composes two puzzle tasks from the same seeded modeling case', () => {
+  const modelingCase = createSeededModelingCase({ seed: 321 });
 
-  expect(puzzle.kind).toBe('story-to-quantities');
-  expect(puzzle.problem.replay).toEqual({
+  const storyPuzzle = createPuzzle(modelingCase, 'story-to-quantities');
+  const namedPuzzle = createPuzzle(
+    modelingCase,
+    'quantities-to-named-equation',
+  );
+
+  expect(storyPuzzle.modelingCase).toBe(modelingCase);
+  expect(namedPuzzle.modelingCase).toBe(modelingCase);
+  expect(storyPuzzle.task).toBe('story-to-quantities');
+  expect(namedPuzzle.task).toBe('quantities-to-named-equation');
+});
+
+test('creates a seeded modeling case with the scenario-bound problem', () => {
+  const modelingCase = createSeededModelingCase({ seed: 321 });
+
+  expect(modelingCase.problem.replay).toEqual({
     seed: 321,
     generatorVersion: 'total-from-parts-v1',
   });
   expect(
-    puzzle.problem.quantities.find((quantity) => quantity.id === 'dronePower')?.given,
+    modelingCase.problem.quantities.find(
+      (quantity) => quantity.id === 'dronePower',
+    )?.given,
   ).toEqual({ kind: 'hidden' });
-  expect(puzzle.storySeed).toBe(321);
+  expect(modelingCase.storySeed).toBe(321);
 });
 
 test('uses explicit scenario and concept inputs when creating a seeded puzzle', () => {
-  const puzzle = createSeededPuzzle({
+  const modelingCase = createSeededModelingCase({
     seed: 321,
     scenarioId: 'creator.followers',
     concepts: defaultTotalFromPartsConcepts,
   });
 
-  expect(puzzle.problem.scenarioId).toBe('creator.followers');
-  expect(puzzle.problem.concepts).toEqual(defaultTotalFromPartsConcepts);
-  expect(puzzle.problem.quantities.map((quantity) => quantity.id)).toEqual([
+  expect(modelingCase.problem.scenarioId).toBe('creator.followers');
+  expect(modelingCase.problem.concepts).toEqual(defaultTotalFromPartsConcepts);
+  expect(
+    modelingCase.problem.quantities.map((quantity) => quantity.id),
+  ).toEqual([
     'startingFollowers',
     'promotedPostCount',
     'followersPerPost',
@@ -35,13 +56,13 @@ test('uses explicit scenario and concept inputs when creating a seeded puzzle', 
 });
 
 test('provides the localized creator story through the scenario-selected puzzle definition', () => {
-  const puzzle = createSeededPuzzle({
+  const modelingCase = createSeededModelingCase({
     seed: 321,
     scenarioId: 'creator.followers',
     concepts: defaultTotalFromPartsConcepts,
   });
 
-  const definition = puzzle.storyQuantities?.createDefinition('nb');
+  const definition = modelingCase.storyQuantities?.createDefinition('nb');
 
   expect(definition?.sourceText).toContain(
     'En innholdsskaper starter med',
@@ -57,13 +78,13 @@ test('provides the localized creator story through the scenario-selected puzzle 
 });
 
 test('provides localized creator names for the named-equation puzzle', () => {
-  const puzzle = createSeededPuzzle({
+  const modelingCase = createSeededModelingCase({
     seed: 321,
     scenarioId: 'creator.followers',
     concepts: defaultTotalFromPartsConcepts,
   });
 
-  expect(puzzle.namedEquation?.createDefinition('nb')).toMatchObject({
+  expect(modelingCase.namedEquation?.createDefinition('nb')).toMatchObject({
     quantityNames: {
       startingFollowers: 'startFoelgere',
       promotedPostCount: 'promoterteInnlegg',
@@ -86,9 +107,9 @@ test('provides localized creator names for the named-equation puzzle', () => {
 });
 
 test('provides locale-consistent names for the preserved named-equation puzzle', () => {
-  const puzzle = createSeededPuzzle({ seed: 321 });
+  const modelingCase = createSeededModelingCase({ seed: 321 });
 
-  expect(puzzle.namedEquation?.createDefinition('nb')).toMatchObject({
+  expect(modelingCase.namedEquation?.createDefinition('nb')).toMatchObject({
     quantityNames: {
       basePower: 'grunnEffekt',
       droneCount: 'droneAntall',
