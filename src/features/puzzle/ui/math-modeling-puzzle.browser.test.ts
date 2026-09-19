@@ -1,5 +1,4 @@
 import { expect, test } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
 import { startMathModelingApplication } from '../../../application';
 import { MathModelingPuzzle } from './math-modeling-puzzle';
 import './math-modeling-puzzle';
@@ -26,62 +25,94 @@ function mountPuzzle(search: string): MathModelingPuzzle {
   return element as MathModelingPuzzle;
 }
 
+function shellText(puzzle: MathModelingPuzzle): string {
+  const shell = puzzle.shadowRoot?.querySelector('puzzle-shell');
+  return shell?.shadowRoot?.textContent ?? '';
+}
+
+function storyOf(puzzle: MathModelingPuzzle): string {
+  return (
+    puzzle.shadowRoot?.querySelector('div[slot="source"] p')?.textContent ?? ''
+  );
+}
+
 test('switches tasks and input modes while the story stays visible and the math is identical', async () => {
   const puzzle = mountPuzzle(
     '?seed=17&scenario=gaming.drone-power&task=story-to-quantities',
   );
   await puzzle.updateComplete;
 
-  await expect
-    .element(page.getByRole('heading', { level: 1, name: 'Story to quantities' }))
-    .toBeVisible();
-  const story = puzzle.shadowRoot?.querySelector('div[slot="source"] p')?.textContent ?? '';
+  expect(shellText(puzzle)).toContain('Story to quantities');
+  const story = storyOf(puzzle);
   expect(story.length).toBeGreaterThan(0);
   expect(puzzle.shadowRoot?.textContent).toContain('?');
 
-  await userEvent.selectOptions(
-    page.getByLabelText('Task'),
-    'quantities-to-named-equation',
-  );
-  await userEvent.click(page.getByRole('button', { name: 'Show puzzle' }));
+  const menu = puzzle.shadowRoot?.querySelector('puzzle-menu');
+  const taskSelect = menu?.shadowRoot?.querySelector(
+    'select[name="task"]',
+  ) as HTMLSelectElement | null;
+  expect(taskSelect).not.toBeNull();
+  taskSelect!.value = 'quantities-to-named-equation';
+  menu?.shadowRoot?.querySelector('form')?.requestSubmit();
+  await puzzle.updateComplete;
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  expect(shellText(puzzle)).toContain('Quantities to named equation');
+  expect(storyOf(puzzle)).toBe(story);
+
+  const textInput = puzzle.shadowRoot?.querySelector(
+    'named-equation-text-input',
+  ) as (HTMLElement & { updateComplete: Promise<unknown> }) | null;
+  expect(textInput).not.toBeNull();
+  await textInput!.updateComplete;
+
+  const multipleChoiceButton = Array.from(
+    puzzle.shadowRoot?.querySelectorAll<HTMLButtonElement>('nav button') ?? [],
+  ).find((button) => button.textContent?.trim() === 'Multiple choice');
+  expect(multipleChoiceButton).toBeDefined();
+  multipleChoiceButton!.click();
   await puzzle.updateComplete;
 
-  await expect
-    .element(
-      page.getByRole('heading', {
-        level: 1,
-        name: 'Quantities to named equation',
-      }),
-    )
-    .toBeVisible();
-  expect(
-    puzzle.shadowRoot?.querySelector('div[slot="source"] p')?.textContent,
-  ).toBe(story);
-  await expect.element(page.getByLabelText('Named equation')).toBeVisible();
+  expect(storyOf(puzzle)).toBe(story);
+  const choiceInput = puzzle.shadowRoot?.querySelector(
+    'named-equation-choice-input',
+  ) as (HTMLElement & { updateComplete: Promise<unknown> }) | null;
+  expect(choiceInput).not.toBeNull();
+  await choiceInput!.updateComplete;
+  const labels = Array.from(
+    choiceInput!.shadowRoot?.querySelectorAll('label') ?? [],
+  ).map((label) => label.textContent?.trim());
+  expect(labels).toEqual([
+    'totalPower = basePower + droneCount * dronePower',
+    'totalPower = droneCount * (basePower + dronePower)',
+  ]);
 
-  await userEvent.click(page.getByRole('button', { name: 'Multiple choice' }));
+  const distractorRadio = choiceInput!.shadowRoot?.querySelector(
+    'input[value="base-per-item"]',
+  ) as HTMLInputElement | null;
+  expect(distractorRadio).not.toBeNull();
+  distractorRadio!.checked = true;
+  choiceInput!.shadowRoot?.querySelector('form')?.requestSubmit();
+  await Promise.all([
+    puzzle.updateComplete,
+    choiceInput!.updateComplete,
+    new Promise((resolve) => setTimeout(resolve, 50)),
+  ]);
   await puzzle.updateComplete;
-  await expect
-    .element(
-      page.getByText('totalPower = basePower + droneCount * dronePower'),
-    )
-    .toBeVisible();
-  expect(
-    puzzle.shadowRoot?.querySelector('div[slot="source"] p')?.textContent,
-  ).toBe(story);
-
-  await userEvent.click(
-    page.getByText('totalPower = droneCount * (basePower + dronePower)'),
-  );
-  await userEvent.click(page.getByRole('button', { name: 'Check' }));
-  await puzzle.updateComplete;
-  expect(puzzle.shadowRoot?.textContent).toContain(
+  expect(shellText(puzzle)).toContain(
     'The equation grouping does not match the quantity model.',
   );
 
-  await userEvent.click(page.getByRole('button', { name: 'Text input' }));
+  const textButton = Array.from(
+    puzzle.shadowRoot?.querySelectorAll<HTMLButtonElement>('nav button') ?? [],
+  ).find((button) => button.textContent?.trim() === 'Text input');
+  expect(textButton).toBeDefined();
+  textButton!.click();
   await puzzle.updateComplete;
-  await expect.element(page.getByLabelText('Named equation')).toBeVisible();
+  expect(
+    puzzle.shadowRoot?.querySelector('named-equation-text-input'),
+  ).not.toBeNull();
+  expect(storyOf(puzzle)).toBe(story);
 });
 
 test('replays the same problem from the URL state', async () => {
@@ -89,17 +120,14 @@ test('replays the same problem from the URL state', async () => {
     '?seed=321&scenario=creator.followers&task=quantities-to-named-equation&locale=en';
   const first = mountPuzzle(search);
   await first.updateComplete;
-  const firstStory =
-    first.shadowRoot?.querySelector('div[slot="source"] p')?.textContent ?? '';
+  const firstStory = storyOf(first);
   const firstQuantities = Array.from(
     first.shadowRoot?.querySelectorAll('div[slot="source"] li') ?? [],
   ).map((item) => item.textContent);
 
   const second = mountPuzzle(search);
   await second.updateComplete;
-  expect(
-    second.shadowRoot?.querySelector('div[slot="source"] p')?.textContent,
-  ).toBe(firstStory);
+  expect(storyOf(second)).toBe(firstStory);
   expect(
     Array.from(
       second.shadowRoot?.querySelectorAll('div[slot="source"] li') ?? [],

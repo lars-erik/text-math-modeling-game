@@ -42,6 +42,7 @@ export class MathModelingPuzzle extends LitElement {
     modeId: { attribute: 'mode', type: String },
     inputMode: { attribute: 'input-mode', reflect: true, type: String },
     locale: { reflect: true, type: String },
+    screen: { state: true },
   };
 
   static styles = css`
