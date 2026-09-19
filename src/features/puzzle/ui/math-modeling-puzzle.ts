@@ -268,6 +268,7 @@ export class MathModelingPuzzle extends LitElement {
       feedback: this.screen.feedback?.message ?? '',
       replay: this.screen.replay,
       source: html`
+        <p>${this.screen.source.text}</p>
         <ul class="quantity-list">
           ${this.screen.source.quantities.map(
             (quantity) => html`

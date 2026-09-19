@@ -18,6 +18,7 @@ export type PuzzleScreen = {
   source: {
     kind: 'quantities';
     quantities: readonly ScreenQuantity[];
+    text: string;
   };
   target: {
     kind: 'named-equation';
@@ -91,6 +92,7 @@ export function startPuzzle(
             ? { kind: 'known', value: quantity.given.value }
             : { kind: 'hidden' },
       })),
+      text: 'TODO: Refactor such that problem kind and story are separated.',
     },
     target: {
       kind: 'named-equation',

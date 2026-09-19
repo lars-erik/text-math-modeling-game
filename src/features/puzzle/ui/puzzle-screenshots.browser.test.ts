@@ -21,13 +21,8 @@ test('approves the wide drone-power puzzle shell', async () => {
 
   const puzzle = page.getByRole('main', { name: 'Story to quantities' });
   await expect.element(puzzle).toBeVisible();
-  const documentRoot = page.elementLocator(document.documentElement);
-  await documentRoot.screenshot({
-    path: '../../../test-results/browser/screenshots/drone-power-wide.png',
-  });
-  await expect.element(documentRoot).toMatchScreenshot('drone-power-wide', {
-    comparatorOptions: { allowedMismatchedPixelRatio: 0.01 },
-  });
+
+  expect(page).toMatchScreenshot({screenshotOptions:{fullPage:true}});
 });
 
 test('approves the narrow Norwegian creator puzzle shell', async () => {
@@ -49,13 +44,6 @@ test('approves the narrow Norwegian creator puzzle shell', async () => {
     name: 'Fra fortelling til størrelser',
   });
   await expect.element(puzzle).toBeVisible();
-  const documentRoot = page.elementLocator(document.documentElement);
-  await documentRoot.screenshot({
-    path: '../../../test-results/browser/screenshots/creator-narrow-nb.png',
-  });
-  await expect.element(documentRoot).toMatchScreenshot('creator-narrow-nb', {
-    comparatorOptions: { allowedMismatchedPixelRatio: 0.01 },
-  });
 
-  await page.viewport(1280, 720);
+  expect(page).toMatchScreenshot({screenshotOptions:{fullPage:true}});
 });
