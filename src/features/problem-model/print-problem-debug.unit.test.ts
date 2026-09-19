@@ -10,10 +10,9 @@ test('prints deterministic metadata, quantity visibility, relation structure, an
   const output = printProblemDebug(totalFromPartsProblem);
 
   expect(output).toContain('problem total-from-parts');
-  expect(output).toContain('scenario gaming.drone-power');
   expect(output).toContain('concepts arithmetic.addition, arithmetic.multiplication, algebra.variable, linear.one-unknown');
-  expect(output).toContain('quantity base dimension=scalar role=base visibility=known value=30');
-  expect(output).toContain('quantity unitValue dimension=scalar role=per-item visibility=hidden value=?');
+  expect(output).toContain('quantity base dimension=amount role=base visibility=known value=30');
+  expect(output).toContain('quantity unitValue dimension=amountPerItem role=per-item visibility=hidden value=?');
   expect(output).toContain('relation');
   expect(output).toContain('  equation');
   expect(output).not.toContain('\n  \nreplay');

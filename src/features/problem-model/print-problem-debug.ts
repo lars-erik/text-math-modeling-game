@@ -12,7 +12,6 @@ export function printProblemDebug(
 ): string {
   const lines = [
     `problem ${problem.id}`,
-    `scenario ${problem.scenarioId}`,
     `concepts ${problem.concepts.join(', ')}`,
     'quantities',
     ...problem.quantities.map((quantity) => `  ${printQuantity(quantity)}`),

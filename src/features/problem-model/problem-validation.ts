@@ -388,18 +388,12 @@ function multiplyDimensions(
   }
 
   if (
-    (left === 'item' && right === 'powerPerItem') ||
-    (left === 'powerPerItem' && right === 'item')
+    (left === 'item' && right === 'amountPerItem') ||
+    (left === 'amountPerItem' && right === 'item')
   ) {
-    return 'power';
+    return 'amount';
   }
 
-  if (
-    (left === 'item' && right === 'followersPerItem') ||
-    (left === 'followersPerItem' && right === 'item')
-  ) {
-    return 'followers';
-  }
 
   if (left === 'scalar') {
     return right;

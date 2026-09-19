@@ -39,8 +39,13 @@ test('round-trips an AST with replay and transitional role metadata', () => {
 });
 
 test('parenthesizes grouped addition so equation structure survives round-trip', () => {
+  const scalarQuantities = totalFromPartsProblem.quantities.map((quantity) => ({
+    ...quantity,
+    dimension: 'scalar' as const,
+  }));
   const groupedProblem = {
     ...totalFromPartsProblem,
+    quantities: scalarQuantities,
     relation: {
       kind: 'equation' as const,
       left: { kind: 'quantity' as const, id: 'total' },
@@ -67,11 +72,10 @@ test('parenthesizes grouped addition so equation structure survives round-trip',
 test('preserves nested right-associated addition and multiplication trees through round-trip', () => {
   const rightAssociatedProblem = {
     ...totalFromPartsProblem,
-    quantities: totalFromPartsProblem.quantities.map((quantity) =>
-      quantity.id === 'count'
-        ? { ...quantity, dimension: 'scalar' as const }
-        : quantity,
-    ),
+    quantities: totalFromPartsProblem.quantities.map((quantity) => ({
+      ...quantity,
+      dimension: 'scalar' as const,
+    })),
     relation: {
       kind: 'equation' as const,
       left: { kind: 'quantity' as const, id: 'total' },
@@ -128,7 +132,7 @@ test('serializes learner-visible facts without leaking a colocated private answe
 
   const serialized = serializeProblem(runtimeValueWithPrivateData);
 
-  expect(serialized).toContain('    quantity unitValue: scalar role per-item = ?\n');
+  expect(serialized).toContain('    quantity unitValue: amountPerItem role per-item = ?\n');
   expect(serialized).not.toContain('45');
   expect(serialized).not.toContain('answerKey');
   expect(serialized).not.toContain('bindings');

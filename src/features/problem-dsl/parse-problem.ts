@@ -38,7 +38,6 @@ type ParsedProblem = {
   concepts: readonly string[];
   quantities: readonly Quantity[];
   equation: ParsedEquation;
-  scenarioId: string;
   symbols: readonly (readonly [string, string])[];
   replay?: ProblemReplay;
 };
@@ -68,7 +67,6 @@ const semantics = problemGrammar.createSemantics().addOperation<ParsedNode>(
       concepts,
       quantities,
       equation,
-      scenario,
       symbols,
       replay,
       _close,
@@ -78,7 +76,6 @@ const semantics = problemGrammar.createSemantics().addOperation<ParsedNode>(
         concepts: concepts.toDomain(),
         quantities: quantities.children.map((quantity) => quantity.toDomain()),
         equation: equation.toDomain(),
-        scenarioId: scenario.toDomain(),
         symbols: symbols.children.map((symbol) => symbol.toDomain()),
         ...(replay.children.length === 0
           ? {}
@@ -117,9 +114,6 @@ const semantics = problemGrammar.createSemantics().addOperation<ParsedNode>(
         source: rawSource.trim(),
         startOffset: source.source.startIdx + leadingWhitespaceLength,
       } as ParsedEquation;
-    },
-    Scenario(_scenario, scenarioId) {
-      return scenarioId.sourceString;
     },
     Symbol(_symbol, quantityId, _equals, symbol) {
       return [quantityId.sourceString, symbol.sourceString] as const;
@@ -185,7 +179,6 @@ export function parseProblem(source: string): ParseProblemResult {
     concepts: parsed.concepts,
     quantities: parsed.quantities,
     relation: relationResult.relation as Relation,
-    scenarioId: parsed.scenarioId,
     academicSymbols: Object.fromEntries(parsed.symbols),
     ...(parsed.replay ? { replay: parsed.replay } : {}),
   };

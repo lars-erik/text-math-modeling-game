@@ -16,7 +16,6 @@ export function serializeProblem(problem: Problem): string {
     `${indentation.repeat(2)}${serializeExpression(problem.relation.left)} = ${serializeExpression(problem.relation.right)}`,
     `${indentation}}`,
     '',
-    `${indentation}scenario ${problem.scenarioId}`,
     ...Object.entries(problem.academicSymbols)
       .sort(([leftId], [rightId]) => leftId.localeCompare(rightId))
       .map(([quantityId, symbol]) =>

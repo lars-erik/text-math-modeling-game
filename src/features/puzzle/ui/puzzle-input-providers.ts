@@ -1,7 +1,6 @@
 import { html, type TemplateResult } from 'lit';
-
 import type { NamedEquationChoice } from '../learner-answer';
-import type { PuzzleScreen } from '../start-puzzle';
+import type { PuzzleScreen } from '../modes/mode';
 import type { PuzzleLocaleResources } from '../lang/contract';
 import './named-equation-choice-input';
 import './named-equation-text-input';
@@ -25,7 +24,9 @@ export const puzzleInputProviders = {
     render: ({ definition, screen, resources }) => html`
       <named-equation-choice-input
         .choices=${definition.choices}
-        .selectedChoiceId=${screen.submission?.choiceId}
+        .selectedChoiceId=${screen.submission?.kind === 'named-equation'
+          ? screen.submission.choiceId
+          : undefined}
         .legend=${resources.quantitiesToNamedEquation.choiceLegend}
         .checkLabel=${resources.controls.check}
       ></named-equation-choice-input>
@@ -35,8 +36,9 @@ export const puzzleInputProviders = {
     label: 'Text input',
     render: ({ screen, resources }) => html`
       <named-equation-text-input
-        .value=${screen.submission?.answerKind === 'text'
-          ? screen.input.value
+        .value=${screen.submission?.kind === 'named-equation' &&
+        screen.submission.answerKind === 'text'
+          ? screen.submission.input
           : ''}
         .inputLabel=${resources.quantitiesToNamedEquation.inputLabel}
         .checkLabel=${resources.controls.check}

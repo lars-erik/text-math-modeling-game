@@ -7,15 +7,14 @@ import {
 export type QuantityRole = 'base' | 'count' | 'per-item' | 'total';
 
 export type ConceptId = string;
+
 export type Dimension =
-  | 'followers'
-  | 'followersPerItem'
+  | 'amount'
+  | 'amountPerItem'
   | 'item'
-  | 'power'
-  | 'powerPerItem'
   | 'scalar';
+
 export type ProblemId = string;
-export type ScenarioId = string;
 
 export type QuantityGiven =
   | { kind: 'known'; value: number }
@@ -42,7 +41,6 @@ export type Problem = {
   concepts: readonly ConceptId[];
   quantities: readonly Quantity[];
   relation: Relation;
-  scenarioId: ScenarioId;
   academicSymbols: Readonly<Record<QuantityId, string>>;
   replay?: ProblemReplay;
 };

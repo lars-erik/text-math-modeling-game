@@ -14,7 +14,6 @@ replay {
       "min": 3,
       "max": 20
     },
-    "scenarioId": "gaming.drone-power",
     "concepts": [
       "arithmetic.addition",
       "arithmetic.multiplication",
@@ -35,16 +34,15 @@ problem total-from-parts-seed-17 {
         linear.one-unknown
     }
 
-    quantity base: scalar role base = 30
+    quantity base: amount role base = 30
     quantity count: item role count = 3
-    quantity unitValue: scalar role per-item = ?
-    quantity total: scalar role total = 66
+    quantity unitValue: amountPerItem role per-item = ?
+    quantity total: amount role total = 66
 
     equation {
         total = base + count * unitValue
     }
 
-    scenario gaming.drone-power
     symbol unitValue = p
 
     replay {
@@ -55,13 +53,12 @@ problem total-from-parts-seed-17 {
 
 debug
 problem total-from-parts-seed-17
-scenario gaming.drone-power
 concepts arithmetic.addition, arithmetic.multiplication, algebra.variable, algebra.equation, linear.one-unknown
 quantities
-  quantity base dimension=scalar role=base visibility=known value=30
+  quantity base dimension=amount role=base visibility=known value=30
   quantity count dimension=item role=count visibility=known value=3
-  quantity unitValue dimension=scalar role=per-item visibility=hidden value=?
-  quantity total dimension=scalar role=total visibility=known value=66
+  quantity unitValue dimension=amountPerItem role=per-item visibility=hidden value=?
+  quantity total dimension=amount role=total visibility=known value=66
 relation
   equation
     quantity total
@@ -83,16 +80,15 @@ dsl
           linear.one-unknown
       }
   
-      quantity base: scalar role base = 30
+      quantity base: amount role base = 30
       quantity count: item role count = 3
-      quantity unitValue: scalar role per-item = ?
-      quantity total: scalar role total = 66
+      quantity unitValue: amountPerItem role per-item = ?
+      quantity total: amount role total = 66
   
       equation {
           total = base + count * unitValue
       }
   
-      scenario gaming.drone-power
       symbol unitValue = p
   
       replay {

@@ -1,25 +1,18 @@
 import { css, html, LitElement } from 'lit';
-
 import { maximumTotalFromPartsSeed } from '../../problem-generation/generate-total-from-parts';
 import {
   puzzleSelectionRequestEvent,
   type PuzzleSelectionRequest,
 } from '../puzzle-request';
 import type { PuzzleLocale } from '../lang';
-import {
-  isPuzzleTask,
-  type PuzzleTask,
-} from '../puzzle-definition';
-import {
-  isSupportedScenarioId,
-  type SupportedScenarioId,
-} from '../seeded-puzzle';
+import { isModeId, type ModeId } from '../modes/mode';
+import { isSkinId, type SkinId } from '../../skins';
 
 export class PuzzleMenu extends LitElement {
   static properties = {
     seed: { type: Number },
-    scenarioId: { attribute: 'scenario-id', type: String },
-    task: { type: String },
+    skinId: { attribute: 'skin-id', type: String },
+    modeId: { attribute: 'mode-id', type: String },
     locale: { type: String },
     menuLabel: { attribute: false },
     scenarioLabel: { attribute: false },
@@ -37,18 +30,15 @@ export class PuzzleMenu extends LitElement {
       display: block;
       min-width: 0;
     }
-
     * {
       box-sizing: border-box;
     }
-
     form {
       display: flex;
       align-items: end;
       gap: 0.75rem;
       min-width: 0;
     }
-
     label {
       display: grid;
       flex: 1 1 12rem;
@@ -58,7 +48,6 @@ export class PuzzleMenu extends LitElement {
       font-size: 0.875rem;
       font-weight: 600;
     }
-
     select,
     input,
     button {
@@ -66,7 +55,6 @@ export class PuzzleMenu extends LitElement {
       border-radius: 0.35rem;
       font: inherit;
     }
-
     select,
     input {
       width: 100%;
@@ -76,7 +64,6 @@ export class PuzzleMenu extends LitElement {
       background: #fff;
       color: #202428;
     }
-
     button {
       flex: 0 0 auto;
       padding: 0.6rem 1rem;
@@ -86,13 +73,11 @@ export class PuzzleMenu extends LitElement {
       font-weight: 700;
       cursor: pointer;
     }
-
     @media (max-width: 40rem) {
       form {
         display: grid;
         grid-template-columns: minmax(0, 1fr);
       }
-
       button {
         width: 100%;
       }
@@ -100,8 +85,8 @@ export class PuzzleMenu extends LitElement {
   `;
 
   declare seed: number;
-  declare scenarioId: SupportedScenarioId;
-  declare task: PuzzleTask;
+  declare skinId: SkinId;
+  declare modeId: ModeId;
   declare locale: PuzzleLocale;
   declare menuLabel: string;
   declare scenarioLabel: string;
@@ -116,8 +101,8 @@ export class PuzzleMenu extends LitElement {
   constructor() {
     super();
     this.seed = 17;
-    this.scenarioId = 'gaming.drone-power';
-    this.task = 'story-to-quantities';
+    this.skinId = 'gaming.drone-power';
+    this.modeId = 'story-to-quantities';
     this.locale = 'en';
     this.menuLabel = 'Puzzle menu';
     this.scenarioLabel = 'Scenario';
@@ -135,7 +120,7 @@ export class PuzzleMenu extends LitElement {
       <form aria-label=${this.menuLabel} @submit=${this.handleSubmit}>
         <label>
           ${this.scenarioLabel}
-          <select name="scenario" .value=${this.scenarioId}>
+          <select name="scenario" .value=${this.skinId}>
             <option value="gaming.drone-power">
               ${this.dronePowerLabel}
             </option>
@@ -146,7 +131,7 @@ export class PuzzleMenu extends LitElement {
         </label>
         <label>
           ${this.taskLabel}
-          <select name="task" .value=${this.task}>
+          <select name="task" .value=${this.modeId}>
             <option value="story-to-quantities">
               ${this.storyToQuantitiesLabel}
             </option>
@@ -177,26 +162,24 @@ export class PuzzleMenu extends LitElement {
     if (!(event.currentTarget instanceof HTMLFormElement)) {
       return;
     }
-
     const data = new FormData(event.currentTarget);
-    const scenarioId = data.get('scenario');
-    const task = data.get('task');
+    const skinId = data.get('scenario');
+    const modeId = data.get('task');
     const seed = Number(data.get('seed'));
     if (
-      typeof scenarioId !== 'string' ||
-      !isSupportedScenarioId(scenarioId) ||
-      typeof task !== 'string' ||
-      !isPuzzleTask(task) ||
+      typeof skinId !== 'string' ||
+      !isSkinId(skinId) ||
+      typeof modeId !== 'string' ||
+      !isModeId(modeId) ||
       !Number.isInteger(seed)
     ) {
       return;
     }
-
     this.dispatchEvent(
       new CustomEvent<PuzzleSelectionRequest>(puzzleSelectionRequestEvent, {
         bubbles: true,
         composed: true,
-        detail: { seed, scenarioId, task, locale: this.locale },
+        detail: { seed, skinId, modeId, locale: this.locale },
       }),
     );
   }

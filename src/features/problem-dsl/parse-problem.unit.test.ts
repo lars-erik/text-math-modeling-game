@@ -7,7 +7,7 @@ test('parses the complete reference problem DSL into the domain model', () => {
   expect(parseProblem(referenceProblemDsl)).toEqual({
     kind: 'success',
     problem: {
-      id: 'drone-power',
+      id: 'total-from-parts',
       concepts: [
         'arithmetic.addition',
         'arithmetic.multiplication',
@@ -16,127 +16,126 @@ test('parses the complete reference problem DSL into the domain model', () => {
       ],
       quantities: [
         {
-          id: 'basePower',
-          dimension: 'power',
+          id: 'base',
+          dimension: 'amount',
           given: { kind: 'known', value: 30 },
         },
         {
-          id: 'droneCount',
+          id: 'count',
           dimension: 'item',
           given: { kind: 'known', value: 4 },
         },
         {
-          id: 'dronePower',
-          dimension: 'powerPerItem',
+          id: 'unitValue',
+          dimension: 'amountPerItem',
           given: { kind: 'hidden' },
         },
         {
-          id: 'totalPower',
-          dimension: 'power',
+          id: 'total',
+          dimension: 'amount',
           given: { kind: 'known', value: 210 },
         },
       ],
       relation: {
         kind: 'equation',
-        left: { kind: 'quantity', id: 'totalPower' },
+        left: { kind: 'quantity', id: 'total' },
         right: {
           kind: 'add',
-          left: { kind: 'quantity', id: 'basePower' },
+          left: { kind: 'quantity', id: 'base' },
           right: {
             kind: 'multiply',
-            left: { kind: 'quantity', id: 'droneCount' },
-            right: { kind: 'quantity', id: 'dronePower' },
+            left: { kind: 'quantity', id: 'count' },
+            right: { kind: 'quantity', id: 'unitValue' },
           },
         },
       },
-      scenarioId: 'gaming.drone-power',
-      academicSymbols: { dronePower: 'p' },
+      academicSymbols: { unitValue: 'p' },
     },
   });
 });
 
 test('returns the domain validation issue for a duplicate quantity ID', () => {
   const duplicateQuantityDsl = referenceProblemDsl.replace(
-    '    quantity basePower: power = 30\n',
-    '    quantity basePower: power = 30\n    quantity basePower: power = 31\n',
+    '    quantity base: amount = 30\n',
+    '    quantity base: amount = 30\n    quantity base: amount = 31\n',
   );
 
   expect(parseProblem(duplicateQuantityDsl)).toEqual({
     kind: 'invalid-problem',
-    issues: [{ kind: 'duplicate-quantity-id', id: 'basePower' }],
+    issues: [{ kind: 'duplicate-quantity-id', id: 'base' }],
   });
 });
 
 test('returns the domain validation issue for an undefined equation identifier', () => {
   const undefinedIdentifierDsl = referenceProblemDsl.replace(
-    'droneCount * dronePower',
-    'droneCount * missingPower',
+    'count * unitValue',
+    'count * missingValue',
   );
 
   expect(parseProblem(undefinedIdentifierDsl)).toEqual({
     kind: 'invalid-problem',
-    issues: [{ kind: 'undefined-quantity', id: 'missingPower' }],
+    issues: [{ kind: 'undefined-quantity', id: 'missingValue' }],
   });
 });
 
 test('returns a typed deterministic diagnostic for malformed DSL', () => {
   const malformedDsl = referenceProblemDsl.replace(
-    'quantity droneCount: item',
-    'quantity droneCount item',
+    'quantity count: item',
+    'quantity count item',
   );
 
   expect(parseProblem(malformedDsl)).toEqual({
     kind: 'syntax-error',
-    message: 'Expected ":" at line 10, column 25.',
+    message: 'Expected ":" at line 10, column 20.',
     expected: '":"',
     range: {
-      start: { offset: 217, line: 10, column: 25 },
-      end: { offset: 217, line: 10, column: 25 },
+      start: { offset: 213, line: 10, column: 20 },
+      end: { offset: 213, line: 10, column: 20 },
     },
   });
 });
 
 test('reports malformed equation syntax in complete DSL source coordinates', () => {
   const malformedEquationDsl = referenceProblemDsl.replace(
-    'droneCount * dronePower',
-    'droneCount + * dronePower',
+    'count * unitValue',
+    'count + * unitValue',
   );
-  const invalidOffset = malformedEquationDsl.indexOf('* dronePower');
+  const invalidOffset = malformedEquationDsl.indexOf('* unitValue');
 
   expect(parseProblem(malformedEquationDsl)).toEqual({
     kind: 'syntax-error',
-    message: 'Expected an identifier, an integer, or "(" at line 15, column 47.',
+    message: 'Expected an identifier, an integer, or "(" at line 15, column 32.',
     expected: 'an identifier, an integer, or "("',
     range: {
-      start: { offset: invalidOffset, line: 15, column: 47 },
-      end: { offset: invalidOffset, line: 15, column: 47 },
+      start: { offset: invalidOffset, line: 15, column: 32 },
+      end: { offset: invalidOffset, line: 15, column: 32 },
     },
   });
 });
 
 test('rejects an academic symbol mapping for an undefined quantity', () => {
   const undefinedSymbolDsl = referenceProblemDsl.replace(
-    'symbol dronePower = p',
-    'symbol missingPower = p',
+    'symbol unitValue = p',
+    'symbol missingValue = p',
   );
 
   expect(parseProblem(undefinedSymbolDsl)).toEqual({
     kind: 'invalid-problem',
     issues: [
-      { kind: 'undefined-academic-symbol-quantity', id: 'missingPower' },
+      { kind: 'undefined-academic-symbol-quantity', id: 'missingValue' },
     ],
   });
 });
 
 test('returns a typed diagnostic instead of discarding a duplicate symbol mapping', () => {
   const duplicateSymbolDsl = referenceProblemDsl.replace(
-    '    symbol dronePower = p\n',
-    '    symbol dronePower = p\n    symbol dronePower = q\n',
+    '    symbol unitValue = p\n',
+    '    symbol unitValue = p\n    symbol unitValue = q\n',
   );
 
   expect(parseProblem(duplicateSymbolDsl)).toEqual({
     kind: 'duplicate-symbol-mapping',
-    quantityId: 'dronePower',
+    quantityId: 'unitValue',
     symbols: ['p', 'q'],
   });
 });
