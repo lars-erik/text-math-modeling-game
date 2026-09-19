@@ -16,7 +16,7 @@ const excludedDirectories = new Set([
 const testOnlyPathPattern = /(?:^|\/)(?:__tests__|__screenshots__)\//;
 const testOnlyFilePattern = /\.(?:test|fixture)(?:\.ts)?$/;
 const domainFilePattern =
-  /^features\/(?:problem-model|problem-dsl|named-expression|problem-generation|scenarios)\//;
+  /^features\/(?:problem-model|problem-dsl|named-expression|problem-generation|skins|puzzle\/modes)\//;
 const uiModulePattern = /^features\/puzzle\/ui(?:\/|$)/;
 const testOnlyPackagePattern =
   /^(?:vitest|@vitest\/[^/]+|approvals|playwright|@playwright\/[^/]+|fast-check|@fast-check\/[^/]+)(?:\/|$)/;

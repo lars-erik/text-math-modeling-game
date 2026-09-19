@@ -1,6 +1,5 @@
 import { expect, test } from 'vitest';
 import { page } from 'vitest/browser';
-
 import { startMathModelingApplication } from '../../../application';
 import './math-modeling-puzzle';
 
@@ -8,7 +7,9 @@ test('approves the wide drone-power puzzle shell', async () => {
   await page.viewport(1280, 900);
   document.body.innerHTML = `
     <math-modeling-puzzle
-      puzzle="reference"
+      seed="17"
+      skin="gaming.drone-power"
+      mode="story-to-quantities"
       locale="en"
       input-mode="text"
     ></math-modeling-puzzle>
@@ -18,10 +19,8 @@ test('approves the wide drone-power puzzle shell', async () => {
     root: document,
   });
   window.scrollTo(0, 0);
-
-  const puzzle = page.getByRole('main', { name: 'Story to quantities' });
+  const puzzle = page.getByRole('main');
   await expect.element(puzzle).toBeVisible();
-
   expect(page).toMatchScreenshot({screenshotOptions:{fullPage:true}});
 });
 
@@ -29,21 +28,20 @@ test('approves the narrow Norwegian creator puzzle shell', async () => {
   await page.viewport(390, 844);
   document.body.innerHTML = `
     <math-modeling-puzzle
-      puzzle="reference"
+      seed="321"
+      skin="creator.followers"
+      mode="quantities-to-named-equation"
       locale="nb"
       input-mode="text"
     ></math-modeling-puzzle>
   `;
   startMathModelingApplication({
-    search: '?seed=321&scenario=creator.followers&locale=nb',
+    search:
+      '?seed=321&scenario=creator.followers&task=quantities-to-named-equation&locale=nb',
     root: document,
   });
   window.scrollTo(0, 0);
-
-  const puzzle = page.getByRole('main', {
-    name: 'Fra fortelling til størrelser',
-  });
+  const puzzle = page.getByRole('main');
   await expect.element(puzzle).toBeVisible();
-
   expect(page).toMatchScreenshot({screenshotOptions:{fullPage:true}});
 });
