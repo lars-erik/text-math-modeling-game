@@ -116,6 +116,7 @@ jobs:
     permissions:
       contents: write
       issues: write
+      pull-requests: write
 
     steps:
       - name: Checkout repository
@@ -213,8 +214,8 @@ jobs:
           🔎 **PR preview:** $preview"
 
           comment_id="$(
-            gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
-              --jq ".[] | select(.user.login == \"github-actions[bot]\") | select(.body | contains(\"$marker\")) | .id" \
+            gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments?per_page=100" \
+              --jq '.[] | select(.user.login == "github-actions[bot]") | select(.body | contains("<!-- pr-preview-link -->")) | .id' \
               | head -n 1
           )"
 
@@ -282,8 +283,8 @@ jobs:
           set -euo pipefail
           marker='<!-- pr-preview-link -->'
 
-          gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
-            --jq ".[] | select(.user.login == \"github-actions[bot]\") | select(.body | contains(\"$marker\")) | .id" \
+          gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments?per_page=100" \
+            --jq '.[] | select(.user.login == "github-actions[bot]") | select(.body | contains("<!-- pr-preview-link -->")) | .id' \
             | while read -r comment_id; do
                 [[ -z "$comment_id" ]] || gh api --method DELETE "repos/$REPOSITORY/issues/comments/$comment_id"
               done
