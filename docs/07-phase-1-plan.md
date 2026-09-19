@@ -51,9 +51,10 @@
 
 ## Milestone 4 — Minimal complete DSL
 
-**First red test:** parse one complete `problem drone-power { ... }` fixture into the same domain case.
+**First red test:** parse one complete generic `problem total-from-parts { ... }` fixture into the same canonical domain case.
 
-- Add DSL metadata/quantity/equation grammar on top of the tested expression subset.
+- Add mathematical DSL metadata/quantity/equation grammar on top of the tested expression subset.
+- Keep Skin/scenario, locale, learner-facing names/units, Mode and academic presentation metadata outside canonical `Problem`/DSL.
 - Build deterministic `serializeProblem(problem)` and canonical ordering.
 - Add AST -> DSL -> AST and DSL -> AST -> canonical DSL tests; approve canonical fixture plus debug dump.
 - Keep test fixtures alongside their reviewed approvals.
@@ -66,53 +67,52 @@
 
 - Inject a stable, seeded RNG and bounded positive integers.
 - Generate base/count/unit first, derive total, hide unit; retain a private answer key.
-- Validate values, references, dimensions, requested concepts and solution.
-- Add fast-check properties for invariants, deterministic replay, and generated DSL round-trips.
+- Accept mathematical seed/concepts/constraints only; do not accept Skin/scenario, locale or Mode as generation inputs.
+- Validate values, references, generic dimensions, requested concepts and solution.
+- Add fast-check properties for invariants, deterministic mathematical replay, and generated DSL round-trips.
 - Approve at least one seeded case's DSL and debug printer output.
 
 **Acceptance:** the browser can receive a fresh valid problem from a seed. A failed generated test provides reproducible replay information.
 
-## Milestone 6 — First deterministic story
+## Milestone 6 — First deterministic Skin/story
 
-**First red approval:** rendering the reference problem with `gaming.drone-power` and `locale=en` yields a readable story and corresponding fact ledger; rendering the same story plan with `locale=nb` preserves the same facts and semantic keys.
+**First red approval:** projecting the same canonical Problem through `gaming.drone-power` with `locale=en` yields a readable story and corresponding fact ledger; rendering the same Skin story plan with `locale=nb` preserves canonical fact references and semantic keys.
 
-- Bind mathematical roles to power/drone quantities, units and canonical scenario keys.
-- Introduce a deterministic story plan made from semantic sentence-fragment and noun keys before any language rendering.
+- Map canonical mathematical roles to learner-facing power/drone names, labels and units without rewriting `Problem` IDs, dimensions or relation AST.
+- Introduce a deterministic Skin story plan made from semantic sentence-fragment and noun keys before any language rendering.
 - Add Bellissima-style per-locale resource modules (`en.ts`, `nb.ts`) with the same typed map for localized variable names, labels, noun forms, units and story fragments.
 - Render the story by resolving the story plan against the selected locale map and interpolating validated fact-ledger values.
 - Route localized variable names into the named-expression name resolver while retaining canonical quantity IDs internally.
 - Use the same locale-map pattern for learner-visible puzzle prompts/feedback rather than hard-coding English strings in UI/use-cases.
-- Show Story -> Quantities in the existing screen using constrained chips or selections.
-- Approve story + ledger in English and Norwegian Bokmål plus one use-case transcript; assert resource-key parity and that locale changes preserve the AST, answer key, selected story-plan keys and correct hidden role.
+- Show Story -> Quantities in the existing screen using constrained chips or selections, but keep the Skin reusable by other Modes.
+- Approve story + ledger in English and Norwegian Bokmål plus one use-case transcript; assert resource-key parity and exact canonical Problem/AnswerKey identity across Skin/locale projection.
 
-**Acceptance:** the same generated case and deterministic story plan render as coherent English and Norwegian Bokmål prose, localized quantity/variable names resolve to the same semantic model, and a learner can complete the transformation.
+**Acceptance:** the same canonical generated Problem and deterministic Skin story plan render as coherent English and Norwegian Bokmål prose, localized quantity/variable names resolve to the same canonical IDs, and the Skin contains no task-specific factory.
 
-## Milestone 7 — Second scenario and compositional request
+## Milestone 7 — Second Skin and compositional proof
 
-**First red test:** applying the creator/followers scenario to the same generated values preserves the normalized mathematical shape and answer key.
+**First red test:** project one frozen canonical Problem through both drone and creator Skins and assert the Problem, canonical DSL/relation and private AnswerKey remain exactly unchanged.
 
-- Add a role map and localized resource set with coherent follower/post units, using the same locale-resource contract established by the first scenario.
-- Expose requested concept list and scenario choice as generation inputs.
-- Compose the initial capability/constraint declarations rather than implementing concept-specific question strings.
-- Approve story outputs for both domains/locales and property-test math invariance under both scenario and locale changes.
+- Add a second Skin role/presentation map and localized resource set with coherent follower/post units, using the same Skin locale-resource contract established by the first Skin.
+- Keep Skin selection outside mathematical generation; requested concepts remain mathematical generation input while Skin is learner-facing composition input.
+- Add the Skin through a shared registry/contract rather than branching task logic on Skin ID.
+- Approve story outputs for both Skins/locales and cross-product-test exact mathematical identity across Skin and locale changes.
 
-**Acceptance:** one schema yields reproducible distinct stories; interest choice changes context rather than correctness.
+**Acceptance:** one canonical Problem yields reproducible distinct stories; every existing Mode can consume either Skin without Skin-specific task code.
 
-## Milestone 7.5 — Modeling-case/task composition and replay UI
+## Milestone 7.5 — Independent Problem × Skin × Mode composition and replay UI
 
-**First red test:** starting the real application with an explicit
-`task=quantities-to-named-equation` selects that task without cloning and mutating a
-story puzzle definition.
+**First red test:** compose one canonical Problem with both supported Skins and both supported Modes, assert all four combinations use the exact same Problem/relation/DSL, and show the selected Skin's story in both Modes.
 
-- Separate the generated/scenario-bound `ModelingCase` from the selected `PuzzleTask`.
-- Compose both implemented representation edges from the same modeling case.
-- Expose scenario, task, seed and locale through localized UI controls.
-- Persist all four selections in the URL and restore them on reload.
-- Reuse the current modeling case when task or locale changes.
+- Treat `Problem`, Skin and Mode as independent axes; do not introduce a scenario-bound `ModelingCase` that owns task-specific factories.
+- Compose both implemented representation edges from the same canonical Problem and generic Skin presentation.
+- Make `PuzzleScreen` genuinely generic: shared story/context plus a discriminated Mode-specific source/target/input/feedback state.
+- Treat free text and multiple choice as input providers within the same Quantities -> Named Equation Mode.
+- Expose scenario/Skin, task/Mode, seed and locale through localized UI controls; preserve current URL parameter names for compatibility.
+- Persist selections in the URL and restore them on reload. Changing Skin, Mode, locale or input provider reuses the canonical Problem; changing mathematical seed creates a new Problem.
+- Prove composition-order independence and the complete Skin × Mode × locale cross-product. Track the corrective implementation in GitHub issue #19 before proceeding to Milestone 8.
 
-**Acceptance:** both implemented task flows run through the real application start
-path; complete URLs replay the learner-facing state without exposing the private
-answer key.
+**Acceptance:** both implemented task flows run through the real application start path with either Skin; the same localized story remains visible when switching task/input provider; replay URLs restore learner-facing state without exposing or regenerating the private answer key.
 
 ## Milestone 8 — Substitution and academic display
 
