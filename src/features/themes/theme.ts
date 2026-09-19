@@ -7,19 +7,19 @@ import type {
 } from '../problem-model/problem';
 import type { QuantityId } from '../problem-model/expression';
 
-export const skinIds = [
+export const themeIds = [
   'gaming.drone-power',
   'creator.followers',
 ] as const;
 
-export type SkinId = (typeof skinIds)[number];
+export type ThemeId = (typeof themeIds)[number];
 
-export function isSkinId(value: string): value is SkinId {
-  return (skinIds as readonly string[]).includes(value);
+export function isThemeId(value: string): value is ThemeId {
+  return (themeIds as readonly string[]).includes(value);
 }
 
-export type SkinFact = {
-  skinQuantityId: string;
+export type ThemeFact = {
+  themeQuantityId: string;
   canonicalId: QuantityId;
   role: QuantityRole;
   visibility: QuantityGiven['kind'];
@@ -29,19 +29,19 @@ export type SkinFact = {
   unit: string;
 };
 
-export type SkinPresentation = {
-  skinId: SkinId;
+export type ThemePresentation = {
+  themeId: ThemeId;
   locale: PuzzleLocale;
-  facts: readonly SkinFact[];
+  facts: readonly ThemeFact[];
   story: { text: string; storySeed: number };
   learnerNames: LearnerNameMap;
 };
 
-export type Skin = {
-  id: SkinId;
+export type Theme = {
+  id: ThemeId;
   present: (options: {
     problem: Problem;
     locale: PuzzleLocale;
     storySeed: number;
-  }) => SkinPresentation;
+  }) => ThemePresentation;
 };

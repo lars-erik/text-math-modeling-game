@@ -7,10 +7,10 @@ Build a test-driven web puzzle for translating between natural-language situatio
 ## Reading order
 
 1. [Product and learning loop](docs/01-product-and-learning-loop.md) — intent, representation graph, initial use cases.
-2. [Problem × Skin × Mode architecture contract](docs/architecture-contract.md) — authoritative ownership, dependency and composition rules.
+2. [Problem × Theme × Mode architecture contract](docs/architecture-contract.md) — authoritative ownership, dependency and composition rules.
 3. [Architecture and semantic domain](docs/02-architecture-and-domain.md) — AST, quantities, operations, validation, checking.
 4. [DSL and representations](docs/03-dsl-and-representations.md) — canonical syntax, parsing, serialization, notation adapters.
-5. [Procedural generation and skins](docs/04-generation-and-scenarios.md) — composable math generation, seeds, Skin/story templates.
+5. [Procedural generation and themes](docs/04-generation-and-scenarios.md) — composable math generation, seeds, Theme/story templates.
 6. [Graybox puzzles and UI](docs/05-graybox-core-loop.md) — initial Modes, two-way traversal, screen contract.
 7. [TDD and approval testing](docs/06-testing-and-approvals.md) — golden masters, architecture invariants, use-case printers, properties, DOM testing.
 8. [Phase 1 execution plan](docs/07-phase-1-plan.md) — small red/green/refactor milestones and acceptance criteria.
@@ -41,7 +41,7 @@ The real application exposes both implemented learner transformations:
 
 Named equations are parsed back into the canonical domain AST and checked structurally rather than by raw string comparison. The browser UI has a shared responsive shell, scenario/task/seed/locale controls, accessible interaction tests, and selected visual screenshot approvals. Its URL reproduces all four selections, for example `?seed=321&scenario=creator.followers&task=quantities-to-named-equation&locale=nb`.
 
-The current implementation still contains scenario-bound/task-specific coupling that issue #19 is removing. The intended contract is one canonical mathematical Problem composed independently with a Skin and a Mode; switching Skin, Mode, locale or input provider must not regenerate or rewrite the Problem. Milestone 8 waits behind that correction.
+The current implementation still contains scenario-bound/task-specific coupling that issue #19 is removing. The intended contract is one canonical mathematical Problem composed independently with a Theme and a Mode; switching Theme, Mode, locale or input provider must not regenerate or rewrite the Problem. Milestone 8 waits behind that correction.
 
 ## Architectural invariant
 
@@ -52,7 +52,7 @@ The current implementation still contains scenario-bound/task-specific coupling 
                   canonical Problem
                     /         \
                    /           \
-                Skin           Mode
+                Theme           Mode
                    \           /
                     \         /
                      Composer
@@ -64,9 +64,9 @@ The current implementation still contains scenario-bound/task-specific coupling 
                       Lit UI
 ```
 
-Problem, Skin and Mode are independent axes. Skin may present canonical facts as drones, followers or another theme without changing canonical quantity IDs/relation/DSL. Mode determines the representation edge without knowing which concrete Skin is active. The composer is the first layer allowed to select both.
+Problem, Theme and Mode are independent axes. Theme may present canonical facts as drones, followers or another theme without changing canonical quantity IDs/relation/DSL. Mode determines the representation edge without knowing which concrete Theme is active. The composer is the first layer allowed to select both.
 
-The private `AnswerKey` remains separate from learner-visible Problem and browser state. Architecture tests should prove exact Problem identity and supported Skin × Mode × locale composition, not only equivalent arithmetic results.
+The private `AnswerKey` remains separate from learner-visible Problem and browser state. Architecture tests should prove exact Problem identity and supported Theme × Mode × locale composition, not only equivalent arithmetic results.
 
 ## Development
 

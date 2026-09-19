@@ -3,7 +3,7 @@ import {
   puzzleSelectionRequestEvent,
   type PuzzleSelectionRequest,
 } from './features/puzzle/puzzle-request';
-import { isSkinId, type SkinId } from './features/skins';
+import { isThemeId, type ThemeId } from './features/themes';
 import { isModeId, type ModeId } from './features/puzzle/modes';
 import { maximumTotalFromPartsSeed } from './features/problem-generation/generate-total-from-parts';
 
@@ -21,7 +21,7 @@ export function startMathModelingApplication({
   const puzzleElement = root.querySelector('math-modeling-puzzle');
   const showPuzzle = (request: PuzzleSelectionRequest, updateSearch: boolean) => {
     puzzleElement?.setAttribute('seed', String(request.seed));
-    puzzleElement?.setAttribute('skin', request.skinId);
+    puzzleElement?.setAttribute('theme', request.themeId);
     puzzleElement?.setAttribute('mode', request.modeId);
     puzzleElement?.setAttribute('locale', request.locale);
     if (updateSearch) {
@@ -39,12 +39,12 @@ export type ApplicationState = PuzzleSelectionRequest;
 export function parseApplicationState(search: string): ApplicationState {
   const parameters = new URLSearchParams(search);
   const seedText = parameters.get('seed');
-  const skinText = parameters.get('scenario');
+  const themeText = parameters.get('scenario');
   const modeText = parameters.get('task');
   const localeText = parameters.get('locale');
   return {
     seed: seedText === null ? defaultPuzzleSeed : parseSeed(seedText),
-    skinId: parseSkinId(skinText),
+    themeId: parseThemeId(themeText),
     modeId: parseModeId(modeText),
     locale: parseLocale(localeText),
   };
@@ -81,11 +81,11 @@ function parseSeed(seedText: string): number {
   return seed;
 }
 
-function parseSkinId(value: string | null): SkinId {
+function parseThemeId(value: string | null): ThemeId {
   if (value === null) {
     return 'gaming.drone-power';
   }
-  if (!isSkinId(value)) {
+  if (!isThemeId(value)) {
     throw new Error(`Unknown scenario ${JSON.stringify(value)}.`);
   }
   return value;
@@ -94,7 +94,7 @@ function parseSkinId(value: string | null): SkinId {
 export function formatSearch(request: PuzzleSelectionRequest): string {
   const parameters = new URLSearchParams({
     seed: String(request.seed),
-    scenario: request.skinId,
+    scenario: request.themeId,
     task: request.modeId,
     locale: request.locale,
   });

@@ -2181,7 +2181,7 @@ A language model may turn validated structured problems into varied natural-lang
 
 The mathematical AST remains authoritative.
 
-## Phase 6 — Game skins and progression
+## Phase 6 — Game themes and progression
 
 Build different experiences over the same learning engine.
 

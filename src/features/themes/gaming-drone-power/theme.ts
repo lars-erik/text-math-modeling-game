@@ -1,25 +1,25 @@
 import type { QuantityRole } from '../../problem-model/problem';
-import type { Skin, SkinFact } from '../skin';
+import type { Theme, ThemeFact } from '../theme';
 import { dronePowerResources } from './lang';
 import { createDronePowerLearnerNames } from './learner-names';
 import { renderDronePowerStory } from './render-story';
 import { planDronePowerStory } from './story-plan';
 
 const roleFacts = {
-  base: { skinQuantityId: 'basePower', unitKey: 'power' },
-  count: { skinQuantityId: 'droneCount', unitKey: 'count' },
-  'per-item': { skinQuantityId: 'dronePower', unitKey: 'powerPerDrone' },
-  total: { skinQuantityId: 'totalPower', unitKey: 'power' },
+  base: { themeQuantityId: 'basePower', unitKey: 'power' },
+  count: { themeQuantityId: 'droneCount', unitKey: 'count' },
+  'per-item': { themeQuantityId: 'dronePower', unitKey: 'powerPerDrone' },
+  total: { themeQuantityId: 'totalPower', unitKey: 'power' },
 } as const satisfies Record<
   QuantityRole,
-  { skinQuantityId: string; unitKey: 'count' | 'power' | 'powerPerDrone' }
+  { themeQuantityId: string; unitKey: 'count' | 'power' | 'powerPerDrone' }
 >;
 
-export const dronePowerSkin: Skin = {
+export const dronePowerTheme: Theme = {
   id: 'gaming.drone-power',
   present({ problem, locale, storySeed }) {
     const resources = dronePowerResources[locale];
-    const facts: SkinFact[] = problem.quantities.map((quantity) => {
+    const facts: ThemeFact[] = problem.quantities.map((quantity) => {
       if (quantity.role === undefined) {
         throw new Error(
           `Quantity ${quantity.id} has no total-from-parts role.`,
@@ -27,10 +27,10 @@ export const dronePowerSkin: Skin = {
       }
       const roleFact = roleFacts[quantity.role];
       const quantityResources = resources.quantities[
-        roleFact.skinQuantityId as keyof typeof resources.quantities
+        roleFact.themeQuantityId as keyof typeof resources.quantities
       ];
       return {
-        skinQuantityId: roleFact.skinQuantityId,
+        themeQuantityId: roleFact.themeQuantityId,
         canonicalId: quantity.id,
         role: quantity.role,
         visibility: quantity.given.kind,
@@ -45,7 +45,7 @@ export const dronePowerSkin: Skin = {
     const plan = planDronePowerStory(facts, storySeed);
     const story = renderDronePowerStory(facts, plan, locale);
     return {
-      skinId: 'gaming.drone-power',
+      themeId: 'gaming.drone-power',
       locale,
       facts,
       story: { text: story.text, storySeed: story.replay.storySeed },

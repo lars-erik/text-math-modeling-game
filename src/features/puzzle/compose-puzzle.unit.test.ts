@@ -7,7 +7,7 @@ import { serializeProblem } from '../problem-dsl';
 import {
   composePuzzle,
   createNamedEquationChoices,
-  presentSkin,
+  presentTheme,
   submitPuzzle,
   type PuzzleScreen,
 } from './compose-puzzle';
@@ -15,7 +15,7 @@ import { createNamedEquationChoiceSeeds } from './modes/named-equation-choices';
 import { modes, modeIds } from './modes';
 import { relationsHaveNormalizedStructure } from '../problem-model/normalized-structure';
 import { namedEquationStructurePolicy } from '../problem-model/normalized-structure';
-import { skins, skinIds } from '../skins';
+import { themes, themeIds } from '../themes';
 import type { PuzzleLocale } from './lang';
 
 const locales: readonly PuzzleLocale[] = ['en', 'nb'];
@@ -27,21 +27,21 @@ function generateCase() {
   });
 }
 
-test('one canonical Problem, DSL, and answer key serve every skin and mode in both locales', () => {
+test('one canonical Problem, DSL, and answer key serve every theme and mode in both locales', () => {
   const generated = generateCase();
   const problemBefore = structuredClone(generated.problem);
   const dslBefore = serializeProblem(generated.problem);
-  for (const skinId of skinIds) {
+  for (const themeId of themeIds) {
     for (const locale of locales) {
       for (const modeId of modeIds) {
         const screen = composePuzzle({
           problem: generated.problem,
-          skinId,
+          themeId,
           modeId,
           locale,
         });
         expect(screen.screen.modeId).toBe(modeId);
-        expect(screen.context.skinId).toBe(skinId);
+        expect(screen.context.themeId).toBe(themeId);
         expect(screen.context.locale).toBe(locale);
         expect(screen.context.replay?.seed).toBe(321);
         expect(screen.context.story.length).toBeGreaterThan(0);
@@ -73,7 +73,7 @@ test('mode state depends only on the canonical Problem and locale', () => {
         problem: generated.problem,
         locale,
       });
-      expect(JSON.stringify(state)).not.toContain('skin');
+      expect(JSON.stringify(state)).not.toContain('theme');
       const quantityIds =
         state.modeId === 'story-to-quantities'
           ? state.target.quantityIds
@@ -85,9 +85,9 @@ test('mode state depends only on the canonical Problem and locale', () => {
   }
 });
 
-test('composition is order-independent: mode first, then skin', () => {
+test('composition is order-independent: mode first, then theme', () => {
   const generated = generateCase();
-  for (const skinId of skinIds) {
+  for (const themeId of themeIds) {
     for (const modeId of modeIds) {
       for (const locale of locales) {
         const modeFirstState = modes[modeId].start({
@@ -96,13 +96,13 @@ test('composition is order-independent: mode first, then skin', () => {
         });
         const screen = composePuzzle({
           problem: generated.problem,
-          skinId,
+          themeId,
           modeId,
           locale,
         });
         expect(modeFirstState.state.modeId).toBe(screen.screen.modeId);
-        const presentation = presentSkin(
-          skinId,
+        const presentation = presentTheme(
+          themeId,
           generated.problem,
           locale,
           321,
@@ -113,7 +113,7 @@ test('composition is order-independent: mode first, then skin', () => {
         );
         expect(composePuzzle({
           problem: generated.problem,
-          skinId,
+          themeId,
           modeId,
           locale,
         })).toEqual(screen);
@@ -122,10 +122,10 @@ test('composition is order-independent: mode first, then skin', () => {
   }
 });
 
-test('both skins present the exact same canonical relation and bindings by role', () => {
+test('both themes present the exact same canonical relation and bindings by role', () => {
   const generated = generateCase();
-  const byRole = (skinId: (typeof skinIds)[number], locale: PuzzleLocale) => {
-    const presentation = presentSkin(skinId, generated.problem, locale, 321);
+  const byRole = (themeId: (typeof themeIds)[number], locale: PuzzleLocale) => {
+    const presentation = presentTheme(themeId, generated.problem, locale, 321);
     return presentation.facts.map((fact) => ({
       role: fact.role,
       visibility: fact.visibility,
@@ -140,7 +140,7 @@ test('both skins present the exact same canonical relation and bindings by role'
   }
 });
 
-test('named-equation choice relations are canonical and identical across skins', () => {
+test('named-equation choice relations are canonical and identical across themes', () => {
   const generated = generateCase();
   const seeds = createNamedEquationChoiceSeeds(generated.problem);
   expect(seeds.map((seed) => seed.id)).toEqual([
@@ -159,10 +159,10 @@ test('named-equation choice relations are canonical and identical across skins',
     ),
   ).toBe(false);
   for (const locale of locales) {
-    for (const skinId of skinIds) {
+    for (const themeId of themeIds) {
       const choices = createNamedEquationChoices(
         generated.problem,
-        presentSkin(skinId, generated.problem, locale, 321),
+        presentTheme(themeId, generated.problem, locale, 321),
       );
       expect(choices.map((choice) => choice.relation)).toEqual(
         seeds.map((seed) => seed.relation),
@@ -179,20 +179,20 @@ test('the same story and problem serve both modes and both input providers', () 
   const problemBefore = structuredClone(generated.problem);
   const storyScreen: PuzzleScreen = composePuzzle({
     problem: generated.problem,
-    skinId: 'gaming.drone-power',
+    themeId: 'gaming.drone-power',
     modeId: 'story-to-quantities',
     locale: 'en',
   });
   const namedScreen = composePuzzle({
     problem: generated.problem,
-    skinId: 'gaming.drone-power',
+    themeId: 'gaming.drone-power',
     modeId: 'quantities-to-named-equation',
     locale: 'en',
   });
   expect(namedScreen.context.story).toBe(storyScreen.context.story);
   const textSubmission = submitPuzzle({
     problem: generated.problem,
-    skinId: 'gaming.drone-power',
+    themeId: 'gaming.drone-power',
     modeId: 'quantities-to-named-equation',
     locale: 'en',
     answer: { kind: 'text', input: 'totalPower = basePower + droneCount * dronePower' },
@@ -204,7 +204,7 @@ test('the same story and problem serve both modes and both input providers', () 
   );
   const choiceSubmission = submitPuzzle({
     problem: generated.problem,
-    skinId: 'gaming.drone-power',
+    themeId: 'gaming.drone-power',
     modeId: 'quantities-to-named-equation',
     locale: 'en',
     answer: {

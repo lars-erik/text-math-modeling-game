@@ -1,8 +1,8 @@
-# Procedural generation and skins
+# Procedural generation and themes
 
-## Independent mathematical generation and Skin projection
+## Independent mathematical generation and Theme projection
 
-The **mathematical generator** produces a complete canonical `Problem` plus a private `AnswerKey`. A **Skin** projects those fixed canonical facts into a story, contextual labels/names/units and locale-specific wording. Skin selection never changes the Problem or AnswerKey.
+The **mathematical generator** produces a complete canonical `Problem` plus a private `AnswerKey`. A **Theme** projects those fixed canonical facts into a story, contextual labels/names/units and locale-specific wording. Theme selection never changes the Problem or AnswerKey.
 
 ```text
 requested concepts + constraints + seed
@@ -15,13 +15,13 @@ requested concepts + constraints + seed
            |
            +-------------> Mode
            |
-           +-------------> Skin + locale + story seed
+           +-------------> Theme + locale + story seed
                                 |
                                 v
-                         SkinPresentation
+                         ThemePresentation
 ```
 
-Mathematical generation constructs the AST directly. The canonical DSL exposes only that mathematical AST/replay. Learner-facing replay records Skin, Mode and locale separately.
+Mathematical generation constructs the AST directly. The canonical DSL exposes only that mathematical AST/replay. Learner-facing replay records Theme, Mode and locale separately.
 
 ## Initial compositional design
 
@@ -48,14 +48,14 @@ interface GeneratedCase {
 }
 
 interface PuzzleSelection {
-  skinId: string;
+  themeId: string;
   mode: PuzzleMode;
   locale: PuzzleLocale;
   storySeed: number;
 }
 ```
 
-Compose mathematical responsibilities as needed by concrete tests: `ShapeGenerator`, `ValueGenerator`, `UnknownSelector`, and `ConstraintValidator`. Skin projection is outside mathematical generation. A small pure function may satisfy several mathematical responsibilities at first; extract reusable interfaces when a second mathematical shape requires them. Allow multiple concepts to contribute to one schema: addition and multiplication may both shape the same generated relation.
+Compose mathematical responsibilities as needed by concrete tests: `ShapeGenerator`, `ValueGenerator`, `UnknownSelector`, and `ConstraintValidator`. Theme projection is outside mathematical generation. A small pure function may satisfy several mathematical responsibilities at first; extract reusable interfaces when a second mathematical shape requires them. Allow multiple concepts to contribute to one schema: addition and multiplication may both shape the same generated relation.
 
 ## First equation family
 
@@ -74,7 +74,7 @@ total = 30 + 4 * 45 = 210
 
 Hide `unitValue` in the first vertical slice. Later allow hiding `base`, `count`, or `total` after writing appropriate domain and pedagogy tests (including zero/non-integer cases). Preserve the complete answer key rather than solving randomly constructed equations to recover it.
 
-The mathematical family uses generic roles/dimensions such as `scalar + item * scalar -> scalar`: `item` marks the repeated count and the second `scalar` is the abstract per-count value. Concrete Skin concepts such as MW/drone or followers/post are presentation/unit semantics validated by the Skin; they do not rewrite the canonical Problem's IDs, relation or generic dimensions.
+The mathematical family uses generic roles/dimensions such as `scalar + item * scalar -> scalar`: `item` marks the repeated count and the second `scalar` is the abstract per-count value. Concrete Theme concepts such as MW/drone or followers/post are presentation/unit semantics validated by the Theme; they do not rewrite the canonical Problem's IDs, relation or generic dimensions.
 
 The initial family trains the requested concept composition:
 
@@ -90,7 +90,7 @@ A broader catalog can later add additive change, comparisons, ratios, two unknow
 
 ## Determinism and replay
 
-Inject the random-number source. Use a stable documented algorithm or library, explicit numeric ranges, and deterministic ordering. The same seed, generator version and mathematical configuration produce an identical canonical case regardless of Skin, Mode or locale. Print mathematical replay fields with generated test failures. `fast-check` manages its own shrinkable test cases; record both the fast-check replay seed/path and the application's generation seed as appropriate.
+Inject the random-number source. Use a stable documented algorithm or library, explicit numeric ranges, and deterministic ordering. The same seed, generator version and mathematical configuration produce an identical canonical case regardless of Theme, Mode or locale. Print mathematical replay fields with generated test failures. `fast-check` manages its own shrinkable test cases; record both the fast-check replay seed/path and the application's generation seed as appropriate.
 
 The `total-from-parts-v1` generator uses Mulberry32 and accepts unsigned 32-bit
 integer seeds (`0` through `4294967295`). This range is the replay contract:
@@ -108,14 +108,14 @@ Generation invariants:
 - Every generated answer key satisfies the relation.
 - The hidden answer meets the integer-solution constraint.
 - AST -> DSL -> AST preserves semantics.
-- Skin selection leaves the exact canonical Problem/DSL/relation and AnswerKey unchanged.
+- Theme selection leaves the exact canonical Problem/DSL/relation and AnswerKey unchanged.
 - Mode selection leaves the exact canonical Problem/DSL/relation and AnswerKey unchanged.
-- Locale selection leaves the exact canonical Problem, AnswerKey, and semantic Skin story plan unchanged.
+- Locale selection leaves the exact canonical Problem, AnswerKey, and semantic Theme story plan unchanged.
 - Every supported locale provides the complete typed resource-key set required by its scenario.
 
-## Structured Skin projections
+## Structured Theme projections
 
-The shape has canonical IDs/roles: `base`, `count`, `unitValue`, `total`. A Skin gives those roles contextual learner-facing names, labels, units and natural language while retaining the canonical IDs as semantic identity.
+The shape has canonical IDs/roles: `base`, `count`, `unitValue`, `total`. A Theme gives those roles contextual learner-facing names, labels, units and natural language while retaining the canonical IDs as semantic identity.
 
 ```
 Shape: total = base + count * unitValue
@@ -135,11 +135,11 @@ Creator roles:
 
 Use an explicit presentation map keyed by canonical IDs/roles. `basePower` and `startingFollowers` are learner-facing names, not replacements for canonical `base`; similarly for the other roles. Use coherent units and narrative: the fixed base applies once, each repeated unit applies `count` times, and the question identifies the hidden role.
 
-A Skin adapter returns presentation data, not `{ problem: Problem }`. It never renames AST references, rewrites relations, changes mathematical replay, or creates task-specific definitions. The same `SkinPresentation` is reusable by every Mode.
+A Theme adapter returns presentation data, not `{ problem: Problem }`. It never renames AST references, rewrites relations, changes mathematical replay, or creates task-specific definitions. The same `ThemePresentation` is reusable by every Mode.
 
-## Localized Skin resource maps
+## Localized Theme resource maps
 
-Keep Skin semantics separate from language. A Skin first produces a deterministic **story plan** containing semantic keys for quantities, nouns, and sentence fragments. A locale renderer then resolves those keys through a language resource map and interpolates only validated fact-ledger values. Random selection chooses semantic variant keys before localization, so changing language does not choose a different mathematical story structure.
+Keep Theme semantics separate from language. A Theme first produces a deterministic **story plan** containing semantic keys for quantities, nouns, and sentence fragments. A locale renderer then resolves those keys through a language resource map and interpolates only validated fact-ledger values. Random selection chooses semantic variant keys before localization, so changing language does not choose a different mathematical story structure.
 
 Use Bellissima-style language modules: each supported locale lives in its own file and exports the same typed nested map. For example:
 
@@ -179,7 +179,7 @@ type ScenarioLocaleResources = {
 };
 ```
 
-The map keys are stable Skin resource keys while semantic quantity references point back to canonical Problem IDs; values are localized. `variableName` is the identifier shown to and accepted from the learner for named-expression puzzles. The parser resolves that localized name back to the Problem's canonical quantity ID before semantic checking. Noun forms and sentence fragments are data rather than conditionals embedded in the renderer. Extend the shared noun-form schema deliberately when a supported language needs additional grammatical forms.
+The map keys are stable Theme resource keys while semantic quantity references point back to canonical Problem IDs; values are localized. `variableName` is the identifier shown to and accepted from the learner for named-expression puzzles. The parser resolves that localized name back to the Problem's canonical quantity ID before semantic checking. Noun forms and sentence fragments are data rather than conditionals embedded in the renderer. Extend the shared noun-form schema deliberately when a supported language needs additional grammatical forms.
 
 Generic puzzle UI text (commands, common prompts, feedback categories) uses the same per-locale-map pattern in the puzzle feature rather than being duplicated in every scenario. All learner-visible strings should come from a locale resource boundary even when Phase 1 initially exercises only a small subset.
 
@@ -203,8 +203,8 @@ The domain's numbers come from the generated AST and answer key, not hard-coded 
 
 ## Template testing
 
-Print a deterministic story and a fact ledger in an approval artifact. Test required quantities, values, contextual units, unknown role and relation separately through exact assertions. Approve representative output for each Phase 1 locale and verify that localized learner-facing variable names resolve to the same canonical quantities. Also assert exact deep equality of the canonical Problem before and after every Skin projection; normalized arithmetic equivalence alone is insufficient. An approved prose output verifies wording and readability but is not the sole source of evidence that the story is mathematically faithful.
+Print a deterministic story and a fact ledger in an approval artifact. Test required quantities, values, contextual units, unknown role and relation separately through exact assertions. Approve representative output for each Phase 1 locale and verify that localized learner-facing variable names resolve to the same canonical quantities. Also assert exact deep equality of the canonical Problem before and after every Theme projection; normalized arithmetic equivalence alone is insufficient. An approved prose output verifies wording and readability but is not the sole source of evidence that the story is mathematically faithful.
 
 ## Later LLM adapter
 
-Retain a `StoryGenerator`/Skin interface that accepts the immutable canonical Problem plus validated presentation facts and returns story text and structured metadata. An eventual language model receives a locked fact ledger and interest setting. Treat its text as untrusted until a validation/review process confirms that it preserved facts, mathematical relationships, units, and the question. The semantic AST/answer key remains authoritative. Phase 1 uses deterministic templates; the LLM path is an architectural seam.
+Retain a `StoryGenerator`/Theme interface that accepts the immutable canonical Problem plus validated presentation facts and returns story text and structured metadata. An eventual language model receives a locked fact ledger and interest setting. Treat its text as untrusted until a validation/review process confirms that it preserved facts, mathematical relationships, units, and the question. The semantic AST/answer key remains authoritative. Phase 1 uses deterministic templates; the LLM path is an architectural seam.

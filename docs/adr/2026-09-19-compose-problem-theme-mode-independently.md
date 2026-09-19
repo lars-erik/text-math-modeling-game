@@ -1,4 +1,4 @@
-# Compose canonical Problem, Skin and Mode independently
+# Compose canonical Problem, Theme and Mode independently
 
 ## Status
 
@@ -15,34 +15,34 @@ We need one mathematical problem to support independent theme and task choices: 
 ## Decision drivers
 
 - Canonical mathematics, DSL and answer identity must not depend on theme or task.
-- A new Skin must work with existing Modes without adding task-specific code inside the Skin.
-- A new Mode must work with existing Skins without importing concrete themes.
+- A new Theme must work with existing Modes without adding task-specific code inside the Theme.
+- A new Mode must work with existing Themes without importing concrete themes.
 - Locale and input-provider choices are presentation/interaction choices rather than mathematical generation inputs.
 - Architecture tests must be able to prove independence mechanically rather than relying on prose or normalized arithmetic equivalence.
 
 ## Decision outcome
 
-Use four explicit boundaries: **Problem**, **Skin**, **Mode**, and **Composer/PuzzleScreen**.
+Use four explicit boundaries: **Problem**, **Theme**, **Mode**, and **Composer/PuzzleScreen**.
 
 1. The mathematical generator produces a theme-free, mode-free canonical `Problem` plus a separate private `AnswerKey`.
-2. A Skin projects that Problem into contextual story, names, labels, units and localized presentation. A Skin never mutates or returns a rewritten `Problem`.
-3. A Mode defines the representation edge, interaction/checking semantics and generic semantic distractors. A Mode never imports a concrete Skin.
+2. A Theme projects that Problem into contextual story, names, labels, units and localized presentation. A Theme never mutates or returns a rewritten `Problem`.
+3. A Mode defines the representation edge, interaction/checking semantics and generic semantic distractors. A Mode never imports a concrete Theme.
 4. Composition/application code selects both axes and combines their generic outputs into a `PuzzleScreen` whose task-specific state is a discriminated union and whose localized story/context is shared.
 
-`Problem -> Skin -> Mode -> PuzzleScreen` is conceptual composition, not mandatory execution order. Skin and Mode are independent peers over the same Problem; composing them in either order must produce equivalent learner-facing semantics.
+`Problem -> Theme -> Mode -> PuzzleScreen` is conceptual composition, not mandatory execution order. Theme and Mode are independent peers over the same Problem; composing them in either order must produce equivalent learner-facing semantics.
 
-The canonical Problem DSL contains canonical mathematical identifiers/roles, relation structure, givens/concepts and mathematical replay only. Scenario/skin IDs, localized/contextual quantity names, story text and academic display selections live outside the canonical DSL. Exact replay of a learner-facing puzzle may record those selections in separate puzzle/session replay metadata.
+The canonical Problem DSL contains canonical mathematical identifiers/roles, relation structure, givens/concepts and mathematical replay only. Scenario/theme IDs, localized/contextual quantity names, story text and academic display selections live outside the canonical DSL. Exact replay of a learner-facing puzzle may record those selections in separate puzzle/session replay metadata.
 
-Changing Skin, Mode, locale or input provider keeps the canonical Problem and AnswerKey unchanged. Changing the mathematical seed is what generates a new Problem.
+Changing Theme, Mode, locale or input provider keeps the canonical Problem and AnswerKey unchanged. Changing the mathematical seed is what generates a new Problem.
 
 ## Consequences
 
-- Scenario-specific IDs such as `dronePower` and `followersPerPost` become learner-facing Skin names mapped to canonical IDs such as `unitValue`, rather than AST identity.
-- Existing scenario binders that rewrite quantities, relations or dimensions must be migrated to presentation-only Skin adapters.
+- Scenario-specific IDs such as `dronePower` and `followersPerPost` become learner-facing Theme names mapped to canonical IDs such as `unitValue`, rather than AST identity.
+- Existing scenario binders that rewrite quantities, relations or dimensions must be migrated to presentation-only Theme adapters.
 - Task-specific files under concrete scenario folders must be generalized into Mode/composition logic.
 - Existing DSL fixtures and the scenario-related portion of the 2026-09-18 canonical-DSL ADR require migration.
-- Tests must cover the supported Problem × Skin × Mode × Locale Cartesian product and assert exact canonical identity.
-- The browser may keep `scenario` and `task` URL parameter names for compatibility while internally treating them as Skin and Mode selections.
+- Tests must cover the supported Problem × Theme × Mode × Locale Cartesian product and assert exact canonical identity.
+- The browser may keep `scenario` and `task` URL parameter names for compatibility while internally treating them as Theme and Mode selections.
 - This architecture intentionally accepts a larger cleanup now to avoid multiplying theme/task combinations as independent puzzle implementations.
 
 ## Supersedes

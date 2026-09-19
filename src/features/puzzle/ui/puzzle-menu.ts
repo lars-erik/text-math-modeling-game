@@ -6,12 +6,12 @@ import {
 } from '../puzzle-request';
 import type { PuzzleLocale } from '../lang';
 import { isModeId, type ModeId } from '../modes/mode';
-import { isSkinId, type SkinId } from '../../skins';
+import { isThemeId, type ThemeId } from '../../themes';
 
 export class PuzzleMenu extends LitElement {
   static properties = {
     seed: { type: Number },
-    skinId: { attribute: 'skin-id', type: String },
+    themeId: { attribute: 'theme-id', type: String },
     modeId: { attribute: 'mode-id', type: String },
     locale: { type: String },
     menuLabel: { attribute: false },
@@ -85,7 +85,7 @@ export class PuzzleMenu extends LitElement {
   `;
 
   declare seed: number;
-  declare skinId: SkinId;
+  declare themeId: ThemeId;
   declare modeId: ModeId;
   declare locale: PuzzleLocale;
   declare menuLabel: string;
@@ -101,7 +101,7 @@ export class PuzzleMenu extends LitElement {
   constructor() {
     super();
     this.seed = 17;
-    this.skinId = 'gaming.drone-power';
+    this.themeId = 'gaming.drone-power';
     this.modeId = 'story-to-quantities';
     this.locale = 'en';
     this.menuLabel = 'Puzzle menu';
@@ -120,7 +120,7 @@ export class PuzzleMenu extends LitElement {
       <form aria-label=${this.menuLabel} @submit=${this.handleSubmit}>
         <label>
           ${this.scenarioLabel}
-          <select name="scenario" .value=${this.skinId}>
+          <select name="scenario" .value=${this.themeId}>
             <option value="gaming.drone-power">
               ${this.dronePowerLabel}
             </option>
@@ -163,12 +163,12 @@ export class PuzzleMenu extends LitElement {
       return;
     }
     const data = new FormData(event.currentTarget);
-    const skinId = data.get('scenario');
+    const themeId = data.get('scenario');
     const modeId = data.get('task');
     const seed = Number(data.get('seed'));
     if (
-      typeof skinId !== 'string' ||
-      !isSkinId(skinId) ||
+      typeof themeId !== 'string' ||
+      !isThemeId(themeId) ||
       typeof modeId !== 'string' ||
       !isModeId(modeId) ||
       !Number.isInteger(seed)
@@ -179,7 +179,7 @@ export class PuzzleMenu extends LitElement {
       new CustomEvent<PuzzleSelectionRequest>(puzzleSelectionRequestEvent, {
         bubbles: true,
         composed: true,
-        detail: { seed, skinId, modeId, locale: this.locale },
+        detail: { seed, themeId, modeId, locale: this.locale },
       }),
     );
   }

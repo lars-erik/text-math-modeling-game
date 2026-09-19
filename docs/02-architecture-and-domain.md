@@ -7,20 +7,20 @@
 ```text
 problem model / math generation / canonical DSL
                     |
-                    +------> Skin adapters
+                    +------> Theme adapters
                     |
                     +------> Mode use-cases
                               \
                                +--> composer/application --> PuzzleScreen --> Lit UI
 ```
 
-Domain and Mode use-cases are framework-independent TypeScript. Skins and Modes are orthogonal peers over one canonical `Problem`; they do not import each other. The Lit layer renders the composed screen model and dispatches user actions. All public domain operations use domain types rather than parser-tree, HTML, KaTeX, concrete Skin, or concrete Mode objects.
+Domain and Mode use-cases are framework-independent TypeScript. Themes and Modes are orthogonal peers over one canonical `Problem`; they do not import each other. The Lit layer renders the composed screen model and dispatches user actions. All public domain operations use domain types rather than parser-tree, HTML, KaTeX, concrete Theme, or concrete Mode objects.
 
 ## Identity and meaning
 
-Use stable, theme-free quantity IDs such as `base`, `count`, `unitValue`, and `total` as references. Learner-facing descriptive names such as `dronePower`, `followersPerPost`, or localized equivalents are Skin presentation/name-resolution metadata and may vary without changing the problem. Academic symbols are notation/Mode presentation metadata and may also vary without changing the problem. Define problem data separately from Skin, Mode, submitted answer, checker diagnostics, localization resources, and presentation state.
+Use stable, theme-free quantity IDs such as `base`, `count`, `unitValue`, and `total` as references. Learner-facing descriptive names such as `dronePower`, `followersPerPost`, or localized equivalents are Theme presentation/name-resolution metadata and may vary without changing the problem. Academic symbols are notation/Mode presentation metadata and may also vary without changing the problem. Define problem data separately from Theme, Mode, submitted answer, checker diagnostics, localization resources, and presentation state.
 
-A named-expression puzzle resolves the active Skin/locale variable names back to canonical quantity IDs before checking. Localized labels, contextual dimensions/units, nouns, prompts, story fragments, symbols, and feedback never become canonical mathematical identity. The DSL/debug representation uses stable canonical IDs so fixtures and mathematical replay remain theme- and language-neutral.
+A named-expression puzzle resolves the active Theme/locale variable names back to canonical quantity IDs before checking. Localized labels, contextual dimensions/units, nouns, prompts, story fragments, symbols, and feedback never become canonical mathematical identity. The DSL/debug representation uses stable canonical IDs so fixtures and mathematical replay remain theme- and language-neutral.
 
 A useful starting model (illustrative TypeScript, refine through tests):
 
@@ -64,9 +64,9 @@ Use integer-safe, bounded Phase 1 generation. JavaScript numbers are acceptable 
 
 ## Dimensions and quantity roles
 
-Keep canonical mathematical dimensions generic enough to describe the reusable shape without naming a theme. Contextual dimensions and units such as MW, drones, followers, posts, MW/drone or followers/post belong to the active Skin presentation and can be validated there against canonical roles.
+Keep canonical mathematical dimensions generic enough to describe the reusable shape without naming a theme. Contextual dimensions and units such as MW, drones, followers, posts, MW/drone or followers/post belong to the active Theme presentation and can be validated there against canonical roles.
 
-Test canonical rules using canonical IDs/roles, for example that the reusable relation is structurally valid and that incompatible generic dimensions are rejected. Separately test each Skin's unit/fact ledger for contextual consistency. A Skin must not make its concrete dimensions authoritative by rewriting the canonical `Problem`.
+Test canonical rules using canonical IDs/roles, for example that the reusable relation is structurally valid and that incompatible generic dimensions are rejected. Separately test each Theme's unit/fact ledger for contextual consistency. A Theme must not make its concrete dimensions authoritative by rewriting the canonical `Problem`.
 
 ## Semantic operations
 
@@ -111,7 +111,7 @@ type PuzzleCommand =
 type PuzzleScreen = {
   context: {
     story: string;
-    replay: { seed: number; skin: string; mode: string; locale: string };
+    replay: { seed: number; theme: string; mode: string; locale: string };
   };
   task:
     | StoryToQuantitiesScreen

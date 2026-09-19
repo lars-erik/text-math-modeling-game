@@ -7,7 +7,7 @@ function mountPuzzle(search: string): MathModelingPuzzle {
   document.body.innerHTML = `
     <math-modeling-puzzle
       seed="17"
-      skin="gaming.drone-power"
+      theme="gaming.drone-power"
       mode="story-to-quantities"
       locale="en"
       input-mode="text"

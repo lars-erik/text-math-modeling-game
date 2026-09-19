@@ -8,7 +8,7 @@ import {
 import {
   composePuzzle,
   createNamedEquationChoices,
-  presentSkin,
+  presentTheme,
   submitPuzzle,
   type PuzzleScreen,
 } from '../compose-puzzle';
@@ -23,7 +23,7 @@ import {
   puzzleSelectionRequestEvent,
   type PuzzleSelectionRequest,
 } from '../puzzle-request';
-import { isSkinId } from '../../skins';
+import { isThemeId } from '../../themes';
 import type { Problem } from '../../problem-model/problem';
 import { isModeId, type ModeId } from '../modes/mode';
 import {
@@ -42,7 +42,7 @@ import './puzzle-menu';
 export class MathModelingPuzzle extends LitElement {
   static properties = {
     seed: { type: String },
-    skinId: { attribute: 'skin', type: String },
+    themeId: { attribute: 'theme', type: String },
     modeId: { attribute: 'mode', type: String },
     inputMode: { attribute: 'input-mode', reflect: true, type: String },
     locale: { reflect: true, type: String },
@@ -138,7 +138,7 @@ export class MathModelingPuzzle extends LitElement {
   `;
 
   declare seed: string;
-  declare skinId: string;
+  declare themeId: string;
   declare modeId: string;
   declare inputMode: string;
   declare locale: string;
@@ -148,7 +148,7 @@ export class MathModelingPuzzle extends LitElement {
   constructor() {
     super();
     this.seed = '17';
-    this.skinId = 'gaming.drone-power';
+    this.themeId = 'gaming.drone-power';
     this.modeId = 'story-to-quantities';
     this.inputMode = 'text';
     this.locale = 'en';
@@ -162,7 +162,7 @@ export class MathModelingPuzzle extends LitElement {
     }
     if (
       changedProperties.has('seed') ||
-      changedProperties.has('skinId') ||
+      changedProperties.has('themeId') ||
       changedProperties.has('modeId') ||
       changedProperties.has('locale')
     ) {
@@ -171,12 +171,12 @@ export class MathModelingPuzzle extends LitElement {
   }
 
   private composeCurrentScreen(): PuzzleScreen | undefined {
-    if (!isSkinId(this.skinId) || !isPuzzleLocale(this.locale)) {
+    if (!isThemeId(this.themeId) || !isPuzzleLocale(this.locale)) {
       return undefined;
     }
     return composePuzzle({
       problem: this.generatedProblem,
-      skinId: this.skinId,
+      themeId: this.themeId,
       modeId: isModeId(this.modeId) ? this.modeId : 'story-to-quantities',
       locale: this.locale,
       storySeed: Number(this.seed),
@@ -184,9 +184,9 @@ export class MathModelingPuzzle extends LitElement {
   }
 
   render() {
-    if (!isSkinId(this.skinId)) {
+    if (!isThemeId(this.themeId)) {
       return html`<p role="alert">
-        Unknown scenario ${JSON.stringify(this.skinId)}.
+        Unknown scenario ${JSON.stringify(this.themeId)}.
       </p>`;
     }
     if (!isModeId(this.modeId)) {
@@ -249,15 +249,15 @@ export class MathModelingPuzzle extends LitElement {
       </p>`;
     }
     const screen = this.screen;
-    if (screen === undefined || !isSkinId(this.skinId)) {
+    if (screen === undefined || !isThemeId(this.themeId)) {
       return html``;
     }
     const resources = puzzleResources[locale];
     const inputProvider = puzzleInputProviders[this.inputMode];
     const choices = createNamedEquationChoices(
       this.generatedProblem,
-      presentSkin(
-        this.skinId,
+      presentTheme(
+        this.themeId,
         this.generatedProblem,
         locale,
         Number(this.seed),
@@ -291,7 +291,7 @@ export class MathModelingPuzzle extends LitElement {
 
   private submitAnswer(answer: LearnerAnswer | QuantitySelection): void {
     if (
-      !isSkinId(this.skinId) ||
+      !isThemeId(this.themeId) ||
       !isModeId(this.modeId) ||
       !isPuzzleLocale(this.locale)
     ) {
@@ -299,7 +299,7 @@ export class MathModelingPuzzle extends LitElement {
     }
     this.screen = submitPuzzle({
       problem: this.generatedProblem,
-      skinId: this.skinId,
+      themeId: this.themeId,
       modeId: this.modeId,
       locale: this.locale,
       storySeed: Number(this.seed),
@@ -338,7 +338,7 @@ export class MathModelingPuzzle extends LitElement {
         composed: true,
         detail: {
           seed: Number(this.seed),
-          skinId: isSkinId(this.skinId) ? this.skinId : 'gaming.drone-power',
+          themeId: isThemeId(this.themeId) ? this.themeId : 'gaming.drone-power',
           modeId: isModeId(this.modeId)
             ? this.modeId
             : 'story-to-quantities',
@@ -363,7 +363,7 @@ export class MathModelingPuzzle extends LitElement {
     source: TemplateResult;
     input: TemplateResult;
     feedback: string;
-    replay?: { seed: number; generatorVersion: string; skinId: string; storySeed: number };
+    replay?: { seed: number; generatorVersion: string; themeId: string; storySeed: number };
   }) {
     const resources = puzzleResources[locale];
     return html`
@@ -387,7 +387,7 @@ export class MathModelingPuzzle extends LitElement {
         <puzzle-menu
           slot="settings"
           .seed=${Number(this.seed)}
-          .skinId=${this.skinId}
+          .themeId=${this.themeId}
           .modeId=${this.modeId}
           .locale=${locale}
           .menuLabel=${resources.puzzleMenu.label}
@@ -410,7 +410,7 @@ export class MathModelingPuzzle extends LitElement {
               <dt>${resources.common.generatorVersion}</dt>
               <dd>${replay.generatorVersion}</dd>
               <dt>${resources.common.scenario}</dt>
-              <dd>${replay.skinId}</dd>
+              <dd>${replay.themeId}</dd>
               <dt>${resources.common.storySeed}</dt>
               <dd>${replay.storySeed}</dd>
             </dl>`}

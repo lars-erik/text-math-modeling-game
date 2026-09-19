@@ -32,7 +32,7 @@ Separate mathematical generation from learner-facing composition:
 generate(seed, requested concepts, mathematical constraints)
   -> canonical Problem + private AnswerKey
 
-compose(problem, skin, mode, locale, inputMode?)
+compose(problem, theme, mode, locale, inputMode?)
   -> PuzzleScreen
 
 submit(screen/task state, input)
@@ -45,17 +45,17 @@ next()
 
 Each command should have a deterministic use-case printer. Favor actions that can be tested without mounting the UI.
 
-The browser replay URL may retain the compatibility names `seed`, `scenario`, `task`, and `locale`, but `scenario` selects a Skin and `task` selects a Mode. Changing Skin, Mode, locale or input provider reuses the exact canonical Problem; changing only the mathematical seed generates another Problem.
+The browser replay URL may retain the compatibility names `seed`, `scenario`, `task`, and `locale`, but `scenario` selects a Theme and `task` selects a Mode. Changing Theme, Mode, locale or input provider reuses the exact canonical Problem; changing only the mathematical seed generates another Problem.
 
 ## First five puzzle types
 
 ### A. Story -> quantities
 
-Show the active Skin's story from shared puzzle context. Present candidate quantity/label/value chips and let the player identify the givens and hidden role. Checking compares semantic IDs and facts, not rendered string formatting. Add plausible distractors once the basic interaction works.
+Show the active Theme's story from shared puzzle context. Present candidate quantity/label/value chips and let the player identify the givens and hidden role. Checking compares semantic IDs and facts, not rendered string formatting. Add plausible distractors once the basic interaction works.
 
 ### B. Quantities -> named equation
 
-Keep the same Skin story visible as context and show the active Skin's learner-facing names for the canonical quantities. A drone Skin may render:
+Keep the same Theme story visible as context and show the active Theme's learner-facing names for the canonical quantities. A drone Theme may render:
 
 ```text
 basePower = 30
@@ -64,7 +64,7 @@ dronePower = ?
 totalPower = 210
 ```
 
-while a creator Skin renders the same canonical Problem with follower/post names. Ask for the same canonical relation expressed through the active name map.
+while a creator Theme renders the same canonical Problem with follower/post names. Ask for the same canonical relation expressed through the active name map.
 
 Start with a plain expression field using the Ohm expression parser. The UI can later support draggable tokens or structured editor operations using the same command/checking interface.
 

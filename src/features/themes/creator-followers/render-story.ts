@@ -2,7 +2,7 @@ import {
   creatorFollowersResources,
   type SupportedLocale,
 } from './lang';
-import type { SkinFact } from '../skin';
+import type { ThemeFact } from '../theme';
 import type { CreatorFollowersStoryPlan } from './story-plan';
 
 export type RenderedCreatorFollowersStory = {
@@ -15,13 +15,13 @@ export type RenderedCreatorFollowersStory = {
 };
 
 export function renderCreatorFollowersStory(
-  facts: readonly SkinFact[],
+  facts: readonly ThemeFact[],
   plan: CreatorFollowersStoryPlan,
   locale: SupportedLocale,
 ): RenderedCreatorFollowersStory {
   const resources = creatorFollowersResources[locale];
   const factsById = new Map(
-    facts.map((fact) => [fact.skinQuantityId, fact]),
+    facts.map((fact) => [fact.themeQuantityId, fact]),
   );
   const sentences = plan.sentences.map((sentence) => {
     const fact = requireKnownFact(factsById, sentence.factId);
@@ -67,9 +67,9 @@ export function renderCreatorFollowersStory(
 }
 
 function requireKnownFact(
-  factsById: ReadonlyMap<string, SkinFact>,
+  factsById: ReadonlyMap<string, ThemeFact>,
   id: string,
-): SkinFact & { visibility: 'known'; value: number } {
+): ThemeFact & { visibility: 'known'; value: number } {
   const fact = factsById.get(id);
   if (fact?.visibility !== 'known' || fact.value === undefined) {
     throw new Error(`Story sentence fact ${id} must have a known value.`);

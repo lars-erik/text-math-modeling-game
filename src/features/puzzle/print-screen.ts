@@ -6,7 +6,7 @@ export function printScreen(puzzleScreen: PuzzleScreen): string {
   const lines = [
     `puzzle ${screen.source.kind} -> ${screen.target.kind}`,
     context.replay
-      ? `replay seed=${context.replay.seed} generator=${context.replay.generatorVersion} skin=${context.replay.skinId} story-seed=${context.replay.storySeed} locale=${context.replay.locale}`
+      ? `replay seed=${context.replay.seed} generator=${context.replay.generatorVersion} theme=${context.replay.themeId} story-seed=${context.replay.storySeed} locale=${context.replay.locale}`
       : 'replay none',
     `prompt ${screen.target.prompt}`,
   ];
@@ -64,7 +64,7 @@ function printQuantity(
 ): string {
   const value =
     quantity.given.kind === 'known' ? String(quantity.given.value) : '?';
-  return `  ${quantity.skinQuantityId} [${quantity.role}] = ${value}`;
+  return `  ${quantity.themeQuantityId} [${quantity.role}] = ${value}`;
 }
 
 function indent(value: string): string[] {

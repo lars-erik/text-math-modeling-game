@@ -1,6 +1,6 @@
 import type { PuzzleLocale } from './lang';
-import type { SkinId } from '../skins';
-import { isSkinId } from '../skins';
+import type { ThemeId } from '../themes';
+import { isThemeId } from '../themes';
 import type { ModeId } from './modes';
 import { isModeId } from './modes';
 
@@ -8,7 +8,7 @@ export const puzzleSelectionRequestEvent = 'puzzle-selection-request';
 
 export type PuzzleSelectionRequest = {
   seed: number;
-  skinId: SkinId;
+  themeId: ThemeId;
   modeId: ModeId;
   locale: PuzzleLocale;
 };
@@ -22,8 +22,8 @@ export function isPuzzleSelectionRequest(
   const request = value as Partial<PuzzleSelectionRequest>;
   return (
     typeof request.seed === 'number' &&
-    typeof request.skinId === 'string' &&
-    isSkinId(request.skinId) &&
+    typeof request.themeId === 'string' &&
+    isThemeId(request.themeId) &&
     typeof request.modeId === 'string' &&
     isModeId(request.modeId) &&
     (request.locale === 'en' || request.locale === 'nb')

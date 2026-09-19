@@ -1,4 +1,4 @@
-import type { SkinFact } from '../skin';
+import type { ThemeFact } from '../theme';
 
 export type CreatorFollowersStoryPlan = {
   scenarioId: 'creator.followers';
@@ -8,27 +8,27 @@ export type CreatorFollowersStoryPlan = {
         fragmentKey:
           | 'baseFact.startingAudience'
           | 'countFact.promotedPosts';
-        factId: SkinFact['skinQuantityId'];
+        factId: ThemeFact['themeQuantityId'];
         nounKey: 'creator' | 'post';
       }
     | {
         fragmentKey: 'totalFact.finalAudience';
-        factId: SkinFact['skinQuantityId'];
+        factId: ThemeFact['themeQuantityId'];
       }
   )[];
   question: {
     fragmentKey: 'question.followersPerPost';
-    factId: SkinFact['skinQuantityId'];
+    factId: ThemeFact['themeQuantityId'];
     nounKey: 'post';
   };
 };
 
 export function planCreatorFollowersStory(
-  facts: readonly SkinFact[],
+  facts: readonly ThemeFact[],
   seed: number,
 ): CreatorFollowersStoryPlan {
   const factIdByRole = new Map(
-    facts.map((fact) => [fact.role, fact.skinQuantityId]),
+    facts.map((fact) => [fact.role, fact.themeQuantityId]),
   );
   return {
     scenarioId: 'creator.followers',

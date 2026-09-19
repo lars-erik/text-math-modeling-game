@@ -1,4 +1,4 @@
-import type { SkinFact } from '../skin';
+import type { ThemeFact } from '../theme';
 
 export type DronePowerStoryPlan = {
   scenarioId: 'gaming.drone-power';
@@ -6,26 +6,26 @@ export type DronePowerStoryPlan = {
   sentences: readonly (
     | {
         fragmentKey: 'baseFact.basicSystems' | 'countFact.activeDrones';
-        factId: SkinFact['skinQuantityId'];
+        factId: ThemeFact['themeQuantityId'];
         nounKey: 'ship' | 'drone';
       }
     | {
         fragmentKey: 'totalFact.combinedDraw';
-        factId: SkinFact['skinQuantityId'];
+        factId: ThemeFact['themeQuantityId'];
       }
   )[];
   question: {
     fragmentKey: 'question.perDronePower';
-    factId: SkinFact['skinQuantityId'];
+    factId: ThemeFact['themeQuantityId'];
     nounKey: 'drone';
   };
 };
 
 export function planDronePowerStory(
-  facts: readonly SkinFact[],
+  facts: readonly ThemeFact[],
   seed: number,
 ): DronePowerStoryPlan {
-  const factIdByRole = new Map(facts.map((fact) => [fact.role, fact.skinQuantityId]));
+  const factIdByRole = new Map(facts.map((fact) => [fact.role, fact.themeQuantityId]));
   return {
     scenarioId: 'gaming.drone-power',
     seed,

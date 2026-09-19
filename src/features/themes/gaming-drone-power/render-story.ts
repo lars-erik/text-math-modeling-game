@@ -1,5 +1,5 @@
 import { dronePowerResources, type SupportedLocale } from './lang';
-import type { SkinFact } from '../skin';
+import type { ThemeFact } from '../theme';
 import type { DronePowerStoryPlan } from './story-plan';
 
 export type RenderedStory = {
@@ -12,13 +12,13 @@ export type RenderedStory = {
 };
 
 export function renderDronePowerStory(
-  facts: readonly SkinFact[],
+  facts: readonly ThemeFact[],
   plan: DronePowerStoryPlan,
   locale: SupportedLocale,
 ): RenderedStory {
   const resources = dronePowerResources[locale];
   const factsById = new Map(
-    facts.map((fact) => [fact.skinQuantityId, fact]),
+    facts.map((fact) => [fact.themeQuantityId, fact]),
   );
   const sentences = plan.sentences.map((sentence) => {
     const fact = requireKnownFact(factsById, sentence.factId);
@@ -62,9 +62,9 @@ export function renderDronePowerStory(
 }
 
 function requireKnownFact(
-  factsById: ReadonlyMap<string, SkinFact>,
+  factsById: ReadonlyMap<string, ThemeFact>,
   id: string,
-): SkinFact & { visibility: 'known'; value: number } {
+): ThemeFact & { visibility: 'known'; value: number } {
   const fact = factsById.get(id);
   if (fact?.visibility !== 'known' || fact.value === undefined) {
     throw new Error(`Story sentence fact ${id} must have a known value.`);

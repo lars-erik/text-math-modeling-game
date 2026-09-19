@@ -8,7 +8,7 @@ test('approves the wide drone-power puzzle shell', async () => {
   document.body.innerHTML = `
     <math-modeling-puzzle
       seed="17"
-      skin="gaming.drone-power"
+      theme="gaming.drone-power"
       mode="story-to-quantities"
       locale="en"
       input-mode="text"
@@ -29,7 +29,7 @@ test('approves the narrow Norwegian creator puzzle shell', async () => {
   document.body.innerHTML = `
     <math-modeling-puzzle
       seed="321"
-      skin="creator.followers"
+      theme="creator.followers"
       mode="quantities-to-named-equation"
       locale="nb"
       input-mode="text"

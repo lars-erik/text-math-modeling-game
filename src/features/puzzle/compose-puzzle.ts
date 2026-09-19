@@ -4,11 +4,11 @@ import type {
 } from '../problem-model/expression';
 import type { Problem } from '../problem-model/problem';
 import {
-  skins as allSkins,
-  type Skin,
-  type SkinId,
-  type SkinPresentation,
-} from '../skins';
+  themes as allThemes,
+  type Theme,
+  type ThemeId,
+  type ThemePresentation,
+} from '../themes';
 import type { LearnerAnswer, NamedEquationChoice } from './learner-answer';
 import { puzzleResources, type PuzzleLocale } from './lang';
 import { modes } from './modes';
@@ -26,7 +26,7 @@ import type {
 
 export type ScreenQuantity = {
   id: string;
-  skinQuantityId: string;
+  themeQuantityId: string;
   label: string;
   variableName: string;
   displayValue: string;
@@ -37,14 +37,14 @@ export type ScreenQuantity = {
 export type ReplayContext = {
   seed: number;
   generatorVersion: string;
-  skinId: SkinId;
+  themeId: ThemeId;
   storySeed: number;
   locale: PuzzleLocale;
 };
 
 export type PuzzleScreenContext = {
   locale: PuzzleLocale;
-  skinId: SkinId;
+  themeId: ThemeId;
   story: string;
   quantities: readonly ScreenQuantity[];
   replay: ReplayContext | undefined;
@@ -95,14 +95,14 @@ export type PuzzleScreen = {
 
 export type ComposePuzzleOptions = {
   problem: Problem;
-  skinId: SkinId;
+  themeId: ThemeId;
   modeId: ModeId;
   locale: PuzzleLocale;
   storySeed?: number;
 };
 
 export function composePuzzle(options: ComposePuzzleOptions): PuzzleScreen {
-  return mergeModeWithSkin(options, startMode(options));
+  return mergeModeWithTheme(options, startMode(options));
 }
 
 export function submitPuzzle(
@@ -110,14 +110,14 @@ export function submitPuzzle(
     answer: LearnerAnswer | QuantitySelection;
   },
 ): PuzzleScreen {
-  const presentation = presentSkinOf(options);
+  const presentation = presentThemeOf(options);
   const { state, feedback } = modes[options.modeId].submit({
     problem: options.problem,
     locale: options.locale,
     answer: options.answer,
     names: presentation.learnerNames,
   });
-  return mergeModeWithSkin(options, { state, feedback });
+  return mergeModeWithTheme(options, { state, feedback });
 }
 
 function startMode(options: ComposePuzzleOptions): ModeResult {
@@ -127,17 +127,17 @@ function startMode(options: ComposePuzzleOptions): ModeResult {
   });
 }
 
-function mergeModeWithSkin(
+function mergeModeWithTheme(
   options: ComposePuzzleOptions,
   modeResult: ModeResult,
 ): PuzzleScreen {
-  const presentation = presentSkinOf(options);
+  const presentation = presentThemeOf(options);
   const quantities = toScreenQuantities(presentation);
   return {
     screen: mergeTask(options, modeResult.state, quantities),
     context: {
       locale: options.locale,
-      skinId: presentation.skinId,
+      themeId: presentation.themeId,
       story: presentation.story.text,
       quantities,
       replay: composeReplay(options, presentation),
@@ -201,11 +201,11 @@ function mergeTask(
 }
 
 function toScreenQuantities(
-  presentation: SkinPresentation,
+  presentation: ThemePresentation,
 ): readonly ScreenQuantity[] {
   return presentation.facts.map((fact) => ({
     id: fact.canonicalId,
-    skinQuantityId: fact.skinQuantityId,
+    themeQuantityId: fact.themeQuantityId,
     label: fact.label,
     variableName: fact.variableName,
     displayValue:
@@ -220,34 +220,34 @@ function toScreenQuantities(
 
 function composeReplay(
   options: ComposePuzzleOptions,
-  presentation: SkinPresentation,
+  presentation: ThemePresentation,
 ): ReplayContext | undefined {
   return options.problem.replay
     ? {
         ...options.problem.replay,
         locale: options.locale,
-        skinId: presentation.skinId,
+        themeId: presentation.themeId,
         storySeed: presentation.story.storySeed,
       }
     : undefined;
 }
 
-export function presentSkin(
-  skinId: SkinId,
+export function presentTheme(
+  themeId: ThemeId,
   problem: Problem,
   locale: PuzzleLocale,
   storySeed: number,
-): SkinPresentation {
-  const skin: Skin | undefined = allSkins[skinId];
-  if (skin === undefined) {
-    throw new Error(`Unknown skin ${skinId}.`);
+): ThemePresentation {
+  const theme: Theme | undefined = allThemes[themeId];
+  if (theme === undefined) {
+    throw new Error(`Unknown theme ${themeId}.`);
   }
-  return skin.present({ problem, locale, storySeed });
+  return theme.present({ problem, locale, storySeed });
 }
 
-function presentSkinOf(options: ComposePuzzleOptions): SkinPresentation {
-  return presentSkin(
-    options.skinId,
+function presentThemeOf(options: ComposePuzzleOptions): ThemePresentation {
+  return presentTheme(
+    options.themeId,
     options.problem,
     options.locale,
     options.storySeed ?? options.problem.replay?.seed ?? 0,
@@ -256,7 +256,7 @@ function presentSkinOf(options: ComposePuzzleOptions): SkinPresentation {
 
 export function createNamedEquationChoices(
   problem: Problem,
-  presentation: SkinPresentation,
+  presentation: ThemePresentation,
 ): readonly NamedEquationChoice[] {
   return labelChoiceSeeds(
     createNamedEquationChoiceSeeds(problem),
@@ -266,7 +266,7 @@ export function createNamedEquationChoices(
 
 function labelChoiceSeeds(
   seeds: readonly NamedEquationChoiceSeed[],
-  presentation: SkinPresentation,
+  presentation: ThemePresentation,
 ): readonly NamedEquationChoice[] {
   const names = new Map(
     presentation.facts.map((fact) => [fact.canonicalId, fact.variableName]),
@@ -323,7 +323,7 @@ function requireName(
 ): string {
   const name = names.get(id);
   if (name === undefined) {
-    throw new Error(`No skin name for canonical quantity ${id}.`);
+    throw new Error(`No theme name for canonical quantity ${id}.`);
   }
   return name;
 }
