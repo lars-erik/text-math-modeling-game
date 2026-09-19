@@ -9,6 +9,7 @@ export default defineConfig({
     include: ['lit'],
   },
   test: {
+    attachmentsDir: 'test-results/browser/attachments',
     browser: {
       enabled: true,
       headless: true,

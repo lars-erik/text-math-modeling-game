@@ -54,6 +54,12 @@ export class PuzzleShell extends LitElement {
       background: var(--surface);
     }
 
+    .settings {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-muted);
+    }
+
     h1,
     h2,
     p {
@@ -134,6 +140,10 @@ export class PuzzleShell extends LitElement {
         padding: 1rem;
       }
 
+      .settings {
+        padding: 1rem;
+      }
+
       .language {
         width: 100%;
       }
@@ -185,6 +195,8 @@ export class PuzzleShell extends LitElement {
           <h1 id="puzzle-heading">${this.heading}</h1>
           <div class="language"><slot name="language"></slot></div>
         </header>
+
+        <div class="settings"><slot name="settings"></slot></div>
 
         <div class="representations">
           <section class="source" aria-labelledby="source-heading">

@@ -12,6 +12,14 @@ export const nb = {
     textInput: 'Tekstfelt',
     multipleChoice: 'Flervalg',
   },
+  puzzleMenu: {
+    label: 'Oppgavemeny',
+    scenario: 'Scenario',
+    dronePower: 'Romskip og droner',
+    creatorFollowers: 'Innholdsskaper og følgere',
+    seed: 'Frø',
+    show: 'Vis oppgave',
+  },
   common: {
     puzzle: 'Oppgave',
     source: 'Utgangspunkt',
