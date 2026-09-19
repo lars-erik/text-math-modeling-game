@@ -23,3 +23,4 @@ default_subagent_reasoning_effort = "medium"
 
 [mcp_servers.context7]
 url = "https://mcp.context7.com/mcp"
+transport = "streamable-http"
