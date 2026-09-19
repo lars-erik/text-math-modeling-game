@@ -1,9 +1,13 @@
+import { fileURLToPath } from 'node:url';
+
 import { defineConfig } from 'vitest/config';
-import { resolve } from 'node:path';
 
 process.env.PLAYWRIGHT_BROWSERS_PATH ??= '0';
 
 const { playwright } = await import('@vitest/browser-playwright');
+const screenshotDirectory = fileURLToPath(
+  new URL('./screenshots', import.meta.url),
+);
 
 export default defineConfig({
   optimizeDeps: {
@@ -15,22 +19,7 @@ export default defineConfig({
       enabled: true,
       expect: {
         toMatchScreenshot: {
-          resolveScreenshotPath: ({
-            arg,
-            browserName,
-            ext,
-            platform,
-            root,
-            testFileDirectory,
-            testFileName,
-          }) =>
-            resolve(
-              root,
-              'screenshots',
-              testFileDirectory,
-              testFileName,
-              `${arg}-${browserName}-${platform}${ext}`,
-            ),
+          screenshotDirectory,
         },
       },
       headless: true,

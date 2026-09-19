@@ -30,7 +30,7 @@ test('approves the wide drone-power puzzle shell', async () => {
 });
 
 test('approves the narrow Norwegian creator puzzle shell', async () => {
-  await page.viewport(390, 844);
+  await page.viewport(390, 1600);
   document.body.innerHTML = `
     <math-modeling-puzzle
       puzzle="reference"
