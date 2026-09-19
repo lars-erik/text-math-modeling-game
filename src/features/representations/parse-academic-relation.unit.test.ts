@@ -28,3 +28,15 @@ test('reports unknown academic symbols with deterministic available identifiers'
     availableIdentifiers: ['T', 'b', 'n', 'p'],
   });
 });
+
+test('parses the academic display juxtaposition without a trailing newline', () => {
+  expect(
+    parseAcademicRelation(
+      '210 = 30 + 4p',
+      createAcademicSymbolMap(totalFromPartsProblem),
+    ),
+  ).toEqual({
+    kind: 'success',
+    relation: substituteVisibleValues(totalFromPartsProblem),
+  });
+});

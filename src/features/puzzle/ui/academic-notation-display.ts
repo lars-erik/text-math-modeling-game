@@ -48,7 +48,7 @@ export class AcademicNotationDisplay extends LitElement {
     if (target === null || this.relation === undefined) {
       return;
     }
-    this.adapter.render(renderToString(this.relation, this.symbols), target);
+    this.adapter.render(this.relation, this.symbols, target);
   }
 }
 

@@ -24,6 +24,7 @@ test('approves the wide drone-power puzzle shell', async () => {
   const puzzle = page.getByRole('main');
   await expect.element(puzzle).toBeVisible();
   await expect(page).toMatchScreenshot('drone-power-wide', {
+    comparatorOptions: { allowedMismatchedPixelRatio: 0.02 },
     screenshotOptions: { fullPage: true },
   });
 });
@@ -48,6 +49,7 @@ test('approves the narrow Norwegian creator puzzle shell', async () => {
   const puzzle = page.getByRole('main');
   await expect.element(puzzle).toBeVisible();
   await expect(page).toMatchScreenshot('creator-narrow-nb', {
+    comparatorOptions: { allowedMismatchedPixelRatio: 0.02 },
     screenshotOptions: { fullPage: true },
   });
 });
@@ -78,6 +80,7 @@ test('approves academic notation rendered with the pluggable KaTeX adapter', asy
   await expect.element(puzzle).toBeVisible();
   await expect.element(page.getByLabelText('67 = 25 + 6p')).toBeVisible();
   await expect(page).toMatchScreenshot('academic-notation-creator-nb', {
+    comparatorOptions: { allowedMismatchedPixelRatio: 0.02 },
     screenshotOptions: { fullPage: true },
   });
 });

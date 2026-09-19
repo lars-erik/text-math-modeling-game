@@ -207,3 +207,21 @@ test('only the pluggable UI adapter imports KaTeX', () => {
     ),
   );
 });
+
+test('the academic display adapter contract is AST-based', () => {
+  const adapterContractFile = join(
+    sourceRoot,
+    'features/puzzle/ui/academic-display-adapter.ts',
+  );
+  const source = readFileSync(adapterContractFile, 'utf8');
+  expect(source).toContain(
+    'render: (\n    relation: Relation,\n    symbols: AcademicSymbolMap,\n    target: HTMLElement,\n  ) => void;',
+  );
+  expect(source).not.toMatch(/render:\s*\(\s*source\s*:/);
+  expect(source).toMatch(
+    /import type \{ Relation \} from '..\/..\/problem-model\/expression';/,
+  );
+  expect(source).toMatch(
+    /import type \{ AcademicSymbolMap \} from '..\/..\/representations\/academic-symbol-map';/,
+  );
+});

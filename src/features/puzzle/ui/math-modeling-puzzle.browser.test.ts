@@ -164,7 +164,7 @@ test('completes named equation to academic notation and renders the accepted rel
   await inputComponent!.updateComplete;
   const input = inputComponent!.shadowRoot?.querySelector('input');
   expect(input).not.toBeNull();
-  input!.value = '67 = 25 + 6*p';
+  input!.value = '67 = 25 + 6p';
   inputComponent!.shadowRoot?.querySelector('form')?.requestSubmit();
   await puzzle.updateComplete;
 

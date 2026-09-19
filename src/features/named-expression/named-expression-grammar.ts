@@ -10,6 +10,7 @@ export const namedExpressionGrammar = ohm.grammar(String.raw`
 
     MultiplyExpression
       = MultiplyExpression "*" Primary  -- multiply
+      | MultiplyExpression Primary     -- juxtapose
       | Primary
 
     Primary
