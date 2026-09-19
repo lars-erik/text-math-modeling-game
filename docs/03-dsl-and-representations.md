@@ -8,8 +8,10 @@ Use Ohm/JS for a compact grammar and explicit semantic actions mapping parse nod
 
 ## First canonical fixture
 
+The canonical DSL is mathematical, not themed. A Phase 1 fixture is therefore shaped like:
+
 ```text
-problem drone-power {
+problem total-from-parts {
     concepts {
         arithmetic.addition
         arithmetic.multiplication
@@ -17,57 +19,33 @@ problem drone-power {
         linear.one-unknown
     }
 
-    quantity basePower: power = 30
-    quantity droneCount: item = 4
-    quantity dronePower: powerPerItem = ?
-    quantity totalPower: power = 210
+    quantity base: scalar role base = 30
+    quantity count: item role count = 4
+    quantity unitValue: scalar role per-item = ?
+    quantity total: scalar role total = 210
 
     equation {
-        totalPower = basePower + droneCount * dronePower
+        total = base + count * unitValue
     }
 
-    scenario gaming.drone-power
-    symbol dronePower = p
+    replay {
+        seed 17
+        generator total-from-parts-v1
+    }
 }
 ```
 
-Treat dotted concept/scenario names and dashed problem IDs as identifiers in the metadata grammar. Expression identifiers remain separately lexed and resolved to quantity IDs. Symbols have explicit mappings. Start with this single fixture and evolve syntax from tests.
+Scenario/Skin selection, story text, learner-facing names such as `dronePower` or `followersPerPost`, contextual units, locale, puzzle Mode, input provider and academic display symbols are intentionally absent. They are separate composition/replay metadata.
 
-### Milestone 4 metadata and canonical formatting
+Treat dashed problem IDs and dotted concept names as metadata identifiers. Expression identifiers resolve only to canonical quantity IDs. Evolve syntax from canonical mathematical tests rather than from one Skin's vocabulary.
 
-The required problem data is the canonical problem ID, ordered concept IDs,
-quantity definitions (canonical ID, dimension, and known/hidden state), one
-equation, a canonical scenario ID, and zero or more academic symbol mappings.
-The initial dimension vocabulary is `item`, `power`, `powerPerItem`, and
-`scalar`. Localized names, labels, units, prose resources, story plans, and the
-private answer key are not part of this DSL.
+### Canonical formatting and migration
 
-Generator replay is optional. A generated or replayable problem writes it after
-the symbol mappings:
+The required Problem data is the canonical problem ID, ordered concept IDs, canonical quantity definitions (ID, generic dimension/role, known/hidden state), one relation, and optional mathematical replay. The private AnswerKey is never serialized.
 
-```text
-    replay {
-        seed 0
-        generator hand-built-v1
-    }
-```
+Canonical serialization uses this section order: problem header, concepts, quantities in domain order, equation, optional replay, closing brace. It uses four spaces per indent, one space around expression operators, the minimum parentheses needed to reconstruct the exact expression tree, LF line endings, and one final newline.
 
-The parser does not create replay metadata when this block is absent. The
-transitional Phase 1 quantity role is likewise optional and, when present, is
-written between the dimension and value as `role base`, `role count`,
-`role per-item`, or `role total`. This preserves existing screen metadata until
-a later scenario role-map milestone replaces it.
-
-Canonical serialization uses this section order: problem header, concepts,
-quantities in domain order, equation, scenario, symbol mappings sorted by
-quantity ID, optional replay, closing brace. It uses four spaces per indent,
-one space around expression operators, the minimum parentheses needed to
-reconstruct the exact expression tree, LF line endings, and one final newline.
-Concept and quantity array order is preserved because those arrays are authored
-presentation order; map-shaped symbol metadata is sorted. Serialization is
-defined for domain-valid problems. Known facts are printed as integers and the
-single hidden quantity as `?`; a private answer binding is never accepted or
-printed by `serializeProblem`.
+The earlier Phase 1 DSL included `scenario` and theme-shaped quantity IDs/dimensions. ADR `2026-09-19-compose-problem-skin-mode-independently.md` supersedes that part of the contract. Migrate existing golden files deliberately as the implementation is refactored; do not preserve themed DSL solely for backward compatibility with the accidental coupling.
 
 ## Expression grammar: first increment
 
@@ -76,11 +54,11 @@ Expression := identifier | numeric literal | parenthesized expression | addition
 Equation   := Expression "=" Expression
 ```
 
-Define correct operator precedence (`*` before `+`) and grouping. Whitespace is insignificant; an input such as `basePower+4*dronePower` is valid when the referenced quantities exist. Learner input initially uses explicit `*` multiplication (`4*p`); the notation printer may display `4p`. This keeps academic display and textual input parsing as separate concerns.
+Define correct operator precedence (`*` before `+`) and grouping. Whitespace is insignificant. Canonical DSL expressions use canonical IDs (`total = base + count * unitValue`), while learner input may use the active Skin's names.
 
-Resolve `p` through a declared symbol mapping in academic-input puzzles. Resolve named-input identifiers through an explicit locale name map and then to canonical quantity IDs. For example, an English learner-facing `dronePower` and a Norwegian `droneEffekt` can resolve to the same semantic quantity. Report ambiguous or unknown identifiers as parse/name-resolution feedback. Keep the complete-problem DSL locale-neutral: it serializes canonical IDs rather than localized learner-facing names.
+Named-input identifiers resolve through the composed Skin/locale name map and then to canonical quantity IDs. For example, `dronePower`, `followersPerPost`, and localized equivalents can all resolve to canonical `unitValue` in different puzzle presentations. Academic-input identifiers resolve through a separate notation map owned by the relevant representation/Mode. Report ambiguous or unknown identifiers as parse/name-resolution feedback.
 
-The expression parser accepts its name resolver as data rather than hard-coding one language's identifiers. Tests prove that equivalent localized named equations resolve to the same canonical AST. Academic symbol resolution remains a separate map so changing language does not implicitly change mathematical notation.
+The expression parser accepts its name resolver as data rather than hard-coding a Skin or language. Tests prove that differently skinned/localized equations resolve to the same canonical AST. Neither learner name maps nor academic symbols enter the complete-problem DSL.
 
 ## Required round-trips
 
@@ -95,13 +73,14 @@ Use example tests for grouping, precedence, unknown tokens, duplicate IDs, and u
 
 ## Renderers
 
-From a single AST, define independent adapters:
+From one canonical AST plus explicit presentation inputs, define independent adapters:
 
-- **Named printer:** `totalPower = basePower + droneCount * dronePower`.
-- **Substitution printer:** `210 = 30 + 4 * dronePower`; replace only known values.
-- **LaTeX printer:** `210 = 30 + 4p`, using the symbol map and mathematical precedence.
-- **Debug tree printer:** indented AST plus quantity table, solution and replay info.
-- **Story printer:** structured facts -> template-based prose.
+- **Canonical named/debug printer:** `total = base + count * unitValue`.
+- **Skin-aware learner named printer:** renders the same relation with the active Skin/locale name map.
+- **Substitution printer:** replaces only known values while preserving the active learner-facing unknown name.
+- **LaTeX/academic printer:** uses an explicit notation map supplied by the relevant representation/Mode.
+- **Debug tree printer:** indented canonical AST plus quantity table, solution and mathematical replay info.
+- **Story renderer:** canonical Problem + Skin presentation/story plan -> prose.
 
 All printers are pure or accept explicit formatting options. Tests approve meaningful examples. Evaluate output only through the semantic engine, not by evaluating a LaTeX string or DSL string as program code.
 
