@@ -26,49 +26,45 @@ The debug section is development-only and receives privileged answer-key data in
 
 ## State transition contract
 
-Model a puzzle session with explicit commands:
+Separate mathematical generation from learner-facing composition:
 
-```
-start(seed, requested concepts, scenario)
-  -> ScreenModel
-submit(input)
-  -> ScreenModel with accepted answer or structured feedback
+```text
+generate(seed, requested concepts, mathematical constraints)
+  -> canonical Problem + private AnswerKey
+
+compose(problem, skin, mode, locale, inputMode?)
+  -> PuzzleScreen
+
+submit(screen/task state, input)
+  -> PuzzleScreen with accepted answer or structured feedback
 hint()
-  -> ScreenModel with one targeted hint
+  -> PuzzleScreen with one targeted hint
 next()
-  -> ScreenModel for another seeded puzzle
+  -> another seeded canonical Problem
 ```
 
-Each command should have a deterministic use-case printer. Favor actions that can be tested without mounting the UI. Initially a new puzzle and a single hint may be minimal; the first complete slice focuses on `start` and `submit`.
+Each command should have a deterministic use-case printer. Favor actions that can be tested without mounting the UI.
 
-The browser application composes the generated/scenario-bound modeling case with
-the selected representation edge. Its replay URL carries the complete learner-facing
-selection as `seed`, `scenario`, `task`, and `locale`. Changing only `task` or `locale`
-reuses the current modeling case; changing `seed` or `scenario` creates the requested
-deterministic case.
+The browser replay URL may retain the compatibility names `seed`, `scenario`, `task`, and `locale`, but `scenario` selects a Skin and `task` selects a Mode. Changing Skin, Mode, locale or input provider reuses the exact canonical Problem; changing only the mathematical seed generates another Problem.
 
 ## First five puzzle types
 
 ### A. Story -> quantities
 
-Show the generated story. Present candidate quantity/label/value chips and let the player identify the givens and hidden role. Checking compares semantic IDs and facts, not rendered string formatting. Add plausible distractors once the basic interaction works.
+Show the active Skin's story from shared puzzle context. Present candidate quantity/label/value chips and let the player identify the givens and hidden role. Checking compares semantic IDs and facts, not rendered string formatting. Add plausible distractors once the basic interaction works.
 
 ### B. Quantities -> named equation
 
-Show:
+Keep the same Skin story visible as context and show the active Skin's learner-facing names for the canonical quantities. A drone Skin may render:
 
-```
+```text
 basePower = 30
 droneCount = 4
 dronePower = ?
 totalPower = 210
 ```
 
-Ask for:
-
-```
-totalPower = basePower + droneCount * dronePower
-```
+while a creator Skin renders the same canonical Problem with follower/post names. Ask for the same canonical relation expressed through the active name map.
 
 Start with a plain expression field using the Ohm expression parser. The UI can later support draggable tokens or structured editor operations using the same command/checking interface.
 
@@ -92,6 +88,12 @@ Present the same relation and multiple situations with realistic structural dist
 - `count * (unit + base)` -> explain that the fixed/base amount is counted once per unit.
 
 Introduce new categories alongside corresponding failing tests. Preserve user input and the source representation on a failed check so the learner can revise the model.
+
+## Shared screen contract
+
+`PuzzleScreen` is common composition output, not the name of one concrete representation edge. It carries shared context such as localized story and replay selection plus a discriminated task-specific state. A source kind like `quantities` belongs inside the Quantities -> Named Equation variant, not at the root of the generic screen contract.
+
+Free-text and multiple-choice controls are input providers for the same named-equation Mode and therefore share the same story, quantity presentation and checker semantics.
 
 ## Readable screen-model printer
 
