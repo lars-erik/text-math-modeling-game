@@ -1,4 +1,7 @@
-import { isPuzzleLocale, type PuzzleLocale } from './features/puzzle/lang';
+import {
+  isPuzzleLocale,
+  type PuzzleLocale,
+} from './features/localization/locale';
 import {
   puzzleSelectionRequestEvent,
   type PuzzleSelectionRequest,

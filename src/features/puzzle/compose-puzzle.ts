@@ -1,8 +1,11 @@
-import type {
-  Expression,
-  Relation,
-} from '../problem-model/expression';
+import type { Relation } from '../problem-model/expression';
+import { collectReferences } from '../problem-model/expression';
 import type { Problem } from '../problem-model/problem';
+import type { AcademicSymbolMap } from '../representations/academic-symbol-map';
+import {
+  formatNamedRelation,
+  type QuantityNameMap,
+} from '../representations/named-relation';
 import {
   themes as allThemes,
   type Theme,
@@ -69,9 +72,49 @@ export type QuantitiesToNamedEquationScreen = {
   input: { kind: 'expression'; value: string };
 };
 
+export type ScreenSymbol = {
+  canonicalId: string;
+  symbol: string;
+  variableName: string;
+};
+
+export type NamedEquationToAcademicNotationScreen = {
+  modeId: 'named-equation-to-academic-notation';
+  source: {
+    kind: 'named-equation';
+    relation: Relation;
+    names: QuantityNameMap;
+  };
+  target: {
+    kind: 'academic-notation';
+    prompt: string;
+    symbols: AcademicSymbolMap;
+  };
+  symbolKey: readonly ScreenSymbol[];
+  input: { kind: 'expression'; value: string };
+};
+
+export type AcademicNotationToNamedEquationScreen = {
+  modeId: 'academic-notation-to-named-equation';
+  source: {
+    kind: 'academic-notation';
+    relation: Relation;
+    symbols: AcademicSymbolMap;
+  };
+  target: {
+    kind: 'named-equation';
+    prompt: string;
+    names: QuantityNameMap;
+  };
+  symbolKey: readonly ScreenSymbol[];
+  input: { kind: 'expression'; value: string };
+};
+
 export type PuzzleScreenTask =
   | StoryToQuantitiesScreen
-  | QuantitiesToNamedEquationScreen;
+  | QuantitiesToNamedEquationScreen
+  | NamedEquationToAcademicNotationScreen
+  | AcademicNotationToNamedEquationScreen;
 
 export type PuzzleScreen = {
   screen: PuzzleScreenTask;
@@ -121,7 +164,7 @@ function mergeModeWithTheme(
   const presentation = presentThemeOf(options);
   const quantities = toScreenQuantities(presentation);
   return {
-    screen: mergeTask(options, modeResult.state, quantities),
+    screen: mergeTask(options, modeResult.state, quantities, presentation),
     context: {
       locale: options.locale,
       themeId: presentation.themeId,
@@ -138,6 +181,7 @@ function mergeTask(
   options: ComposePuzzleOptions,
   state: ModeState,
   quantities: readonly ScreenQuantity[],
+  presentation: ThemePresentation,
 ): PuzzleScreenTask {
   const resources = puzzleResources[options.locale];
   switch (state.modeId) {
@@ -159,7 +203,62 @@ function mergeTask(
         target: state.target,
         input: state.input,
       };
+    case 'named-equation-to-academic-notation': {
+      const names = toQuantityNameMap(presentation);
+      return {
+        modeId: state.modeId,
+        source: { ...state.source, names },
+        target: state.target,
+        symbolKey: toSymbolKey(
+          state.target.symbols,
+          presentation,
+          state.source.relation,
+        ),
+        input: state.input,
+      };
+    }
+    case 'academic-notation-to-named-equation': {
+      return {
+        modeId: state.modeId,
+        source: state.source,
+        target: {
+          ...state.target,
+          names: toQuantityNameMap(presentation),
+        },
+        symbolKey: toSymbolKey(
+          state.source.symbols,
+          presentation,
+          state.source.relation,
+        ),
+        input: state.input,
+      };
+    }
   }
+}
+
+function toQuantityNameMap(
+  presentation: ThemePresentation,
+): QuantityNameMap {
+  return Object.fromEntries(
+    presentation.facts.map((fact) => [fact.canonicalId, fact.variableName]),
+  );
+}
+
+function toSymbolKey(
+  symbols: AcademicSymbolMap,
+  presentation: ThemePresentation,
+  relation: Relation,
+): readonly ScreenSymbol[] {
+  const references = new Set(collectReferences(relation));
+  return presentation.facts.flatMap((fact) =>
+    references.has(fact.canonicalId)
+      ? [{
+          canonicalId: fact.canonicalId,
+          symbol: symbols[fact.canonicalId],
+          variableName: fact.variableName,
+        }]
+      : [],
+  );
 }
 
 function toScreenQuantities(
@@ -244,48 +343,5 @@ function formatRelationLabel(
   relation: Relation,
   names: ReadonlyMap<string, string>,
 ): string {
-  return `${formatExpression(relation.left, names)} = ${formatExpression(
-    relation.right,
-    names,
-  )}`;
-}
-
-function formatExpression(
-  expression: Expression,
-  names: ReadonlyMap<string, string>,
-): string {
-  switch (expression.kind) {
-    case 'literal':
-      return String(expression.value);
-    case 'quantity':
-      return requireName(names, expression.id);
-    case 'add':
-      return formatBinary(expression.left, expression.right, '+', names);
-    case 'multiply':
-      return formatBinary(expression.left, expression.right, '*', names);
-  }
-}
-
-function formatBinary(
-  left: Expression,
-  right: Expression,
-  operator: '+' | '*',
-  names: ReadonlyMap<string, string>,
-): string {
-  const formatOperand = (expression: Expression): string =>
-    operator === '*' && expression.kind === 'add'
-      ? `(${formatExpression(expression, names)})`
-      : formatExpression(expression, names);
-  return `${formatOperand(left)} ${operator} ${formatOperand(right)}`;
-}
-
-function requireName(
-  names: ReadonlyMap<string, string>,
-  id: string,
-): string {
-  const name = names.get(id);
-  if (name === undefined) {
-    throw new Error(`No theme name for canonical quantity ${id}.`);
-  }
-  return name;
+  return formatNamedRelation(relation, Object.fromEntries(names));
 }

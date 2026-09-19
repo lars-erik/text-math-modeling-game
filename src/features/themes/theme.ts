@@ -1,5 +1,5 @@
 import type { LearnerNameMap } from '../named-expression';
-import type { PuzzleLocale } from '../puzzle/lang';
+import type { PuzzleLocale } from '../localization/locale';
 import type {
   Problem,
   QuantityGiven,

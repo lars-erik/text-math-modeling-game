@@ -17,6 +17,8 @@ import { relationsHaveNormalizedStructure } from '../problem-model/normalized-st
 import { namedEquationStructurePolicy } from '../problem-model/normalized-structure';
 import { themes, themeIds } from '../themes';
 import type { PuzzleLocale } from './lang';
+import { substituteVisibleValues } from '../representations/substitute-visible-values';
+import { createAcademicSymbolMap } from '../representations/academic-symbol-map';
 
 const locales: readonly PuzzleLocale[] = ['en', 'nb'];
 
@@ -31,6 +33,7 @@ test('one canonical Problem, DSL, and answer key serve every theme and mode in b
   const generated = generateCase();
   const problemBefore = structuredClone(generated.problem);
   const dslBefore = serializeProblem(generated.problem);
+  let composedCount = 0;
   for (const themeId of themeIds) {
     for (const locale of locales) {
       for (const modeId of modeIds) {
@@ -40,6 +43,7 @@ test('one canonical Problem, DSL, and answer key serve every theme and mode in b
           modeId,
           locale,
         });
+        composedCount += 1;
         expect(screen.screen.modeId).toBe(modeId);
         expect(screen.context.themeId).toBe(themeId);
         expect(screen.context.locale).toBe(locale);
@@ -63,6 +67,9 @@ test('one canonical Problem, DSL, and answer key serve every theme and mode in b
   }
   expect(generated.problem).toEqual(problemBefore);
   expect(serializeProblem(generated.problem)).toBe(dslBefore);
+  expect(composedCount).toBe(2 * 4 * 2);
+  expect(generated.problem).not.toHaveProperty('academicSymbols');
+  expect(dslBefore).not.toContain('academic-symbol');
 });
 
 test('mode state depends only on the canonical Problem and locale', () => {
@@ -74,13 +81,34 @@ test('mode state depends only on the canonical Problem and locale', () => {
         locale,
       });
       expect(JSON.stringify(state)).not.toContain('theme');
-      const quantityIds =
-        state.modeId === 'story-to-quantities'
-          ? state.target.quantityIds
-          : state.source.quantityIds;
-      expect([...quantityIds]).toEqual(
-        generated.problem.quantities.map((quantity) => quantity.id),
-      );
+      switch (state.modeId) {
+        case 'story-to-quantities':
+          expect([...state.target.quantityIds]).toEqual(
+            generated.problem.quantities.map((quantity) => quantity.id),
+          );
+          break;
+        case 'quantities-to-named-equation':
+          expect([...state.source.quantityIds]).toEqual(
+            generated.problem.quantities.map((quantity) => quantity.id),
+          );
+          break;
+        case 'named-equation-to-academic-notation':
+          expect(state.source.relation).toEqual(
+            substituteVisibleValues(generated.problem),
+          );
+          expect(state.target.symbols).toEqual(
+            createAcademicSymbolMap(generated.problem),
+          );
+          break;
+        case 'academic-notation-to-named-equation':
+          expect(state.source.relation).toEqual(
+            substituteVisibleValues(generated.problem),
+          );
+          expect(state.source.symbols).toEqual(
+            createAcademicSymbolMap(generated.problem),
+          );
+          break;
+      }
     }
   }
 });

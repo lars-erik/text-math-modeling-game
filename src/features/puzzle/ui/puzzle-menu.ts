@@ -21,6 +21,8 @@ export class PuzzleMenu extends LitElement {
     taskLabel: { attribute: false },
     storyToQuantitiesLabel: { attribute: false },
     quantitiesToNamedEquationLabel: { attribute: false },
+    namedEquationToAcademicNotationLabel: { attribute: false },
+    academicNotationToNamedEquationLabel: { attribute: false },
     seedLabel: { attribute: false },
     showLabel: { attribute: false },
   };
@@ -95,6 +97,8 @@ export class PuzzleMenu extends LitElement {
   declare taskLabel: string;
   declare storyToQuantitiesLabel: string;
   declare quantitiesToNamedEquationLabel: string;
+  declare namedEquationToAcademicNotationLabel: string;
+  declare academicNotationToNamedEquationLabel: string;
   declare seedLabel: string;
   declare showLabel: string;
 
@@ -111,6 +115,10 @@ export class PuzzleMenu extends LitElement {
     this.taskLabel = 'Task';
     this.storyToQuantitiesLabel = 'Story to quantities';
     this.quantitiesToNamedEquationLabel = 'Quantities to named equation';
+    this.namedEquationToAcademicNotationLabel =
+      'Named equation to academic notation';
+    this.academicNotationToNamedEquationLabel =
+      'Academic notation to named equation';
     this.seedLabel = 'Seed';
     this.showLabel = 'Show puzzle';
   }
@@ -137,6 +145,12 @@ export class PuzzleMenu extends LitElement {
             </option>
             <option value="quantities-to-named-equation">
               ${this.quantitiesToNamedEquationLabel}
+            </option>
+            <option value="named-equation-to-academic-notation">
+              ${this.namedEquationToAcademicNotationLabel}
+            </option>
+            <option value="academic-notation-to-named-equation">
+              ${this.academicNotationToNamedEquationLabel}
             </option>
           </select>
         </label>
