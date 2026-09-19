@@ -17,6 +17,7 @@ test('approves the wide drone-power puzzle shell', async () => {
     search: '?seed=17&scenario=gaming.drone-power',
     root: document,
   });
+  window.scrollTo(0, 0);
 
   const puzzle = page.getByRole('main', { name: 'Story to quantities' });
   await expect.element(puzzle).toBeVisible();
@@ -41,6 +42,7 @@ test('approves the narrow Norwegian creator puzzle shell', async () => {
     search: '?seed=321&scenario=creator.followers',
     root: document,
   });
+  window.scrollTo(0, 0);
 
   const puzzle = page.getByRole('main', {
     name: 'Fra fortelling til størrelser',

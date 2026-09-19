@@ -60,13 +60,19 @@ Approval tests write deterministic `*.received.*` files when a baseline is missi
 - `src/test-results/browser/screenshots/` with fresh wide and mobile puzzle PNGs
 
 Selected browser views also use Vitest's Playwright-backed screenshot matcher.
-Their committed `__screenshots__` PNGs are visual approval baselines. Review
+Their committed `src/screenshots/` PNGs are visual approval baselines. Review
 baseline changes like the text approvals; CI emits expected, actual and diff images
 when the rendered result exceeds the configured tolerance.
 
 The GitHub Actions workflow uploads `src/test-results/` and the committed or newly
 received visual baselines as an artifact even when tests fail, so CI logs stay useful
 while still providing downloadable reports and screenshots.
+
+### Browser screenshot approvals
+
+[![Wide English drone-power puzzle](src/screenshots/features/puzzle/ui/puzzle-screenshots.browser.test.ts/drone-power-wide-reference-chromium-linux.png)](src/screenshots/features/puzzle/ui/puzzle-screenshots.browser.test.ts/drone-power-wide-reference-chromium-linux.png)
+
+[![Narrow Norwegian creator puzzle](src/screenshots/features/puzzle/ui/puzzle-screenshots.browser.test.ts/creator-narrow-nb-reference-chromium-linux.png)](src/screenshots/features/puzzle/ui/puzzle-screenshots.browser.test.ts/creator-narrow-nb-reference-chromium-linux.png)
 
 ## CI/CD
 
