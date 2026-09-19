@@ -4,14 +4,23 @@
 
 ## Dependency direction
 
-```text
-problem model / math generation / canonical DSL
-                    |
-                    +------> Theme adapters
-                    |
-                    +------> Mode use-cases
-                              \
-                               +--> composer/application --> PuzzleScreen --> Lit UI
+```mermaid
+flowchart LR
+    Domain["Problem model / math generation / canonical DSL"]
+    Themes["Theme adapters"]
+    Modes["Mode use-cases"]
+    Comp["Composer / application"]
+    Screen["PuzzleScreen"]
+    UI["Lit UI"]
+
+    Domain --> Themes
+    Domain --> Modes
+    Themes --> Comp
+    Modes --> Comp
+    Comp --> Screen
+    Screen --> UI
+
+    Themes x-.- Modes
 ```
 
 Domain and Mode use-cases are framework-independent TypeScript. Themes and Modes are orthogonal peers over one canonical `Problem`; they do not import each other. The Lit layer renders the composed screen model and dispatches user actions. All public domain operations use domain types rather than parser-tree, HTML, KaTeX, concrete Theme, or concrete Mode objects.
@@ -93,6 +102,29 @@ Define independently:
 2. **Structural match:** expected operator structure/relations match under an explicit policy.
 3. **Mathematical equivalence:** expressions have the same value, or a future symbolic engine establishes equivalence under stated assumptions.
 4. **Pedagogical match:** the learner expresses the requested semantic roles and relationship.
+
+```mermaid
+flowchart TB
+    Input["Learner submission"]
+    Parse["Parse + name resolution<br/>(Theme/locale name map → canonical IDs)"]
+    Syntax{"Syntactically valid?"}
+    Structure{"Structural match?<br/>(explicit check policy)"}
+    Equivalence{"Mathematical equivalence?<br/>(future symbolic engine)"}
+    Pedagogical{"Pedagogical match?<br/>(semantic roles)"}
+    Accepted["Accepted + interpreted roles"]
+    ParseError["Parse/name-resolution feedback"]
+    StructuralError["Structural-mismatch feedback<br/>(e.g. base applied per unit)"]
+
+    Input --> Parse --> Syntax
+    Syntax -- "no" --> ParseError
+    Syntax -- "yes" --> Structure
+    Structure -- "no" --> StructuralError
+    Structure -- "yes" --> Equivalence
+    Equivalence -- "no" --> StructuralError
+    Equivalence -- "yes" --> Pedagogical
+    Pedagogical -- "yes" --> Accepted
+    Pedagogical -- "no" --> StructuralError
+```
 
 Initial check policies: `exact-structure`, `normalized-structure`, `equivalent-value`. Provide equation comparison explicitly; decide by a test whether swapping entire left/right sides is accepted for an exercise. Pure numeric equality at one sample binding is insufficient evidence of general algebraic equivalence. `equivalent-value` therefore applies to *fully ground arithmetic* in Phase 1, while named modelling exercises use structural/pedagogical checking.
 

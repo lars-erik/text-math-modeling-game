@@ -4,21 +4,18 @@
 
 The **mathematical generator** produces a complete canonical `Problem` plus a private `AnswerKey`. A **Theme** projects those fixed canonical facts into a story, contextual labels/names/units and locale-specific wording. Theme selection never changes the Problem or AnswerKey.
 
-```text
-requested concepts + constraints + seed
-           |
-           v
-    composable math plan
-           |
-           v
- canonical Problem + private AnswerKey
-           |
-           +-------------> Mode
-           |
-           +-------------> Theme + locale + story seed
-                                |
-                                v
-                         ThemePresentation
+```mermaid
+flowchart TB
+    Req["Requested concepts + constraints + seed<br/>(no theme, locale or mode input)"]
+    Plan["Composable math plan"]
+    Case["Canonical Problem + private AnswerKey"]
+    Mode["Modes"]
+    ThemeIn["Theme + locale + story seed"]
+    Pres["ThemePresentation"]
+
+    Req --> Plan --> Case
+    Case --> Mode
+    Case --> ThemeIn --> Pres
 ```
 
 Mathematical generation constructs the AST directly. The canonical DSL exposes only that mathematical AST/replay. Learner-facing replay records Theme, Mode and locale separately.
@@ -65,11 +62,30 @@ total = base + count * unitValue
 
 Generate valid values **by construction**:
 
-```
-base = 30
-count = 4
-unitValue = 45
-total = 30 + 4 * 45 = 210
+```mermaid
+flowchart TB
+    Seed["Seed<br/>(0..4294967295, Mulberry32 RNG)"]
+    Base["base ← integer in [10, 40]"]
+    Count["count ← integer in [2, 8]"]
+    Unit["unitValue ← integer in [3, 20] <br/>(hidden in the first slice)"]
+    Total["total = base + count * unitValue<br/>(derived, never guessed)"]
+    Key["Private AnswerKey<br/>base, count, unitValue, total"]
+    Problem["Canonical Problem<br/>3 known + 1 hidden quantity"]
+    Validate["ConstraintValidator<br/>(ranges, references, one unknown)\n"]
+
+    Seed --> Base
+    Seed --> Count
+    Seed --> Unit
+    Base --> Total
+    Count --> Total
+    Unit --> Total
+    Total --> Key
+    Base --> Problem
+    Count --> Problem
+    Unit --> Problem
+    Total --> Problem
+    Key --> Validate
+    Problem --> Validate
 ```
 
 Hide `unitValue` in the first vertical slice. Later allow hiding `base`, `count`, or `total` after writing appropriate domain and pedagogy tests (including zero/non-integer cases). Preserve the complete answer key rather than solving randomly constructed equations to recover it.
@@ -140,6 +156,26 @@ A Theme adapter returns presentation data, not `{ problem: Problem }`. It never 
 ## Localized Theme resource maps
 
 Keep Theme semantics separate from language. A Theme first produces a deterministic **story plan** containing semantic keys for quantities, nouns, and sentence fragments. A locale renderer then resolves those keys through a language resource map and interpolates only validated fact-ledger values. Random selection chooses semantic variant keys before localization, so changing language does not choose a different mathematical story structure.
+
+```mermaid
+flowchart LR
+    Problem["Canonical Problem<br/>(read-only)"]
+    Plan["Story plan<br/>semantic keys + variant choices<br/>(storySeed, locale-free)"]
+    En["Locale resources en.ts"]
+    Nb["Locale resources nb.ts"]
+    Story["Localized story prose<br/>+ fact ledger"]
+
+    Problem --> Plan
+    Plan --> En --> Story
+    Plan --> Nb --> Story
+
+    Problem -. "exact identity preserved" .- Story
+
+    style En fill:#f3f9ff
+    style Nb fill:#f3fff6
+```
+
+Changing locale swaps only the resource map; the story plan, canonical Problem and AnswerKey stay identical.
 
 Use Bellissima-style language modules: each supported locale lives in its own file and exports the same typed nested map. For example:
 

@@ -49,23 +49,27 @@ The current implementation still contains scenario-bound/task-specific coupling 
 
 ## Architectural invariant
 
-```text
-                  Puzzle Generator
-                         |
-                         v
-                  canonical Problem
-                    /         \
-                   /           \
-                Theme           Mode
-                   \           /
-                    \         /
-                     Composer
-                        |
-                        v
-                   PuzzleScreen
-                        |
-                        v
-                      Lit UI
+```mermaid
+flowchart TB
+    Gen["Puzzle generator<br/>(seed → Problem + private AnswerKey)"]
+    Prob["Canonical Problem<br/>total = base + count * unitValue"]
+    Theme["Theme<br/>(story, names, units, locale)"]
+    Mode["Mode<br/>(representation edge + checking policy)"]
+    Comp["Composer / application"]
+    Screen["PuzzleScreen"]
+    UI["Lit UI"]
+
+    Gen --> Prob
+    Prob --> Theme
+    Prob --> Mode
+    Theme --> Comp
+    Mode --> Comp
+    Comp --> Screen
+    Screen --> UI
+
+    style Gen fill:#f3f9ff
+    style Theme fill:#f3fff6
+    style Mode fill:#fff7f3
 ```
 
 Problem, Theme and Mode are independent axes. Theme may present canonical facts as drones, followers or another theme without changing canonical quantity IDs/relation/DSL. Mode determines the representation edge without knowing which concrete Theme is active. The composer is the first layer allowed to select both.
