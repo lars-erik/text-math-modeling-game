@@ -1,6 +1,6 @@
 # Text Math Modeling Game — specification package
 
-**Status:** planning baseline with CI/CD automation, 17 September 2026. **Scope:** Phase 1 only has implementation milestones; later phases are architectural direction.
+**Status:** Phase 1 implementation in progress, 19 September 2026. Milestones 0–7 and the responsive graybox UI foundation are implemented; Milestone 7.5 is the next architecture/UI step before academic notation. Later phases remain architectural direction rather than implementation scope.
 
 Build a test-driven web puzzle for translating between natural-language situations, quantity models, named expressions, substituted expressions, and academic notation. The same deterministic semantic problem powers every representation.
 
@@ -18,9 +18,29 @@ Build a test-driven web puzzle for translating between natural-language situatio
 
 [Codex working agreement](src/AGENTS.md) specifies how an implementation agent should proceed.
 
-## First vertical slice
+## Current vertical slice
 
-Use the equation family `total = base + count * unitValue` and a drone-power story. Generate valid values by construction, hide `unitValue`, print a deterministic use-case transcript, accept a named equation, parse and check it, show structured feedback, and render academic notation. Add the reverse transformation and a second scenario only after this path works.
+The implemented mathematical family is:
+
+```
+total = base + count * unitValue
+```
+
+A seeded generator constructs valid cases by design and keeps the complete answer key private. The same generated mathematics can currently be bound to two deterministic scenarios:
+
+- spaceship/drone power
+- creator/follower growth
+
+Both scenarios support English and Norwegian Bokmål resources while preserving the same semantic relationship and answer values.
+
+The implemented learner transformations are:
+
+- Story → Quantities
+- Quantities → Named Equation
+
+Named equations are parsed back into the canonical domain AST and checked structurally rather than by raw string comparison. The browser UI has a shared responsive shell, scenario/seed controls, accessible interaction tests, and selected visual screenshot approvals.
+
+The next step is [Milestone 7.5](https://github.com/lars-erik/text-math-modeling-game/issues/13): separate the generated/scenario-bound modeling case from the selected puzzle task, expose both existing task types through the real application menu, and make seed + scenario + task + locale fully replayable through the URL. Milestone 8 then adds substitution and academic notation.
 
 ## Architectural invariant
 
@@ -33,7 +53,9 @@ DSL parser ─────┼──> semantic Problem AST ──> puzzle/use-cas
                 └── DSL serializer (AST → text)
 ```
 
-The domain remains usable from tests and command-line tooling without a browser. All generated cases are reproducible with seed + generator version/configuration. The test suite includes exact invariants, properties, and human-reviewed approved artifacts.
+The domain remains usable from tests and command-line tooling without a browser. All generated cases are reproducible with seed + generator version/configuration. The test suite includes exact invariants, property tests, human-reviewed text approvals, browser interaction tests, and selected screenshot approvals.
+
+The private `AnswerKey` remains separate from learner-visible problem and browser state. Scenario and locale changes are tested to preserve the underlying mathematical model and answer values.
 
 ## Development
 
@@ -51,7 +73,7 @@ npm run build
 
 Approval tests write deterministic `*.received.*` files when a baseline is missing or changed. Received files are ignored by Git. Inspect the console diff and received file before manually promoting it to the corresponding committed `*.approved.*` file. Tests and CI never update approved files automatically.
 
-`browser:install` keeps Playwright's Chromium binaries under `src/node_modules`; it does not write them to the user-level Playwright cache. `npm test` runs both the Node approval suite and the headless Chromium interaction suite.
+`browser:install` keeps Playwright's Chromium binaries under `src/node_modules`; it does not write them to the user-level Playwright cache. `npm test` runs both the Node approval/property/unit suite and the headless Chromium interaction suite.
 
 `npm test` also writes Vitest reports under `src/test-results/`:
 
@@ -77,16 +99,16 @@ while still providing downloadable reports and screenshots.
 ## CI/CD
 
 - Workflow: `.github/workflows/ci-pages.yml`
-- Current trigger: every push on every branch (temporary broad setup; narrow this after rollout).
-- CI job runs:
+- Validation runs on every push so feature branches receive the same checks as `main`.
+- CI runs:
   1. `npm ci`
   2. `npm run browser:install`
   3. `npm run typecheck`
   4. `npm test`
   5. `npm run build -- --base=/text-math-modeling-game/`
-- Deployment runs after successful CI in the current temporary branch setup, using the official `upload-pages-artifact` + `deploy-pages` actions flow. Switch this back to `main`-only after merge.
-- Test reports are both uploaded as artifacts and published in the GitHub Actions run UI from JUnit XML (`dorny/test-reporter`).
+- Test reports are uploaded as artifacts and published in the GitHub Actions run UI from JUnit XML (`dorny/test-reporter`).
+- A successful `main` build is deployed to GitHub Pages using the official `upload-pages-artifact` + `deploy-pages` actions flow. Feature-branch builds validate and upload test artifacts but do not deploy.
 
-Expected GitHub Pages URL: `https://lars-erik.github.io/text-math-modeling-game/`
+GitHub Pages URL: `https://lars-erik.github.io/text-math-modeling-game/`
 
 One-time repository setting: in **Settings → Pages**, set **Source** to **GitHub Actions**.
