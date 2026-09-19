@@ -4,6 +4,10 @@
 
 Build a test-driven web puzzle for translating between natural-language situations, quantity models, named expressions, substituted expressions, and academic notation. The same deterministic semantic problem powers every representation.
 
+**[Open the live demo](https://lars-erik.github.io/text-math-modeling-game/)**
+
+Open pull requests that change the application are published as temporary previews at `https://lars-erik.github.io/text-math-modeling-game/pr-N/`, where `N` is the pull request number. CI also posts the concrete preview link on the pull request and removes the preview when the PR closes or merges.
+
 ## Reading order
 
 1. [Product and learning loop](docs/01-product-and-learning-loop.md) — intent, representation graph, initial use cases.
@@ -110,16 +114,18 @@ while still providing downloadable reports and screenshots.
 ## CI/CD
 
 - Workflow: `.github/workflows/ci-pages.yml`
-- Validation runs on application/configuration pushes so feature branches receive the same checks as `main`; documentation-only (`*.md`) and repository-agent-skill-only pushes are ignored by the app build workflow.
+- Validation runs for `main` and pull requests targeting `main`; documentation-only and repository-agent-skill-only changes are ignored by the app build workflow.
 - CI runs:
   1. `npm ci`
   2. `npm run browser:install`
   3. `npm run typecheck`
   4. `npm test`
-  5. `npm run build -- --base=/text-math-modeling-game/`
+  5. `npm run build` with `/text-math-modeling-game/` on `main` or `/text-math-modeling-game/pr-N/` for PR previews.
 - Test reports are uploaded as artifacts and published in the GitHub Actions run UI from JUnit XML (`dorny/test-reporter`).
-- A successful `main` build is deployed to GitHub Pages using the official `upload-pages-artifact` + `deploy-pages` actions flow. Feature-branch builds validate and upload test artifacts but do not deploy.
+- A successful `main` build updates the root of the `gh-pages` publishing branch while preserving open PR preview directories.
+- A successful same-repository PR build updates only `pr-N/`; closing or merging the PR removes that directory and its CI-posted preview link.
+- The first preview deployment bootstraps the production root from `main`, so switching Pages publishing mode does not expose unmerged PR code at the live demo URL.
 
 GitHub Pages URL: `https://lars-erik.github.io/text-math-modeling-game/`
 
-One-time repository setting: in **Settings → Pages**, set **Source** to **GitHub Actions**.
+One-time repository setting: in **Settings → Pages**, choose **Deploy from a branch**, select **`gh-pages`**, and publish from **`/ (root)`**.
