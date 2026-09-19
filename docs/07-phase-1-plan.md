@@ -2,6 +2,39 @@
 
 **Goal:** validate the mathematical/representation engine with one generated schema, two coherent story themes, deterministic printers, a real graybox UI, and reverse-direction puzzles. Each milestone ends with observable working behavior and a test report. Start with a thin vertical slice; grow language and generator capabilities only when needed.
 
+## Progress overview
+
+```mermaid
+flowchart LR
+    subgraph Done["Done: engine foundation"]
+        M0["M0 Compatibility/tooling spike"]
+        M1["M1 Semantic case"]
+        M2["M2 First use-case"]
+        M3["M3 Parse learner expressions"]
+        M4["M4 Minimal DSL"]
+        M5["M5 Procedural generator"]
+        M6["M6 First theme/story"]
+        M7["M7 Second theme"]
+    end
+    subgraph Current["Current correction"]
+        M75["M7.5 Problem × Theme × Mode composition<br/>(GitHub issue #19)"]
+    end
+    subgraph Next["Next milestones"]
+        M8["M8 Substitution & academic display"]
+        M9["M9 Misconception feedback"]
+        M10["M10 Short graybox session"]
+    end
+
+    M0 --> M1 --> M2 --> M3 --> M4 --> M5 --> M6 --> M7 --> M75 --> M8 --> M9 --> M10
+
+    style M75 fill:#fffbe6,stroke:#b8a135,stroke-width:3px
+    style M8 fill:#f3f9ff,stroke:#888,stroke-dasharray: 4 3
+    style M9 fill:#f3f9ff,stroke:#888,stroke-dasharray: 4 3
+    style M10 fill:#f3f9ff,stroke:#888,stroke-dasharray: 4 3
+```
+
+Solid nodes are implemented behavior, the yellow node is the active architecture correction (issue #19), and dashed nodes are planned next. Milestone 8 waits behind that correction.
+
 ## Milestone 0 — Compatibility and tooling spike
 
 **First red test:** an approval of a fixed text string has no baseline and produces a reviewable `.received.txt`; after explicit human approval it passes and a changed string produces a useful diff.

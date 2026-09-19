@@ -8,10 +8,29 @@ The first playable artifact is a graybox puzzle loop. Procedurally generated pro
 
 ## Representation graph
 
-```
-Story <-> Quantity model <-> Named expression <-> Substituted expression <-> Academic notation
-                           |                      |
-                           +----- Debug model ----+
+```mermaid
+flowchart LR
+    Story["Story<br/>natural-language situation"]
+    Quantities["Quantity model<br/>roles, names, given/hidden"]
+    Named["Named expression<br/>totalPower = basePower + droneCount * dronePower"]
+    Subst["Substituted expression<br/>210 = 30 + 4 * dronePower"]
+    Academic["Academic notation<br/>210 = 30 + 4p"]
+    Debug["Debug model"]
+
+    Story <--> Quantities
+    Quantities <--> Named
+    Named <--> Subst
+    Subst <--> Academic
+
+    Quantities <---> Debug
+    Subst <---> Debug
+
+    style Story fill:#fff7f3
+    style Quantities fill:#fffdf0
+    style Named fill:#f3fff6
+    style Subst fill:#f3f9ff
+    style Academic fill:#f6f3ff
+    style Debug fill:#f5f5f5
 ```
 
 Initial node definitions:

@@ -6,20 +6,29 @@ If older milestone prose, existing code, or an older ADR conflicts with this doc
 
 ## Core composition
 
-```text
-                  Puzzle Generator
-                         |
-                         v
-                  canonical Problem
-                    /         \
-                   /           \
-                Theme           Mode
-                   \           /
-                    \         /
-                     Composer
-                        |
-                        v
-                   PuzzleScreen
+```mermaid
+flowchart TB
+    Generator["Puzzle generator"]
+    Problem["Canonical Problem"]
+    AnswerKey["Private AnswerKey<br/>(hidden bindings, checking/debug only)"]
+    Theme["Theme"]
+    Mode["Mode"]
+    Composer["Composer / application"]
+    Screen["PuzzleScreen"]
+    UI["Lit UI"]
+
+    Generator --> Problem
+    Generator --> AnswerKey
+    Problem --> Theme
+    Problem --> Mode
+    Theme --> Composer
+    Mode --> Composer
+    Composer --> Screen
+    Screen --> UI
+
+    AnswerKey -. "never learner-visible" .-> Composer
+
+    style AnswerKey fill:#fff0f0,stroke:#c66
 ```
 
 `Problem -> Theme -> Mode -> PuzzleScreen` is a conceptual composition, not a required execution order. Theme and Mode are independent peers over the same canonical `Problem`. The composer may evaluate either first or both independently; the result must not depend on ordering.
@@ -117,15 +126,24 @@ Prefer exact semantic identity assertions (`expect(after).toEqual(before)`) over
 
 ## Dependency direction
 
-```text
-problem-model / generation / DSL
-            |
-            +------> themes
-            |
-            +------> modes
-                      \
-                       +--> composer/application --> PuzzleScreen --> Lit UI
+```mermaid
+flowchart LR
+    Domain["Problem model / generation / DSL"]
+    Themes["Themes"]
+    Modes["Modes"]
+    Composer["Composer / application"]
+    Screen["PuzzleScreen"]
+    UI["Lit UI"]
+
+    Domain --> Themes
+    Domain --> Modes
+    Themes --> Composer
+    Modes --> Composer
+    Composer --> Screen
+    Screen --> UI
 ```
+
+Themes and Modes depend only on shared domain contracts, never on each other; their concrete registries meet only in composer/application code.
 
 Themes and Modes may depend on shared domain contracts. They may not depend on each other. Concrete Theme registries and Mode registries meet only in application/composition code.
 

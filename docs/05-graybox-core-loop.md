@@ -28,19 +28,28 @@ The debug section is development-only and receives privileged answer-key data in
 
 Separate mathematical generation from learner-facing composition:
 
-```text
-generate(seed, requested concepts, mathematical constraints)
-  -> canonical Problem + private AnswerKey
+```mermaid
+flowchart TB
+    Gen["generate(seed, concepts, constraints)"]
+    Pair["canonical Problem + private AnswerKey"]
+    Compose["compose(problem, theme, mode, locale, inputMode?)"]
+    Screen["PuzzleScreen"]
+    Learner["Learner input"]
+    Submit["submit(state, input)"]
+    Check{"Check policy"}
+    Accepted["Accepted answer"]
+    Feedback["Structured feedback<br/>(input preserved)"]
+    Next["next() - another seeded Problem"]
+    Hint["hint() - targeted hint"]
 
-compose(problem, theme, mode, locale, inputMode?)
-  -> PuzzleScreen
-
-submit(screen/task state, input)
-  -> PuzzleScreen with accepted answer or structured feedback
-hint()
-  -> PuzzleScreen with one targeted hint
-next()
-  -> another seeded canonical Problem
+    Gen --> Pair --> Compose --> Screen
+    Learner --> Submit --> Check
+    Screen -.-> Learner
+    Check -- accept --> Accepted
+    Check -- reject --> Feedback --> Learner
+    Accepted --> Next
+    Screen --> Hint
+    Next --> Gen
 ```
 
 Each command should have a deterministic use-case printer. Favor actions that can be tested without mounting the UI.
@@ -48,6 +57,23 @@ Each command should have a deterministic use-case printer. Favor actions that ca
 The browser replay URL may retain the compatibility names `seed`, `scenario`, `task`, and `locale`, but `scenario` selects a Theme and `task` selects a Mode. Changing Theme, Mode, locale or input provider reuses the exact canonical Problem; changing only the mathematical seed generates another Problem.
 
 ## First five puzzle types
+
+```mermaid
+flowchart LR
+    S["Story"]
+    Q["Quantity model"]
+    N["Named equation"]
+    A["Academic notation"]
+
+    S -- "A" --> Q
+    Q -- "B" --> N
+    N -- "C" --> A
+    A -- "D" --> N
+    N -- "E: match story with distractors" --> S
+
+    linkStyle 2 stroke:#4a4
+    linkStyle 3 stroke:#4a4
+```
 
 ### A. Story -> quantities
 
