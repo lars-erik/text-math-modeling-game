@@ -1,0 +1,8 @@
+# Project-level Mistral Vibe settings.
+# Model/provider choice and credentials belong to the user's ~/.vibe configuration.
+# Keep coding, shell and Git tools available; Vibe manages their permissions.
+
+[[mcp_servers]]
+name = "context7"
+transport = "streamable-http"
+url = "https://mcp.context7.com/mcp"
