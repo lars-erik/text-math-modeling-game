@@ -15,6 +15,9 @@ export type PuzzleLocaleResources = {
     scenario: string;
     dronePower: string;
     creatorFollowers: string;
+    task: string;
+    storyToQuantities: string;
+    quantitiesToNamedEquation: string;
     seed: string;
     show: string;
   };

@@ -1,9 +1,11 @@
 import type { LearnerNameMap } from '../named-expression';
 import { totalFromPartsProblem } from '../problem-model/total-from-parts';
-import type { PuzzleDefinition } from './puzzle-definition';
+import {
+  createPuzzle,
+  type ModelingCase,
+} from './puzzle-definition';
 
-export const referencePuzzle = {
-  kind: 'quantities-to-named-equation',
+export const referenceModelingCase = {
   choices: [
     {
       id: 'matching',
@@ -35,4 +37,9 @@ export const referencePuzzle = {
     unitValue: 'unitValue',
   } as const satisfies LearnerNameMap,
   problem: totalFromPartsProblem,
-} as const satisfies PuzzleDefinition;
+} as const satisfies ModelingCase;
+
+export const referencePuzzle = createPuzzle(
+  referenceModelingCase,
+  'quantities-to-named-equation',
+);

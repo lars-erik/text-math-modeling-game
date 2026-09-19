@@ -1,8 +1,12 @@
+import type { PuzzleLocale } from './lang';
+import type { PuzzleTask } from './puzzle-definition';
 import type { SupportedScenarioId } from './seeded-puzzle';
 
-export const puzzleGenerationRequestEvent = 'puzzle-generation-request';
+export const puzzleSelectionRequestEvent = 'puzzle-selection-request';
 
-export type PuzzleGenerationRequest = {
+export type PuzzleSelectionRequest = {
   seed: number;
   scenarioId: SupportedScenarioId;
+  task: PuzzleTask;
+  locale: PuzzleLocale;
 };

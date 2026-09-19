@@ -4,8 +4,7 @@ import type { NamedEquationChoice } from './learner-answer';
 import type { PuzzleLocale } from './lang';
 import type { StoryQuantitiesPuzzleDefinition } from './story-quantities';
 
-export type PuzzleDefinition = {
-  kind: 'quantities-to-named-equation' | 'story-to-quantities';
+export type ModelingCase = {
   problem: Problem;
   learnerNames: LearnerNameSource;
   choices: readonly NamedEquationChoice[];
@@ -17,6 +16,29 @@ export type PuzzleDefinition = {
     createDefinition: (locale: PuzzleLocale) => NamedEquationLocaleDefinition;
   };
 };
+
+export const puzzleTasks = [
+  'story-to-quantities',
+  'quantities-to-named-equation',
+] as const;
+
+export type PuzzleTask = (typeof puzzleTasks)[number];
+
+export function isPuzzleTask(value: string): value is PuzzleTask {
+  return puzzleTasks.some((task) => task === value);
+}
+
+export type PuzzleDefinition = {
+  task: PuzzleTask;
+  modelingCase: ModelingCase;
+};
+
+export function createPuzzle(
+  modelingCase: ModelingCase,
+  task: PuzzleTask,
+): PuzzleDefinition {
+  return { task, modelingCase };
+}
 
 export type NamedEquationLocaleDefinition = {
   learnerNames: LearnerNameSource;

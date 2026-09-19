@@ -1,6 +1,6 @@
 import { html, type TemplateResult } from 'lit';
 
-import type { PuzzleDefinition } from '../puzzle-definition';
+import type { NamedEquationChoice } from '../learner-answer';
 import type { PuzzleScreen } from '../start-puzzle';
 import type { PuzzleLocaleResources } from '../lang/contract';
 import './named-equation-choice-input';
@@ -9,7 +9,7 @@ import './named-equation-text-input';
 export type PuzzleInputMode = 'multiple-choice' | 'text';
 
 type PuzzleInputContext = {
-  definition: PuzzleDefinition;
+  definition: { choices: readonly NamedEquationChoice[] };
   screen: PuzzleScreen;
   resources: PuzzleLocaleResources;
 };

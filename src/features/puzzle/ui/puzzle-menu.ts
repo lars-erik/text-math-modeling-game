@@ -2,9 +2,14 @@ import { css, html, LitElement } from 'lit';
 
 import { maximumTotalFromPartsSeed } from '../../problem-generation/generate-total-from-parts';
 import {
-  puzzleGenerationRequestEvent,
-  type PuzzleGenerationRequest,
+  puzzleSelectionRequestEvent,
+  type PuzzleSelectionRequest,
 } from '../puzzle-request';
+import type { PuzzleLocale } from '../lang';
+import {
+  isPuzzleTask,
+  type PuzzleTask,
+} from '../puzzle-definition';
 import {
   isSupportedScenarioId,
   type SupportedScenarioId,
@@ -14,10 +19,15 @@ export class PuzzleMenu extends LitElement {
   static properties = {
     seed: { type: Number },
     scenarioId: { attribute: 'scenario-id', type: String },
+    task: { type: String },
+    locale: { type: String },
     menuLabel: { attribute: false },
     scenarioLabel: { attribute: false },
     dronePowerLabel: { attribute: false },
     creatorFollowersLabel: { attribute: false },
+    taskLabel: { attribute: false },
+    storyToQuantitiesLabel: { attribute: false },
+    quantitiesToNamedEquationLabel: { attribute: false },
     seedLabel: { attribute: false },
     showLabel: { attribute: false },
   };
@@ -91,10 +101,15 @@ export class PuzzleMenu extends LitElement {
 
   declare seed: number;
   declare scenarioId: SupportedScenarioId;
+  declare task: PuzzleTask;
+  declare locale: PuzzleLocale;
   declare menuLabel: string;
   declare scenarioLabel: string;
   declare dronePowerLabel: string;
   declare creatorFollowersLabel: string;
+  declare taskLabel: string;
+  declare storyToQuantitiesLabel: string;
+  declare quantitiesToNamedEquationLabel: string;
   declare seedLabel: string;
   declare showLabel: string;
 
@@ -102,10 +117,15 @@ export class PuzzleMenu extends LitElement {
     super();
     this.seed = 17;
     this.scenarioId = 'gaming.drone-power';
+    this.task = 'story-to-quantities';
+    this.locale = 'en';
     this.menuLabel = 'Puzzle menu';
     this.scenarioLabel = 'Scenario';
     this.dronePowerLabel = 'Spaceship and drones';
     this.creatorFollowersLabel = 'Creator and followers';
+    this.taskLabel = 'Task';
+    this.storyToQuantitiesLabel = 'Story to quantities';
+    this.quantitiesToNamedEquationLabel = 'Quantities to named equation';
     this.seedLabel = 'Seed';
     this.showLabel = 'Show puzzle';
   }
@@ -121,6 +141,17 @@ export class PuzzleMenu extends LitElement {
             </option>
             <option value="creator.followers">
               ${this.creatorFollowersLabel}
+            </option>
+          </select>
+        </label>
+        <label>
+          ${this.taskLabel}
+          <select name="task" .value=${this.task}>
+            <option value="story-to-quantities">
+              ${this.storyToQuantitiesLabel}
+            </option>
+            <option value="quantities-to-named-equation">
+              ${this.quantitiesToNamedEquationLabel}
             </option>
           </select>
         </label>
@@ -149,20 +180,23 @@ export class PuzzleMenu extends LitElement {
 
     const data = new FormData(event.currentTarget);
     const scenarioId = data.get('scenario');
+    const task = data.get('task');
     const seed = Number(data.get('seed'));
     if (
       typeof scenarioId !== 'string' ||
       !isSupportedScenarioId(scenarioId) ||
+      typeof task !== 'string' ||
+      !isPuzzleTask(task) ||
       !Number.isInteger(seed)
     ) {
       return;
     }
 
     this.dispatchEvent(
-      new CustomEvent<PuzzleGenerationRequest>(puzzleGenerationRequestEvent, {
+      new CustomEvent<PuzzleSelectionRequest>(puzzleSelectionRequestEvent, {
         bubbles: true,
         composed: true,
-        detail: { seed, scenarioId },
+        detail: { seed, scenarioId, task, locale: this.locale },
       }),
     );
   }

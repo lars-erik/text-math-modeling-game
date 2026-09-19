@@ -39,7 +39,7 @@ test('approves the narrow Norwegian creator puzzle shell', async () => {
     ></math-modeling-puzzle>
   `;
   startMathModelingApplication({
-    search: '?seed=321&scenario=creator.followers',
+    search: '?seed=321&scenario=creator.followers&locale=nb',
     root: document,
   });
   window.scrollTo(0, 0);

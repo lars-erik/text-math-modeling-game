@@ -7,14 +7,24 @@ import {
   generateTotalFromPartsCase,
 } from '../../problem-generation/generate-total-from-parts';
 import type { Problem } from '../../problem-model/problem';
-import type { PuzzleRegistry } from '../puzzle-definition';
+import {
+  createPuzzle,
+  type PuzzleRegistry,
+} from '../puzzle-definition';
 import { referencePuzzle } from '../reference-puzzle';
-import { createSeededPuzzle } from '../seeded-puzzle';
+import { createSeededModelingCase } from '../seeded-puzzle';
 import { MathModelingPuzzle } from './math-modeling-puzzle';
 
 const browserGlobal = globalThis as typeof globalThis & {
   mathModelingPuzzles: PuzzleRegistry;
 };
+
+function createSeededStoryPuzzle(seed = 17) {
+  return createPuzzle(
+    createSeededModelingCase({ seed }),
+    'story-to-quantities',
+  );
+}
 
 beforeEach(() => {
   browserGlobal.mathModelingPuzzles = { reference: referencePuzzle };
@@ -22,15 +32,18 @@ beforeEach(() => {
 
 test('loads its puzzle from the global registry key in the puzzle attribute', async () => {
   const configuredProblem: Problem = {
-    ...referencePuzzle.problem,
-    quantities: referencePuzzle.problem.quantities.map((quantity) =>
+    ...referencePuzzle.modelingCase.problem,
+    quantities: referencePuzzle.modelingCase.problem.quantities.map((quantity) =>
       quantity.id === 'base'
         ? { ...quantity, given: { kind: 'known' as const, value: 99 } }
         : quantity,
     ),
   };
   browserGlobal.mathModelingPuzzles = {
-    configured: { ...referencePuzzle, problem: configuredProblem },
+    configured: createPuzzle(
+      { ...referencePuzzle.modelingCase, problem: configuredProblem },
+      referencePuzzle.task,
+    ),
   };
   document.body.innerHTML = `
     <math-modeling-puzzle
@@ -186,14 +199,51 @@ test('loads the selected scenario and seed and exposes a replayable URL', async 
   await expect
     .element(page.getByText(/A creator starts with \d+ followers/))
     .toBeVisible();
-  expect(browserGlobal.mathModelingPuzzles.generated?.problem.scenarioId).toBe(
-    'creator.followers',
+  expect(
+    browserGlobal.mathModelingPuzzles.generated?.modelingCase.problem
+      .scenarioId,
+  ).toBe('creator.followers');
+  expect(
+    browserGlobal.mathModelingPuzzles.generated?.modelingCase.problem.replay
+      ?.seed,
+  ).toBe(321);
+  expect(replacedSearches).toEqual([
+    '?seed=321&scenario=creator.followers&task=story-to-quantities&locale=en',
+  ]);
+});
+
+test('switches task from the menu without replacing the modeling case', async () => {
+  const replacedSearches: string[] = [];
+  document.body.innerHTML = `
+    <math-modeling-puzzle
+      puzzle="reference"
+      input-mode="text"
+    ></math-modeling-puzzle>
+  `;
+  startMathModelingApplication({
+    search: '?seed=17&scenario=gaming.drone-power',
+    root: document,
+    replaceSearch: (search) => replacedSearches.push(search),
+  });
+  const originalCase =
+    browserGlobal.mathModelingPuzzles.generated?.modelingCase;
+
+  await userEvent.selectOptions(
+    page.getByRole('combobox', { name: 'Task' }),
+    'quantities-to-named-equation',
   );
-  expect(browserGlobal.mathModelingPuzzles.generated?.problem.replay?.seed).toBe(
-    321,
+  await userEvent.click(page.getByRole('button', { name: 'Show puzzle' }));
+
+  await expect
+    .element(
+      page.getByRole('heading', { name: 'Quantities to named equation' }),
+    )
+    .toBeVisible();
+  expect(browserGlobal.mathModelingPuzzles.generated?.modelingCase).toBe(
+    originalCase,
   );
   expect(replacedSearches).toEqual([
-    '?seed=321&scenario=creator.followers',
+    '?seed=17&scenario=gaming.drone-power&task=quantities-to-named-equation&locale=en',
   ]);
 });
 
@@ -221,6 +271,36 @@ test('replays a selected text scenario directly from the URL', async () => {
     .toHaveValue(321);
 });
 
+test('starts the named-equation task explicitly from the URL', async () => {
+  document.body.innerHTML = `
+    <math-modeling-puzzle
+      puzzle="reference"
+      input-mode="text"
+    ></math-modeling-puzzle>
+  `;
+
+  startMathModelingApplication({
+    search:
+      '?seed=321&scenario=creator.followers&task=quantities-to-named-equation&locale=nb',
+    root: document,
+  });
+
+  await expect
+    .element(
+      page.getByRole('heading', {
+        name: 'Fra størrelser til navngitt likning',
+      }),
+    )
+    .toBeVisible();
+  await expect.element(page.getByText(/startFoelgere = \d+/)).toBeVisible();
+  await expect
+    .element(page.getByRole('combobox', { name: 'Oppgavetype' }))
+    .toHaveValue('quantities-to-named-equation');
+  await expect
+    .element(page.getByRole('combobox', { name: 'Språk' }))
+    .toHaveValue('nb');
+});
+
 test('starts the real application with a generated puzzle from the URL seed', async () => {
   const generated = generateTotalFromPartsCase({
     seed: 17,
@@ -238,10 +318,9 @@ test('starts the real application with a generated puzzle from the URL seed', as
   const puzzle = document.querySelector('math-modeling-puzzle');
   expect(puzzle?.getAttribute('puzzle')).toBe('generated');
   expect(browserGlobal.mathModelingPuzzles.reference).toBe(referencePuzzle);
-  expect(browserGlobal.mathModelingPuzzles.generated?.problem.replay).toEqual({
-    seed: 17,
-    generatorVersion: 'total-from-parts-v1',
-  });
+  expect(
+    browserGlobal.mathModelingPuzzles.generated?.modelingCase.problem.replay,
+  ).toEqual({ seed: 17, generatorVersion: 'total-from-parts-v1' });
   expect(browserGlobal.mathModelingPuzzles.generated).not.toHaveProperty(
     'answerKey',
   );
@@ -264,7 +343,7 @@ test('starts the real application with a generated puzzle from the URL seed', as
 
 test('renders the generated story as a Story-to-Quantities interaction', async () => {
   browserGlobal.mathModelingPuzzles = {
-    generated: createSeededPuzzle({ seed: 17 }),
+    generated: createSeededStoryPuzzle(),
   };
   document.body.innerHTML = `
     <math-modeling-puzzle
@@ -291,7 +370,7 @@ test('renders the generated story as a Story-to-Quantities interaction', async (
 
 test('preserves an incorrect quantity selection and accepts its keyboard-submitted revision', async () => {
   browserGlobal.mathModelingPuzzles = {
-    generated: createSeededPuzzle({ seed: 17 }),
+    generated: createSeededStoryPuzzle(),
   };
   document.body.innerHTML = `
     <math-modeling-puzzle puzzle="generated" locale="en"></math-modeling-puzzle>
@@ -329,8 +408,8 @@ test('preserves an incorrect quantity selection and accepts its keyboard-submitt
 });
 
 test('switches story language and learner names without regenerating the problem', async () => {
-  const definition = createSeededPuzzle({ seed: 17 });
-  const originalProblem = definition.problem;
+  const definition = createSeededStoryPuzzle();
+  const originalProblem = definition.modelingCase.problem;
   browserGlobal.mathModelingPuzzles = { generated: definition };
   document.body.innerHTML = `
     <math-modeling-puzzle puzzle="generated" locale="en"></math-modeling-puzzle>
@@ -357,17 +436,50 @@ test('switches story language and learner names without regenerating the problem
     .element(page.getByRole('button', { name: 'Vis oppgave' }))
     .toBeVisible();
   expect(document.querySelector('math-modeling-puzzle')?.getAttribute('locale')).toBe('nb');
-  expect(definition.problem).toBe(originalProblem);
-  expect(definition.problem.replay).toEqual({
+  expect(definition.modelingCase.problem).toBe(originalProblem);
+  expect(definition.modelingCase.problem.replay).toEqual({
     seed: 17,
     generatorVersion: 'total-from-parts-v1',
   });
 });
 
+test('updates the replay URL when the application language changes', async () => {
+  const replacedSearches: string[] = [];
+  document.body.innerHTML = `
+    <math-modeling-puzzle puzzle="reference" locale="en"></math-modeling-puzzle>
+  `;
+  startMathModelingApplication({
+    search:
+      '?seed=17&scenario=gaming.drone-power&task=story-to-quantities&locale=en',
+    root: document,
+    replaceSearch: (search) => replacedSearches.push(search),
+  });
+  const originalCase =
+    browserGlobal.mathModelingPuzzles.generated?.modelingCase;
+
+  await userEvent.selectOptions(
+    page.getByRole('combobox', { name: 'Language' }),
+    'nb',
+  );
+
+  await expect
+    .element(page.getByRole('heading', { name: 'Fra fortelling til størrelser' }))
+    .toBeVisible();
+  expect(browserGlobal.mathModelingPuzzles.generated?.modelingCase).toBe(
+    originalCase,
+  );
+  expect(replacedSearches).toEqual([
+    '?seed=17&scenario=gaming.drone-power&task=story-to-quantities&locale=nb',
+  ]);
+});
+
 test('keeps the named-equation puzzle consistent with the selected locale', async () => {
-  const generated = createSeededPuzzle({ seed: 17 });
+  const generated = createSeededStoryPuzzle();
   browserGlobal.mathModelingPuzzles = {
-    named: { ...generated, kind: 'quantities-to-named-equation' },
+    named: createPuzzle(
+      generated.modelingCase,
+      'quantities-to-named-equation',
+    ),
   };
   document.body.innerHTML = `
     <math-modeling-puzzle
@@ -390,10 +502,13 @@ test('keeps the named-equation puzzle consistent with the selected locale', asyn
 });
 
 test('switches language in the named-equation shell without regenerating the problem', async () => {
-  const generated = createSeededPuzzle({ seed: 17 });
-  const originalProblem = generated.problem;
+  const generated = createSeededStoryPuzzle();
+  const originalProblem = generated.modelingCase.problem;
   browserGlobal.mathModelingPuzzles = {
-    named: { ...generated, kind: 'quantities-to-named-equation' },
+    named: createPuzzle(
+      generated.modelingCase,
+      'quantities-to-named-equation',
+    ),
   };
   document.body.innerHTML = `
     <math-modeling-puzzle
@@ -416,18 +531,21 @@ test('switches language in the named-equation shell without regenerating the pro
     )
     .toBeVisible();
   await expect.element(page.getByText('grunnEffekt = 30')).toBeVisible();
-  expect(generated.problem).toBe(originalProblem);
-  expect(generated.problem.replay).toEqual({
+  expect(generated.modelingCase.problem).toBe(originalProblem);
+  expect(generated.modelingCase.problem.replay).toEqual({
     seed: 17,
     generatorVersion: 'total-from-parts-v1',
   });
 });
 
 test('uses the same labelled puzzle shell for both puzzle kinds', async () => {
-  const generated = createSeededPuzzle({ seed: 17 });
+  const generated = createSeededStoryPuzzle();
   browserGlobal.mathModelingPuzzles = {
     story: generated,
-    named: { ...generated, kind: 'quantities-to-named-equation' },
+    named: createPuzzle(
+      generated.modelingCase,
+      'quantities-to-named-equation',
+    ),
   };
 
   for (const puzzleKey of ['story', 'named']) {
@@ -458,7 +576,7 @@ test('uses the same labelled puzzle shell for both puzzle kinds', async () => {
 test('keeps the story puzzle usable without horizontal scrolling at a narrow viewport', async () => {
   await page.viewport(360, 800);
   browserGlobal.mathModelingPuzzles = {
-    generated: createSeededPuzzle({ seed: 17 }),
+    generated: createSeededStoryPuzzle(),
   };
   document.body.innerHTML = `
     <math-modeling-puzzle puzzle="generated" locale="en"></math-modeling-puzzle>
