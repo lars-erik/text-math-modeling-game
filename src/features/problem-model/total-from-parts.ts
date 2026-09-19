@@ -25,7 +25,7 @@ export const totalFromPartsProblem = {
   ],
   quantities: [
     {
-      dimension: 'scalar',
+      dimension: 'amount',
       given: { kind: 'known', value: 30 },
       id: 'base',
       role: 'base',
@@ -37,21 +37,19 @@ export const totalFromPartsProblem = {
       role: 'count',
     },
     {
-      dimension: 'scalar',
+      dimension: 'amountPerItem',
       given: { kind: 'hidden' },
       id: 'unitValue',
       role: 'per-item',
     },
     {
-      dimension: 'scalar',
+      dimension: 'amount',
       given: { kind: 'known', value: 210 },
       id: 'total',
       role: 'total',
     },
   ],
   relation: totalFromParts,
-  scenarioId: 'gaming.drone-power',
-  academicSymbols: { unitValue: 'p' },
   replay: {
     seed: 0,
     generatorVersion: 'hand-built-v1',

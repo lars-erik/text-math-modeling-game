@@ -24,7 +24,7 @@ Add richer deterministic grammar templates and, optionally, an LLM story adapter
 
 ## Game shells
 
-Expose the same puzzle engine to different skins: procedural encounter chains, city exploration, creator progression, crafting/building, or mystery. Gameplay progression consumes the puzzle use-cases and their event/result model; thematic UI remains a replaceable presentation layer.
+Expose the same puzzle engine to different themes: procedural encounter chains, city exploration, creator progression, crafting/building, or mystery. Gameplay progression consumes the puzzle use-cases and their event/result model; thematic UI remains a replaceable presentation layer.
 
 ## Delivery and research
 

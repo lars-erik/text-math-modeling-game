@@ -35,9 +35,9 @@ problem total-from-parts {
 }
 ```
 
-Scenario/Skin selection, story text, learner-facing names such as `dronePower` or `followersPerPost`, contextual units, locale, puzzle Mode, input provider and academic display symbols are intentionally absent. They are separate composition/replay metadata.
+Scenario/Theme selection, story text, learner-facing names such as `dronePower` or `followersPerPost`, contextual units, locale, puzzle Mode, input provider and academic display symbols are intentionally absent. They are separate composition/replay metadata.
 
-Treat dashed problem IDs and dotted concept names as metadata identifiers. Expression identifiers resolve only to canonical quantity IDs. Evolve syntax from canonical mathematical tests rather than from one Skin's vocabulary.
+Treat dashed problem IDs and dotted concept names as metadata identifiers. Expression identifiers resolve only to canonical quantity IDs. Evolve syntax from canonical mathematical tests rather than from one Theme's vocabulary.
 
 ### Canonical formatting and migration
 
@@ -45,7 +45,7 @@ The required Problem data is the canonical problem ID, ordered concept IDs, cano
 
 Canonical serialization uses this section order: problem header, concepts, quantities in domain order, equation, optional replay, closing brace. It uses four spaces per indent, one space around expression operators, the minimum parentheses needed to reconstruct the exact expression tree, LF line endings, and one final newline.
 
-The earlier Phase 1 DSL included `scenario` and theme-shaped quantity IDs/dimensions. ADR `2026-09-19-compose-problem-skin-mode-independently.md` supersedes that part of the contract. Migrate existing golden files deliberately as the implementation is refactored; do not preserve themed DSL solely for backward compatibility with the accidental coupling.
+The earlier Phase 1 DSL included `scenario` and theme-shaped quantity IDs/dimensions. ADR `2026-09-19-compose-problem-theme-mode-independently.md` supersedes that part of the contract. Migrate existing golden files deliberately as the implementation is refactored; do not preserve themed DSL solely for backward compatibility with the accidental coupling.
 
 ## Expression grammar: first increment
 
@@ -54,11 +54,11 @@ Expression := identifier | numeric literal | parenthesized expression | addition
 Equation   := Expression "=" Expression
 ```
 
-Define correct operator precedence (`*` before `+`) and grouping. Whitespace is insignificant. Canonical DSL expressions use canonical IDs (`total = base + count * unitValue`), while learner input may use the active Skin's names.
+Define correct operator precedence (`*` before `+`) and grouping. Whitespace is insignificant. Canonical DSL expressions use canonical IDs (`total = base + count * unitValue`), while learner input may use the active Theme's names.
 
-Named-input identifiers resolve through the composed Skin/locale name map and then to canonical quantity IDs. For example, `dronePower`, `followersPerPost`, and localized equivalents can all resolve to canonical `unitValue` in different puzzle presentations. Academic-input identifiers resolve through a separate notation map owned by the relevant representation/Mode. Report ambiguous or unknown identifiers as parse/name-resolution feedback.
+Named-input identifiers resolve through the composed Theme/locale name map and then to canonical quantity IDs. For example, `dronePower`, `followersPerPost`, and localized equivalents can all resolve to canonical `unitValue` in different puzzle presentations. Academic-input identifiers resolve through a separate notation map owned by the relevant representation/Mode. Report ambiguous or unknown identifiers as parse/name-resolution feedback.
 
-The expression parser accepts its name resolver as data rather than hard-coding a Skin or language. Tests prove that differently skinned/localized equations resolve to the same canonical AST. Neither learner name maps nor academic symbols enter the complete-problem DSL.
+The expression parser accepts its name resolver as data rather than hard-coding a Theme or language. Tests prove that differently themened/localized equations resolve to the same canonical AST. Neither learner name maps nor academic symbols enter the complete-problem DSL.
 
 ## Required round-trips
 
@@ -76,11 +76,11 @@ Use example tests for grouping, precedence, unknown tokens, duplicate IDs, and u
 From one canonical AST plus explicit presentation inputs, define independent adapters:
 
 - **Canonical named/debug printer:** `total = base + count * unitValue`.
-- **Skin-aware learner named printer:** renders the same relation with the active Skin/locale name map.
+- **Theme-aware learner named printer:** renders the same relation with the active Theme/locale name map.
 - **Substitution printer:** replaces only known values while preserving the active learner-facing unknown name.
 - **LaTeX/academic printer:** uses an explicit notation map supplied by the relevant representation/Mode.
 - **Debug tree printer:** indented canonical AST plus quantity table, solution and mathematical replay info.
-- **Story renderer:** canonical Problem + Skin presentation/story plan -> prose.
+- **Story renderer:** canonical Problem + Theme presentation/story plan -> prose.
 
 All printers are pure or accept explicit formatting options. Tests approve meaningful examples. Evaluate output only through the semantic engine, not by evaluating a LaTeX string or DSL string as program code.
 

@@ -10,7 +10,6 @@ const generationConfig = {
   base: { min: 10, max: 40 },
   count: { min: 2, max: 8 },
   unitValue: { min: 3, max: 20 },
-  scenarioId: 'gaming.drone-power',
   concepts: [
     'arithmetic.addition',
     'arithmetic.multiplication',

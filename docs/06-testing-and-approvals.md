@@ -14,16 +14,16 @@ Approval tests exercise **production printers invoked on actual use-case output*
 
 ## Architecture evidence
 
-Architecture boundaries need executable evidence in addition to import rules and prose. For changes touching Problem, Skin, Mode or composition, add the smallest relevant checks from this set:
+Architecture boundaries need executable evidence in addition to import rules and prose. For changes touching Problem, Theme, Mode or composition, add the smallest relevant checks from this set:
 
-1. **Canonical identity:** generate one Problem, project every Skin and build every Mode, then assert the original Problem remains deeply equal to its pre-composition value.
-2. **Cross-product composition:** exercise every supported Skin × Mode × locale combination (and input providers where applicable) over one canonical Problem.
+1. **Canonical identity:** generate one Problem, project every Theme and build every Mode, then assert the original Problem remains deeply equal to its pre-composition value.
+2. **Cross-product composition:** exercise every supported Theme × Mode × locale combination (and input providers where applicable) over one canonical Problem.
 3. **Semantic reuse:** assert the same canonical relation/DSL and private AnswerKey are reused across those combinations; do not settle for equal arithmetic results or normalized-shape equality.
-4. **Dependency boundaries:** statically verify that generation/DSL do not import Skins or Modes, Skins do not import Modes, Modes do not import concrete Skins, and generic UI does not import concrete Skin implementations.
+4. **Dependency boundaries:** statically verify that generation/DSL do not import Themes or Modes, Themes do not import Modes, Modes do not import concrete Themes, and generic UI does not import concrete Theme implementations.
 5. **Answer privacy:** verify no hidden AnswerKey binding appears in browser registry or PuzzleScreen output.
-6. **Order independence:** where composition APIs allow Skin and Mode preparation in either order, assert equivalent composed semantics.
+6. **Order independence:** where composition APIs allow Theme and Mode preparation in either order, assert equivalent composed semantics.
 
-When the second implementation appears on an axis, use it as an abstraction test. A second Skin or Mode should extend a registry/contract and cross-product test rather than copy a branch from the first implementation.
+When the second implementation appears on an axis, use it as an abstraction test. A second Theme or Mode should extend a registry/contract and cross-product test rather than copy a branch from the first implementation.
 
 Approval files remain useful for human review of wording and complete use-case output, but they are not architectural evidence by themselves.
 ## ApprovalTests package integration
@@ -97,9 +97,9 @@ Once the UI exists, mount the Lit component in browser tests; await its complete
 - Generator with fixed seed produces identical case and transcript.
 - A generated answer key always satisfies the relation.
 - Every Phase 1 generated case has one hidden quantity and integer solution.
-- Changing Skin changes story/names/units while retaining the exact canonical Problem/DSL/relation and AnswerKey.
+- Changing Theme changes story/names/units while retaining the exact canonical Problem/DSL/relation and AnswerKey.
 - DSL serialization/parsing round-trips with stable printer output.
-- Learner-facing Skin names can change while canonical quantity IDs and relation references remain unchanged.
+- Learner-facing Theme names can change while canonical quantity IDs and relation references remain unchanged.
 - User input `count*unit + base` is eligible for normalized-structure matching against `base + count*unit`.
 - A fully grounded arithmetic task accepts an equivalent result under `equivalent-value`; a named-modelling task uses its structural/pedagogical policy.
 

@@ -1,9 +1,7 @@
 import { css, html, LitElement } from 'lit';
 
-import type {
-  StoryQuantitiesScreen,
-  StoryQuantitiesSelection,
-} from '../story-quantities';
+import type { StoryToQuantitiesScreen } from '../compose-puzzle';
+import type { QuantitySelection } from '../modes/mode';
 
 export class StoryQuantitiesInput extends LitElement {
   static properties = {
@@ -89,7 +87,7 @@ export class StoryQuantitiesInput extends LitElement {
     }
   `;
 
-  declare screen: StoryQuantitiesScreen;
+  declare screen: StoryToQuantitiesScreen;
   declare knownLegend: string;
   declare unknownLegend: string;
   declare checkLabel: string;
@@ -97,8 +95,9 @@ export class StoryQuantitiesInput extends LitElement {
   constructor() {
     super();
     this.screen = {
-      source: { kind: 'story', text: '' },
-      target: { kind: 'quantities', prompt: '', choices: [] },
+      modeId: 'story-to-quantities',
+      source: { kind: 'story' },
+      target: { kind: 'quantities', prompt: '', quantities: [] },
       input: { kind: 'quantity-selection', knownIds: [] },
     };
     this.knownLegend = '';
@@ -111,7 +110,7 @@ export class StoryQuantitiesInput extends LitElement {
       <form @submit=${this.handleSubmit}>
         <fieldset>
           <legend>${this.knownLegend}</legend>
-          ${this.screen.target.choices.map(
+          ${this.screen.target.quantities.map(
             (choice) => html`
               <label>
                 <input
@@ -127,7 +126,7 @@ export class StoryQuantitiesInput extends LitElement {
         </fieldset>
         <fieldset>
           <legend>${this.unknownLegend}</legend>
-          ${this.screen.target.choices.map(
+          ${this.screen.target.quantities.map(
             (choice) => html`
               <label>
                 <input
@@ -158,7 +157,7 @@ export class StoryQuantitiesInput extends LitElement {
     if (typeof unknownId !== 'string') {
       return;
     }
-    const selection: StoryQuantitiesSelection = {
+    const selection: QuantitySelection = {
       knownIds: data.getAll('known-quantity').filter(
         (value): value is string => typeof value === 'string',
       ),
@@ -166,7 +165,7 @@ export class StoryQuantitiesInput extends LitElement {
     };
 
     this.dispatchEvent(
-      new CustomEvent<StoryQuantitiesSelection>('puzzle-quantity-selection', {
+      new CustomEvent<QuantitySelection>('puzzle-quantity-selection', {
         bubbles: true,
         composed: true,
         detail: selection,

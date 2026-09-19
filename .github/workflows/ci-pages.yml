@@ -2,6 +2,23 @@ name: CI and Pages
 
 on:
   push:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+      - 'readme.md'
+      - 'README.md'
+      - 'AGENTS.md'
+      - 'src/AGENTS.md'
+      - '.agents/**'
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
     paths-ignore:
       - 'docs/**'
       - 'readme.md'
@@ -17,6 +34,7 @@ permissions:
 jobs:
   ci:
     name: Validate and build
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -46,7 +64,14 @@ jobs:
         run: npm run test:node && npm run test:browser
 
       - name: Build
-        run: npm run build -- --base=/text-math-modeling-game/
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            base="/text-math-modeling-game/pr-${{ github.event.number }}/"
+          else
+            base="/text-math-modeling-game/"
+          fi
+          npm run build -- --base="$base"
 
       - name: Upload test reports
         if: always()
@@ -68,25 +93,198 @@ jobs:
           reporter: java-junit
           fail-on-error: false
 
-      - name: Upload Pages artifact
-        if: ${{ success() }}
-        uses: actions/upload-pages-artifact@v4
+      - name: Upload static site artifact
+        if: success()
+        uses: actions/upload-artifact@v4
         with:
+          name: site-${{ github.run_id }}
           path: src/dist
+          if-no-files-found: error
+          retention-days: 1
 
-  deploy:
-    name: Deploy to GitHub Pages
+  publish:
+    name: Publish Pages site
     needs: ci
-    if: ${{ needs.ci.result == 'success' && github.ref == 'refs/heads/main' }}
+    if: >-
+      needs.ci.result == 'success' &&
+      (github.event_name == 'push' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages-publish
+      cancel-in-progress: false
     permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      contents: write
+      issues: write
+      pull-requests: write
 
     steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js for first gh-pages bootstrap
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24.12.0
+          cache: npm
+          cache-dependency-path: src/package-lock.json
+
+      - name: Download static site artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: site-${{ github.run_id }}
+          path: site
+
+      - name: Publish root or PR preview
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            git fetch origin gh-pages:refs/remotes/origin/gh-pages
+            git worktree add --detach ../pages origin/gh-pages
+            cd ../pages
+            git switch -c gh-pages --track origin/gh-pages
+          else
+            # Bootstrap gh-pages without changing the public root to PR code.
+            # The root is built from main; the current PR build goes under pr-N/.
+            git worktree add --detach ../pages HEAD
+            cd ../pages
+            git switch --orphan gh-pages
+            git rm -rf . || true
+
+            if [[ "$EVENT_NAME" == "pull_request" ]]; then
+              cd "$GITHUB_WORKSPACE"
+              git fetch origin main:refs/remotes/origin/main
+              git worktree add --detach ../main-source origin/main
+              cd ../main-source/src
+              npm ci
+              npm run build -- --base=/text-math-modeling-game/
+              cd ../../pages
+              cp -a ../main-source/src/dist/. .
+            fi
+          fi
+
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            target="pr-$PR_NUMBER"
+            rm -rf "$target"
+            mkdir -p "$target"
+            cp -a "$GITHUB_WORKSPACE/site/." "$target/"
+            message="deploy: preview PR #$PR_NUMBER"
+          else
+            # Keep all open PR previews while replacing the production root.
+            find . -mindepth 1 -maxdepth 1 \
+              ! -name '.git' \
+              ! -name 'pr-*' \
+              -exec rm -rf {} +
+            cp -a "$GITHUB_WORKSPACE/site/." .
+            message="deploy: main"
+          fi
+
+          touch .nojekyll
+          git add -A
+
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+
+          git commit -m "$message"
+          git push origin HEAD:gh-pages
+
+      - name: Add or update PR preview link
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          marker='<!-- pr-preview-link -->'
+          preview="https://lars-erik.github.io/text-math-modeling-game/pr-$PR_NUMBER/"
+          body="$marker
+          🔎 **PR preview:** $preview"
+
+          comment_id="$(
+            gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments?per_page=100" \
+              --jq '.[] | select(.user.login == "github-actions[bot]") | select(.body | contains("<!-- pr-preview-link -->")) | .id' \
+              | head -n 1
+          )"
+
+          if [[ -n "$comment_id" ]]; then
+            gh api --method PATCH "repos/$REPOSITORY/issues/comments/$comment_id" -f body="$body" >/dev/null
+          else
+            gh api --method POST "repos/$REPOSITORY/issues/$PR_NUMBER/comments" -f body="$body" >/dev/null
+          fi
+
+  cleanup-preview:
+    name: Remove closed PR preview
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages-publish
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Remove preview from gh-pages
+        shell: bash
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          set -euo pipefail
+
+          if ! git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin gh-pages:refs/remotes/origin/gh-pages
+          git worktree add --detach ../pages origin/gh-pages
+          cd ../pages
+          git switch -c gh-pages --track origin/gh-pages
+
+          rm -rf "pr-$PR_NUMBER"
+          git add -A
+
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+
+          git commit -m "deploy: remove preview PR #$PR_NUMBER"
+          git push origin HEAD:gh-pages
+
+      - name: Remove PR preview link comment
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          marker='<!-- pr-preview-link -->'
+
+          gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments?per_page=100" \
+            --jq '.[] | select(.user.login == "github-actions[bot]") | select(.body | contains("<!-- pr-preview-link -->")) | .id' \
+            | while read -r comment_id; do
+                [[ -z "$comment_id" ]] || gh api --method DELETE "repos/$REPOSITORY/issues/comments/$comment_id"
+              done

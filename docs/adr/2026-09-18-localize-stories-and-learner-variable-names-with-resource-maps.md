@@ -31,9 +31,9 @@ The desired authoring model follows the Bellissima-style localization pattern: o
 
 Use option 3.
 
-Canonical `QuantityId` values, mathematical ASTs and answer keys remain independent of Skin and locale. Skin presentation maps and story-plan keys are locale-independent inside a Skin and reference canonical Problem IDs; they do not replace those IDs in the AST. A named-expression parser receives the active locale's variable-name resolver and maps learner-facing names back to canonical quantity IDs before semantic checking. The canonical DSL/debug format continues to use canonical IDs. Academic symbol mappings remain a separate concern.
+Canonical `QuantityId` values, mathematical ASTs and answer keys remain independent of Theme and locale. Theme presentation maps and story-plan keys are locale-independent inside a Theme and reference canonical Problem IDs; they do not replace those IDs in the AST. A named-expression parser receives the active locale's variable-name resolver and maps learner-facing names back to canonical quantity IDs before semantic checking. The canonical DSL/debug format continues to use canonical IDs. Academic symbol mappings remain a separate concern.
 
-Each Skin (currently stored under the historical `scenarios/` folder name) stores language resources in separate modules such as:
+Each Theme (currently stored under the historical `scenarios/` folder name) stores language resources in separate modules such as:
 
 ```text
 features/scenarios/gaming-drone-power/
@@ -61,8 +61,8 @@ Phase 1 proves this contract with `en` and `nb`. Resource maps are checked for k
 
 ## Consequences
 
-- Skin and mathematical code do not branch on language.
-- Skin localization never rewrites or returns a themed canonical `Problem`; learner-facing names resolve back to canonical Problem IDs.
+- Theme and mathematical code do not branch on language.
+- Theme localization never rewrites or returns a themed canonical `Problem`; learner-facing names resolve back to canonical Problem IDs.
 - Learner-facing variable names can be translated without changing semantic IDs or DSL fixtures.
 - New languages require a complete same-shaped resource module and corresponding reviewed approvals.
 - Supporting languages with richer grammatical requirements may require expanding the shared noun/grammar resource schema for all locales.

@@ -15,9 +15,6 @@ import {
 export type ProblemReferenceIssue = {
   kind: 'undefined-quantity';
   id: QuantityId;
-} | {
-  kind: 'undefined-academic-symbol-quantity';
-  id: QuantityId;
 };
 
 export type ProblemSolutionIssue =
@@ -85,7 +82,6 @@ export type ProblemConstraintCode =
 
 type ProblemAstValidatorCode =
   | 'defined-quantity-references'
-  | 'defined-academic-symbol-quantities'
   | 'safe-known-values'
   | 'safe-replay-seed'
   | 'safe-literals'
@@ -166,19 +162,6 @@ function validateUndefinedQuantityReferences({
   return collectReferences(problem.relation)
     .filter((id) => !declaredIds.has(id))
     .map((id) => ({ kind: 'undefined-quantity', id }));
-}
-
-function validateAcademicSymbolQuantities({
-  problem,
-}: ProblemAstValidationContext): readonly ProblemReferenceIssue[] {
-  const declaredIds = new Set(problem.quantities.map((quantity) => quantity.id));
-
-  return Object.keys(problem.academicSymbols)
-    .filter((id) => !declaredIds.has(id))
-    .map((id) => ({
-      kind: 'undefined-academic-symbol-quantity',
-      id,
-    }));
 }
 
 function validateKnownNumberSafety({
@@ -388,18 +371,12 @@ function multiplyDimensions(
   }
 
   if (
-    (left === 'item' && right === 'powerPerItem') ||
-    (left === 'powerPerItem' && right === 'item')
+    (left === 'item' && right === 'amountPerItem') ||
+    (left === 'amountPerItem' && right === 'item')
   ) {
-    return 'power';
+    return 'amount';
   }
 
-  if (
-    (left === 'item' && right === 'followersPerItem') ||
-    (left === 'followersPerItem' && right === 'item')
-  ) {
-    return 'followers';
-  }
 
   if (left === 'scalar') {
     return right;
@@ -497,10 +474,6 @@ const problemAstValidators: readonly ProblemValidator<
   ProblemAstIssue
 >[] = [
   { code: 'defined-quantity-references', validate: validateUndefinedQuantityReferences },
-  {
-    code: 'defined-academic-symbol-quantities',
-    validate: validateAcademicSymbolQuantities,
-  },
   { code: 'safe-known-values', validate: validateKnownNumberSafety },
   { code: 'safe-replay-seed', validate: validateReplaySeedNumberSafety },
   { code: 'safe-literals', validate: validateLiteralNumberSafety },

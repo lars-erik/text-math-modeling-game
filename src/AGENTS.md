@@ -4,9 +4,9 @@ Follow `../AGENTS.md` first. Read `../readme.md`, `../docs/architecture-contract
 
 ## Architecture preflight
 
-Before changing domain/problem types, mathematical generation, DSL, skins/scenarios, puzzle modes/tasks, `PuzzleScreen`, or application composition, follow `../.agents/skills/architecture-guardian/SKILL.md`. Codex may auto-discover the skill; Copilot, Mistral and other agents must apply the same checklist manually.
+Before changing domain/problem types, mathematical generation, DSL, themes/scenarios, puzzle modes/tasks, `PuzzleScreen`, or application composition, follow `../.agents/skills/architecture-guardian/SKILL.md`. Codex may auto-discover the skill; Copilot, Mistral and other agents must apply the same checklist manually.
 
-Do not begin the normal red/green loop until the change has an explicit axis owner (Problem, Skin, Mode, or Composition/UI) and an independence invariant. A rename or wrapper around an already coupled object does not satisfy this preflight.
+Do not begin the normal red/green loop until the change has an explicit axis owner (Problem, Theme, Mode, or Composition/UI) and an independence invariant. A rename or wrapper around an already coupled object does not satisfy this preflight.
 
 ## Working rhythm
 
@@ -29,8 +29,8 @@ Prefer affirmative requirements and acceptance criteria over prohibition lists. 
 
 - Keep semantic types, validation, generation, and checking framework-independent.
 - Generate a canonical, theme-free and mode-free domain AST, then serialize it into DSL; parse user input back into the same domain AST.
-- Keep problem facts and hidden answers authoritative; skins, story templates, learner-facing names and academic notation are views.
-- Keep Skin and Mode as orthogonal axes. A Skin never rewrites/returns `Problem` or owns task-specific factories; a Mode never imports a concrete Skin; only application/composition selects both.
+- Keep problem facts and hidden answers authoritative; themes, story templates, learner-facing names and academic notation are views.
+- Keep Theme and Mode as orthogonal axes. A Theme never rewrites/returns `Problem` or owns task-specific factories; a Mode never imports a concrete Theme; only application/composition selects both.
 - Keep mathematical equivalence, expected structure, and pedagogical intent distinguishable.
 - Use explicit seeded random sources and print replay details with failures.
 - Keep UI state and transitions accessible through pure use-case interfaces and stable printers.

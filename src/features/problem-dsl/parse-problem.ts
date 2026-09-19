@@ -22,11 +22,6 @@ export type ParseProblemResult =
   | { kind: 'success'; problem: Problem }
   | { kind: 'invalid-problem'; issues: readonly ProblemAstIssue[] }
   | {
-      kind: 'duplicate-symbol-mapping';
-      quantityId: string;
-      symbols: readonly string[];
-    }
-  | {
       kind: 'syntax-error';
       message: string;
       expected: string;
@@ -38,8 +33,6 @@ type ParsedProblem = {
   concepts: readonly string[];
   quantities: readonly Quantity[];
   equation: ParsedEquation;
-  scenarioId: string;
-  symbols: readonly (readonly [string, string])[];
   replay?: ProblemReplay;
 };
 
@@ -55,7 +48,6 @@ type ParsedNode =
   | ProblemReplay
   | ParsedEquation
   | readonly string[]
-  | readonly [string, string]
   | string;
 
 const semantics = problemGrammar.createSemantics().addOperation<ParsedNode>(
@@ -68,8 +60,6 @@ const semantics = problemGrammar.createSemantics().addOperation<ParsedNode>(
       concepts,
       quantities,
       equation,
-      scenario,
-      symbols,
       replay,
       _close,
     ) {
@@ -78,8 +68,6 @@ const semantics = problemGrammar.createSemantics().addOperation<ParsedNode>(
         concepts: concepts.toDomain(),
         quantities: quantities.children.map((quantity) => quantity.toDomain()),
         equation: equation.toDomain(),
-        scenarioId: scenario.toDomain(),
-        symbols: symbols.children.map((symbol) => symbol.toDomain()),
         ...(replay.children.length === 0
           ? {}
           : { replay: replay.children[0].toDomain() }),
@@ -118,12 +106,6 @@ const semantics = problemGrammar.createSemantics().addOperation<ParsedNode>(
         startOffset: source.source.startIdx + leadingWhitespaceLength,
       } as ParsedEquation;
     },
-    Scenario(_scenario, scenarioId) {
-      return scenarioId.sourceString;
-    },
-    Symbol(_symbol, quantityId, _equals, symbol) {
-      return [quantityId.sourceString, symbol.sourceString] as const;
-    },
     Replay(_replay, _open, _seed, seed, _generator, generatorVersion, _close) {
       return {
         seed: Number(seed.sourceString),
@@ -154,10 +136,6 @@ export function parseProblem(source: string): ParseProblemResult {
   }
 
   const parsed = semantics(match).toDomain() as ParsedProblem;
-  const duplicateSymbolMapping = findDuplicateSymbolMapping(parsed.symbols);
-  if (duplicateSymbolMapping) {
-    return duplicateSymbolMapping;
-  }
 
   const relationResult = parseNamedRelation(
     parsed.equation.source,
@@ -185,8 +163,6 @@ export function parseProblem(source: string): ParseProblemResult {
     concepts: parsed.concepts,
     quantities: parsed.quantities,
     relation: relationResult.relation as Relation,
-    scenarioId: parsed.scenarioId,
-    academicSymbols: Object.fromEntries(parsed.symbols),
     ...(parsed.replay ? { replay: parsed.replay } : {}),
   };
 
@@ -194,29 +170,6 @@ export function parseProblem(source: string): ParseProblemResult {
   return issues.length > 0
     ? { kind: 'invalid-problem', issues }
     : { kind: 'success', problem };
-}
-
-function findDuplicateSymbolMapping(
-  symbols: readonly (readonly [string, string])[],
-): Extract<ParseProblemResult, { kind: 'duplicate-symbol-mapping' }> | undefined {
-  const symbolsByQuantity = new Map<string, string[]>();
-  for (const [quantityId, symbol] of symbols) {
-    const mappedSymbols = symbolsByQuantity.get(quantityId) ?? [];
-    mappedSymbols.push(symbol);
-    symbolsByQuantity.set(quantityId, mappedSymbols);
-  }
-
-  for (const [quantityId, mappedSymbols] of symbolsByQuantity) {
-    if (mappedSymbols.length > 1) {
-      return {
-        kind: 'duplicate-symbol-mapping',
-        quantityId,
-        symbols: mappedSymbols,
-      };
-    }
-  }
-
-  return undefined;
 }
 
 function shiftRange(

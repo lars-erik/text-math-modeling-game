@@ -13,17 +13,17 @@ test('prints canonical problem DSL from the parsed reference problem', () => {
   }
 
   expect(parsed.problem.quantities).toContainEqual({
-    id: 'dronePower',
-    dimension: 'powerPerItem',
+    id: 'unitValue',
+    dimension: 'amountPerItem',
     given: { kind: 'hidden' },
   });
   expect(parsed.problem.relation.right).toEqual({
     kind: 'add',
-    left: { kind: 'quantity', id: 'basePower' },
+    left: { kind: 'quantity', id: 'base' },
     right: {
       kind: 'multiply',
-      left: { kind: 'quantity', id: 'droneCount' },
-      right: { kind: 'quantity', id: 'dronePower' },
+      left: { kind: 'quantity', id: 'count' },
+      right: { kind: 'quantity', id: 'unitValue' },
     },
   });
 

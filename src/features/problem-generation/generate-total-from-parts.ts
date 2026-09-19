@@ -1,5 +1,5 @@
 import { totalFromParts } from '../problem-model/total-from-parts';
-import type { AnswerKey, ConceptId, Problem, ScenarioId } from '../problem-model/problem';
+import type { AnswerKey, ConceptId, Problem } from '../problem-model/problem';
 
 export const totalFromPartsGeneratorVersion = 'total-from-parts-v1';
 export const maximumTotalFromPartsSeed = 0xffff_ffff;
@@ -17,7 +17,6 @@ export type TotalFromPartsGenerationConfig = {
   base: PositiveIntegerRange;
   count: PositiveIntegerRange;
   unitValue: PositiveIntegerRange;
-  scenarioId: ScenarioId;
   concepts: readonly ConceptId[];
 };
 
@@ -33,7 +32,6 @@ export const defaultTotalFromPartsGenerationConfig = {
   base: { min: 10, max: 40 },
   count: { min: 2, max: 8 },
   unitValue: { min: 3, max: 20 },
-  scenarioId: 'gaming.drone-power',
   concepts: defaultTotalFromPartsConcepts,
 } as const satisfies TotalFromPartsGenerationConfig;
 
@@ -77,7 +75,7 @@ export function generateTotalFromPartsCase({
       quantities: [
         {
           id: 'base',
-          dimension: 'scalar',
+          dimension: 'amount',
           role: 'base',
           given: { kind: 'known', value: base },
         },
@@ -89,20 +87,18 @@ export function generateTotalFromPartsCase({
         },
         {
           id: 'unitValue',
-          dimension: 'scalar',
+          dimension: 'amountPerItem',
           role: 'per-item',
           given: { kind: 'hidden' },
         },
         {
           id: 'total',
-          dimension: 'scalar',
+          dimension: 'amount',
           role: 'total',
           given: { kind: 'known', value: total },
         },
       ],
       relation: totalFromParts,
-      scenarioId: config.scenarioId,
-      academicSymbols: { unitValue: 'p' },
       replay: {
         seed,
         generatorVersion: totalFromPartsGeneratorVersion,
@@ -202,7 +198,6 @@ function cloneConfig(
     base: { ...config.base },
     count: { ...config.count },
     unitValue: { ...config.unitValue },
-    scenarioId: config.scenarioId,
     concepts: [...config.concepts],
   };
 }

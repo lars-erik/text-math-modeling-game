@@ -1,9 +1,0 @@
-puzzle quantities -> named-equation
-replay seed=0 generator=hand-built-v1
-prompt Write an equation that relates these quantities.
-quantities
-  base [base] = 30
-  count [count] = 4
-  unitValue [per-item] = ?
-  total [total] = 210
-input expression = ""

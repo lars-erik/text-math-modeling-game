@@ -1,52 +1,70 @@
 import { printRelation } from '../problem-model/print-relation';
-import type { PuzzleScreen, ScreenQuantity } from './start-puzzle';
+import type { PuzzleScreen } from './compose-puzzle';
 
-export function printScreen(screen: PuzzleScreen): string {
+export function printScreen(puzzleScreen: PuzzleScreen): string {
+  const { screen, context } = puzzleScreen;
   const lines = [
     `puzzle ${screen.source.kind} -> ${screen.target.kind}`,
-    screen.replay
-      ? `replay seed=${screen.replay.seed} generator=${screen.replay.generatorVersion}`
+    context.replay
+      ? `replay seed=${context.replay.seed} generator=${context.replay.generatorVersion} theme=${context.replay.themeId} story-seed=${context.replay.storySeed} locale=${context.replay.locale}`
       : 'replay none',
     `prompt ${screen.target.prompt}`,
-    'quantities',
-    ...screen.source.quantities.map((quantity) => printQuantity(quantity)),
-    `input ${screen.input.kind} = ${JSON.stringify(screen.input.value)}`,
   ];
-
-  if (screen.submission !== undefined) {
-    lines.push(`submission ${screen.submission.kind}`);
-    if (screen.submission.relation !== undefined) {
-      lines.push(...indent(printRelation(screen.submission.relation)));
+  if (screen.modeId === 'story-to-quantities') {
+    lines.push('source', `  ${context.story}`);
+  }
+  lines.push('quantities');
+  lines.push(
+    ...context.quantities.map((quantity) => printQuantity(quantity)),
+  );
+  if (screen.modeId === 'story-to-quantities') {
+    lines.push(
+      `selection known=[${screen.input.knownIds.join(', ')}] unknown=${screen.input.unknownId ?? 'none'}`,
+    );
+  } else {
+    lines.push(`input expression = ${JSON.stringify(screen.input.value)}`);
+  }
+  if (puzzleScreen.submission !== undefined) {
+    const submission = puzzleScreen.submission;
+    lines.push(`submission ${submission.kind}`);
+    if (submission.kind === 'named-equation') {
+      lines.push(`  answer-kind ${submission.answerKind}`);
+      if (submission.choiceId !== undefined) {
+        lines.push(`  choice ${submission.choiceId}`);
+      }
+      if (submission.relation !== undefined) {
+        lines.push(...indent(printRelation(submission.relation)));
+      }
     }
   }
-
-  if (screen.feedback !== undefined) {
-    if ('checkPolicy' in screen.feedback) {
+  if (puzzleScreen.feedback !== undefined) {
+    const feedback = puzzleScreen.feedback;
+    if ('checkPolicy' in feedback) {
       lines.push(
-        `check ${screen.feedback.checkPolicy} equation-sides=${screen.feedback.equationSides}`,
+        `check ${feedback.checkPolicy} equation-sides=${feedback.equationSides}`,
       );
     }
-    if ('range' in screen.feedback) {
-      const { start, end } = screen.feedback.range;
+    if ('range' in feedback) {
+      const { start, end } = feedback.range;
       const expected =
-        screen.feedback.kind === 'syntax-error'
-          ? ` expected=${JSON.stringify(screen.feedback.expected)}`
+        feedback.kind === 'syntax-error'
+          ? ` expected=${JSON.stringify(feedback.expected)}`
           : '';
       lines.push(
         `diagnostic range=${start.line}:${start.column}-${end.line}:${end.column} offsets=${start.offset}-${end.offset}${expected}`,
       );
     }
-    lines.push(`feedback ${screen.feedback.kind}: ${screen.feedback.message}`);
+    lines.push(`feedback ${feedback.kind}: ${feedback.message}`);
   }
-
   return `${lines.join('\n')}\n`;
 }
 
-function printQuantity(quantity: ScreenQuantity): string {
+function printQuantity(
+  quantity: PuzzleScreen['context']['quantities'][number],
+): string {
   const value =
     quantity.given.kind === 'known' ? String(quantity.given.value) : '?';
-
-  return `  ${quantity.id} [${quantity.role}] = ${value}`;
+  return `  ${quantity.themeQuantityId} [${quantity.role}] = ${value}`;
 }
 
 function indent(value: string): string[] {

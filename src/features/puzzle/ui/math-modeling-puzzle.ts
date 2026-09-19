@@ -5,15 +5,15 @@ import {
   type PropertyValues,
   type TemplateResult,
 } from 'lit';
-
-import type { LearnerAnswer } from '../learner-answer';
 import {
-  findPuzzleDefinition,
-  type NamedEquationLocaleDefinition,
-  type PuzzleDefinition,
-} from '../puzzle-definition';
-import { startPuzzle, type PuzzleScreen } from '../start-puzzle';
-import { submitPuzzle } from '../submit-puzzle';
+  composePuzzle,
+  createNamedEquationChoices,
+  presentTheme,
+  submitPuzzle,
+  type PuzzleScreen,
+} from '../compose-puzzle';
+import type { QuantitySelection } from '../modes/mode';
+import type { LearnerAnswer } from '../learner-answer';
 import {
   isPuzzleLocale,
   puzzleResources,
@@ -23,13 +23,13 @@ import {
   puzzleSelectionRequestEvent,
   type PuzzleSelectionRequest,
 } from '../puzzle-request';
+import { isThemeId } from '../../themes';
+import type { Problem } from '../../problem-model/problem';
+import { isModeId, type ModeId } from '../modes/mode';
 import {
-  startStoryQuantitiesPuzzle,
-  submitStoryQuantitiesPuzzle,
-  type StoryQuantitiesPuzzleDefinition,
-  type StoryQuantitiesScreen,
-  type StoryQuantitiesSelection,
-} from '../story-quantities';
+  generateTotalFromPartsCase,
+  defaultTotalFromPartsGenerationConfig,
+} from '../../problem-generation/generate-total-from-parts';
 import {
   isPuzzleInputMode,
   puzzleInputProviders,
@@ -41,12 +41,12 @@ import './puzzle-menu';
 
 export class MathModelingPuzzle extends LitElement {
   static properties = {
-    puzzleKey: { attribute: 'puzzle', type: String },
+    seed: { type: String },
+    themeId: { attribute: 'theme', type: String },
+    modeId: { attribute: 'mode', type: String },
     inputMode: { attribute: 'input-mode', reflect: true, type: String },
     locale: { reflect: true, type: String },
-    puzzleRevision: { attribute: 'puzzle-revision', type: Number },
     screen: { state: true },
-    storyScreen: { state: true },
   };
 
   static styles = css`
@@ -55,18 +55,15 @@ export class MathModelingPuzzle extends LitElement {
       min-width: 0;
       padding: clamp(0rem, 3vw, 2rem);
     }
-
     * {
       box-sizing: border-box;
     }
-
     label,
     nav,
     ul,
     dl {
       min-width: 0;
     }
-
     .language-control {
       display: grid;
       gap: 0.25rem;
@@ -74,7 +71,6 @@ export class MathModelingPuzzle extends LitElement {
       font-size: 0.875rem;
       font-weight: 600;
     }
-
     select {
       min-height: 2.75rem;
       max-width: 100%;
@@ -85,14 +81,12 @@ export class MathModelingPuzzle extends LitElement {
       color: #202428;
       font: inherit;
     }
-
     nav {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
       margin-block-end: 1rem;
     }
-
     nav button {
       min-height: 2.75rem;
       padding: 0.55rem 0.85rem;
@@ -103,13 +97,11 @@ export class MathModelingPuzzle extends LitElement {
       font: inherit;
       cursor: pointer;
     }
-
     nav button[aria-pressed='true'] {
       border-color: #285f78;
       background: #dcebf2;
       font-weight: 700;
     }
-
     .quantity-list {
       display: grid;
       gap: 0.5rem;
@@ -117,7 +109,6 @@ export class MathModelingPuzzle extends LitElement {
       padding: 0;
       list-style: none;
     }
-
     .quantity-list li {
       padding: 0.65rem 0.75rem;
       border: 1px solid #c5cbd1;
@@ -125,24 +116,20 @@ export class MathModelingPuzzle extends LitElement {
       background: #f7f8f9;
       overflow-wrap: anywhere;
     }
-
     .replay-list {
       display: grid;
       grid-template-columns: max-content minmax(0, 1fr);
       gap: 0.25rem 0.75rem;
       margin-block-end: 0;
     }
-
     .replay-list dt {
       font-weight: 600;
     }
-
     .replay-list dd {
       min-width: 0;
       margin: 0;
       overflow-wrap: anywhere;
     }
-
     @media (max-width: 47.99rem) {
       :host {
         padding: 0;
@@ -150,192 +137,215 @@ export class MathModelingPuzzle extends LitElement {
     }
   `;
 
-  declare puzzleKey: string;
+  declare seed: string;
+  declare themeId: string;
+  declare modeId: string;
   declare inputMode: string;
   declare locale: string;
-  declare puzzleRevision: number;
-  private declare puzzleDefinition: PuzzleDefinition | undefined;
   private declare screen: PuzzleScreen | undefined;
-  private declare storyDefinition: StoryQuantitiesPuzzleDefinition | undefined;
-  private declare storyScreen: StoryQuantitiesScreen | undefined;
-  private declare namedDefinition: NamedEquationLocaleDefinition | undefined;
+  private declare generatedProblem: Problem;
 
   constructor() {
     super();
-    this.puzzleKey = '';
+    this.seed = '17';
+    this.themeId = 'gaming.drone-power';
+    this.modeId = 'story-to-quantities';
     this.inputMode = 'text';
     this.locale = 'en';
-    this.puzzleRevision = 0;
-    this.puzzleDefinition = undefined;
     this.screen = undefined;
-    this.storyDefinition = undefined;
-    this.storyScreen = undefined;
-    this.namedDefinition = undefined;
+    this.generatedProblem = generateCase(17);
   }
 
   protected willUpdate(changedProperties: PropertyValues<this>): void {
+    if (changedProperties.has('seed')) {
+      this.generatedProblem = generateCase(Number(this.seed));
+    }
     if (
-      changedProperties.has('puzzleKey') ||
-      changedProperties.has('puzzleRevision') ||
+      changedProperties.has('seed') ||
+      changedProperties.has('themeId') ||
+      changedProperties.has('modeId') ||
       changedProperties.has('locale')
     ) {
-      this.puzzleDefinition = findPuzzleDefinition(this.puzzleKey);
-      const modelingCase = this.puzzleDefinition?.modelingCase;
-      if (
-        this.puzzleDefinition?.task === 'story-to-quantities' &&
-        modelingCase?.storyQuantities !== undefined &&
-        isPuzzleLocale(this.locale)
-      ) {
-        this.storyDefinition =
-          modelingCase.storyQuantities.createDefinition(this.locale);
-        this.storyScreen = startStoryQuantitiesPuzzle(this.storyDefinition);
-        this.screen = undefined;
-        this.namedDefinition = undefined;
-      } else {
-        this.storyDefinition = undefined;
-        this.storyScreen = undefined;
-        this.namedDefinition =
-          modelingCase && isPuzzleLocale(this.locale)
-            ? (modelingCase.namedEquation?.createDefinition(
-                this.locale,
-              ) ?? {
-                learnerNames: modelingCase.learnerNames,
-                quantityNames: Object.fromEntries(
-                  modelingCase.problem.quantities.map((quantity) => [
-                    quantity.id,
-                    quantity.id,
-                  ]),
-                ),
-                choices: modelingCase.choices,
-              })
-            : undefined;
-        this.screen =
-          modelingCase && isPuzzleLocale(this.locale)
-            ? startPuzzle(
-                modelingCase.problem,
-                puzzleResources[this.locale].quantitiesToNamedEquation.prompt,
-              )
-            : undefined;
-      }
+      this.screen = this.composeCurrentScreen();
     }
   }
 
+  private composeCurrentScreen(): PuzzleScreen | undefined {
+    if (!isThemeId(this.themeId) || !isPuzzleLocale(this.locale)) {
+      return undefined;
+    }
+    return composePuzzle({
+      problem: this.generatedProblem,
+      themeId: this.themeId,
+      modeId: isModeId(this.modeId) ? this.modeId : 'story-to-quantities',
+      locale: this.locale,
+      storySeed: Number(this.seed),
+    });
+  }
+
   render() {
-    if (this.puzzleDefinition === undefined) {
+    if (!isThemeId(this.themeId)) {
       return html`<p role="alert">
-        Unknown puzzle ${JSON.stringify(this.puzzleKey)}.
+        Unknown scenario ${JSON.stringify(this.themeId)}.
       </p>`;
     }
-
+    if (!isModeId(this.modeId)) {
+      return html`<p role="alert">
+        Unknown task ${JSON.stringify(this.modeId)}.
+      </p>`;
+    }
     if (!isPuzzleLocale(this.locale)) {
       return html`<p role="alert">
         Unknown locale ${JSON.stringify(this.locale)}.
       </p>`;
     }
-
-    if (
-      this.puzzleDefinition.task === 'story-to-quantities' &&
-      this.storyDefinition !== undefined &&
-      this.storyScreen !== undefined
-    ) {
-      return this.renderStoryQuantities(this.locale);
-    }
-
     if (this.screen === undefined) {
       return html`<p role="alert">Puzzle screen is unavailable.</p>`;
     }
+    const screen = this.screen;
+    const resources = puzzleResources[this.locale];
+    const heading =
+      screen.screen.modeId === 'story-to-quantities'
+        ? resources.storyToQuantities.heading
+        : resources.quantitiesToNamedEquation.heading;
+    return this.renderShell({
+      locale: this.locale,
+      heading,
+      prompt: screen.screen.target.prompt,
+      feedback: screen.feedback?.message ?? '',
+      replay: screen.context.replay,
+      source:
+        screen.screen.modeId === 'story-to-quantities'
+          ? html`<p>${screen.context.story}</p>`
+          : html`<p>${screen.context.story}</p>
+              <ul class="quantity-list">
+                ${screen.context.quantities.map(
+                  (quantity) => html`<li>
+                    ${quantity.variableName} =
+                    ${quantity.given.kind === 'known'
+                      ? quantity.given.value
+                      : '?'}
+                  </li>`,
+                )}
+              </ul>`,
+      input:
+        screen.screen.modeId === 'story-to-quantities'
+          ? html`<div @puzzle-quantity-selection=${this.handleQuantitySelection}>
+              <story-quantities-input
+                .screen=${screen.screen}
+                .knownLegend=${resources.storyToQuantities.knownLegend}
+                .unknownLegend=${resources.storyToQuantities.unknownLegend}
+                .checkLabel=${resources.controls.check}
+              ></story-quantities-input>
+            </div>`
+          : this.renderNamedEquationInput(this.locale),
+    });
+  }
 
+  private renderNamedEquationInput(locale: PuzzleLocale) {
     if (!isPuzzleInputMode(this.inputMode)) {
       return html`<p role="alert">
         Unknown input mode ${JSON.stringify(this.inputMode)}.
       </p>`;
     }
-
-    const inputProvider = puzzleInputProviders[this.inputMode];
-    const resources = puzzleResources[this.locale];
-    const namedDefinition = this.namedDefinition;
-    if (namedDefinition === undefined) {
-      return html`<p role="alert">Named-equation definition is unavailable.</p>`;
+    const screen = this.screen;
+    if (screen === undefined || !isThemeId(this.themeId)) {
+      return html``;
     }
-    const localizedPuzzleDefinition = {
-      choices: namedDefinition.choices,
-    };
+    const resources = puzzleResources[locale];
+    const inputProvider = puzzleInputProviders[this.inputMode];
+    const choices = createNamedEquationChoices(
+      this.generatedProblem,
+      presentTheme(
+        this.themeId,
+        this.generatedProblem,
+        locale,
+        Number(this.seed),
+      ),
+    );
+    return html`<div @puzzle-answer=${this.handleAnswer}>
+      <nav aria-label=${resources.controls.inputMode}>
+        ${(Object.keys(puzzleInputProviders) as PuzzleInputMode[]).map(
+          (mode) => html`<button
+            type="button"
+            aria-pressed=${this.inputMode === mode}
+            @click=${() => this.selectInputMode(mode)}
+          >
+            ${mode === 'text'
+              ? resources.controls.textInput
+              : resources.controls.multipleChoice}
+          </button>`,
+        )}
+      </nav>
+      ${inputProvider.render({
+        definition: { choices },
+        screen: { ...screen, submission: screen.submission },
+        resources,
+      })}
+    </div>`;
+  }
 
-    return this.renderShell({
+  private handleAnswer(event: CustomEvent<LearnerAnswer>): void {
+    this.submitAnswer(event.detail);
+  }
+
+  private submitAnswer(answer: LearnerAnswer | QuantitySelection): void {
+    if (
+      !isThemeId(this.themeId) ||
+      !isModeId(this.modeId) ||
+      !isPuzzleLocale(this.locale)
+    ) {
+      return;
+    }
+    this.screen = submitPuzzle({
+      problem: this.generatedProblem,
+      themeId: this.themeId,
+      modeId: this.modeId,
       locale: this.locale,
-      heading: resources.quantitiesToNamedEquation.heading,
-      prompt: this.screen.target.prompt,
-      feedback: this.screen.feedback?.message ?? '',
-      replay: this.screen.replay,
-      source: html`
-        <p>${this.screen.source.text}</p>
-        <ul class="quantity-list">
-          ${this.screen.source.quantities.map(
-            (quantity) => html`
-              <li>
-                ${namedDefinition.quantityNames[quantity.id] ?? quantity.id} =
-                ${quantity.given.kind === 'known'
-                  ? quantity.given.value
-                  : '?'}
-              </li>
-            `,
-          )}
-        </ul>
-      `,
-      input: html`
-        <div @puzzle-answer=${this.handleAnswer}>
-          <nav aria-label=${resources.controls.inputMode}>
-            ${(
-              Object.keys(puzzleInputProviders) as PuzzleInputMode[]
-            ).map(
-              (mode) => html`
-                <button
-                  type="button"
-                  aria-pressed=${this.inputMode === mode}
-                  @click=${() => this.selectInputMode(mode)}
-                >
-                  ${mode === 'text'
-                    ? resources.controls.textInput
-                    : resources.controls.multipleChoice}
-                </button>
-              `,
-            )}
-          </nav>
-          ${inputProvider.render({
-            definition: localizedPuzzleDefinition,
-            screen: this.screen,
-            resources,
-          })}
-        </div>
-      `,
+      storySeed: Number(this.seed),
+      answer,
     });
   }
 
-  private renderStoryQuantities(locale: PuzzleLocale) {
-    const resources = puzzleResources[locale];
-    const screen = this.storyScreen;
-    if (screen === undefined) {
-      return html``;
-    }
+  private selectInputMode(mode: PuzzleInputMode): void {
+    this.inputMode = mode;
+    this.screen = this.composeCurrentScreen();
+  }
 
-    return this.renderShell({
-      locale,
-      heading: resources.storyToQuantities.heading,
-      prompt: screen.target.prompt,
-      feedback: screen.feedback?.message ?? '',
-      replay: screen.replay,
-      source: html`<p>${screen.source.text}</p>`,
-      input: html`
-        <div @puzzle-quantity-selection=${this.handleQuantitySelection}>
-          <story-quantities-input
-            .screen=${screen}
-            .knownLegend=${resources.storyToQuantities.knownLegend}
-            .unknownLegend=${resources.storyToQuantities.unknownLegend}
-            .checkLabel=${resources.controls.check}
-          ></story-quantities-input>
-        </div>
-      `,
-    });
+  private handleQuantitySelection(
+    event: CustomEvent<QuantitySelection>,
+  ): void {
+    this.submitAnswer(event.detail);
+  }
+
+  private handleLocaleChange(event: Event): void {
+    if (
+      event.currentTarget instanceof HTMLSelectElement &&
+      isPuzzleLocale(event.currentTarget.value)
+    ) {
+      const locale = event.currentTarget.value;
+      this.locale = locale;
+      this.requestApplicationState({ locale });
+    }
+  }
+
+  private requestApplicationState(
+    changes: Pick<PuzzleSelectionRequest, 'locale'>,
+  ): void {
+    this.dispatchEvent(
+      new CustomEvent<PuzzleSelectionRequest>(puzzleSelectionRequestEvent, {
+        bubbles: true,
+        composed: true,
+        detail: {
+          seed: Number(this.seed),
+          themeId: isThemeId(this.themeId) ? this.themeId : 'gaming.drone-power',
+          modeId: isModeId(this.modeId)
+            ? this.modeId
+            : 'story-to-quantities',
+          locale: changes.locale,
+        },
+      }),
+    );
   }
 
   private renderShell({
@@ -353,17 +363,9 @@ export class MathModelingPuzzle extends LitElement {
     source: TemplateResult;
     input: TemplateResult;
     feedback: string;
-    replay:
-      | {
-          seed: number;
-          generatorVersion: string;
-          scenarioId?: string;
-          storySeed?: number;
-        }
-      | undefined;
+    replay?: { seed: number; generatorVersion: string; themeId: string; storySeed: number };
   }) {
     const resources = puzzleResources[locale];
-
     return html`
       <puzzle-shell
         .heading=${heading}
@@ -384,13 +386,9 @@ export class MathModelingPuzzle extends LitElement {
         </label>
         <puzzle-menu
           slot="settings"
-          .seed=${replay?.seed ?? 17}
-          .scenarioId=${this.puzzleDefinition?.modelingCase.problem
-            .scenarioId ===
-          'creator.followers'
-            ? 'creator.followers'
-            : 'gaming.drone-power'}
-          .task=${this.puzzleDefinition?.task ?? 'story-to-quantities'}
+          .seed=${Number(this.seed)}
+          .themeId=${this.themeId}
+          .modeId=${this.modeId}
           .locale=${locale}
           .menuLabel=${resources.puzzleMenu.label}
           .scenarioLabel=${resources.puzzleMenu.scenario}
@@ -398,8 +396,7 @@ export class MathModelingPuzzle extends LitElement {
           .creatorFollowersLabel=${resources.puzzleMenu.creatorFollowers}
           .taskLabel=${resources.puzzleMenu.task}
           .storyToQuantitiesLabel=${resources.puzzleMenu.storyToQuantities}
-          .quantitiesToNamedEquationLabel=${resources.puzzleMenu
-            .quantitiesToNamedEquation}
+          .quantitiesToNamedEquationLabel=${resources.puzzleMenu.quantitiesToNamedEquation}
           .seedLabel=${resources.puzzleMenu.seed}
           .showLabel=${resources.puzzleMenu.show}
         ></puzzle-menu>
@@ -407,124 +404,27 @@ export class MathModelingPuzzle extends LitElement {
         <div slot="input">${input}</div>
         ${replay === undefined
           ? null
-          : html`
-              <dl slot="replay" class="replay-list">
-                <dt>${resources.common.seed}</dt>
-                <dd>${replay.seed}</dd>
-                <dt>${resources.common.generatorVersion}</dt>
-                <dd>${replay.generatorVersion}</dd>
-                ${replay.scenarioId === undefined
-                  ? null
-                  : html`
-                      <dt>${resources.common.scenario}</dt>
-                      <dd>${replay.scenarioId}</dd>
-                    `}
-                ${replay.storySeed === undefined
-                  ? null
-                  : html`
-                      <dt>${resources.common.storySeed}</dt>
-                      <dd>${replay.storySeed}</dd>
-                    `}
-              </dl>
-            `}
+          : html`<dl slot="replay" class="replay-list">
+              <dt>${resources.common.seed}</dt>
+              <dd>${replay.seed}</dd>
+              <dt>${resources.common.generatorVersion}</dt>
+              <dd>${replay.generatorVersion}</dd>
+              <dt>${resources.common.scenario}</dt>
+              <dd>${replay.themeId}</dd>
+              <dt>${resources.common.storySeed}</dt>
+              <dd>${replay.storySeed}</dd>
+            </dl>`}
       </puzzle-shell>
     `;
   }
+}
 
-  private handleAnswer(event: CustomEvent<LearnerAnswer>): void {
-    if (this.puzzleDefinition === undefined) {
-      return;
-    }
-
-    this.screen = submitPuzzle(
-      this.puzzleDefinition.modelingCase.problem,
-      event.detail,
-      this.namedDefinition?.learnerNames ??
-        this.puzzleDefinition.modelingCase.learnerNames,
-      isPuzzleLocale(this.locale)
-        ? {
-            prompt:
-              puzzleResources[this.locale].quantitiesToNamedEquation.prompt,
-            accepted:
-              puzzleResources[this.locale].quantitiesToNamedEquation.accepted,
-            groupingMismatch:
-              puzzleResources[this.locale].quantitiesToNamedEquation
-                .groupingMismatch,
-            reversedSides:
-              puzzleResources[this.locale].quantitiesToNamedEquation
-                .reversedSides,
-            unknownIdentifier:
-              puzzleResources[this.locale].quantitiesToNamedEquation
-                .unknownIdentifier,
-          }
-        : {},
-    );
-  }
-
-  private selectInputMode(mode: PuzzleInputMode): void {
-    this.inputMode = mode;
-    if (this.puzzleDefinition !== undefined) {
-      this.screen = startPuzzle(
-        this.puzzleDefinition.modelingCase.problem,
-        isPuzzleLocale(this.locale)
-          ? puzzleResources[this.locale].quantitiesToNamedEquation.prompt
-          : undefined,
-      );
-    }
-  }
-
-  private handleQuantitySelection(
-    event: CustomEvent<StoryQuantitiesSelection>,
-  ): void {
-    if (this.storyDefinition === undefined) {
-      return;
-    }
-    this.storyScreen = submitStoryQuantitiesPuzzle(
-      this.storyDefinition,
-      event.detail,
-    );
-  }
-
-  private handleLocaleChange(event: Event): void {
-    if (
-      event.currentTarget instanceof HTMLSelectElement &&
-      isPuzzleLocale(event.currentTarget.value)
-    ) {
-      const locale = event.currentTarget.value;
-      this.locale = locale;
-      this.requestApplicationState({ locale });
-    }
-  }
-
-  private requestApplicationState(
-    changes: Pick<PuzzleSelectionRequest, 'locale'>,
-  ): void {
-    const definition = this.puzzleDefinition;
-    const problem = definition?.modelingCase.problem;
-    const seed = problem?.replay?.seed;
-    if (
-      definition === undefined ||
-      problem === undefined ||
-      seed === undefined ||
-      (problem.scenarioId !== 'gaming.drone-power' &&
-        problem.scenarioId !== 'creator.followers')
-    ) {
-      return;
-    }
-
-    this.dispatchEvent(
-      new CustomEvent<PuzzleSelectionRequest>(puzzleSelectionRequestEvent, {
-        bubbles: true,
-        composed: true,
-        detail: {
-          seed,
-          scenarioId: problem.scenarioId,
-          task: definition.task,
-          locale: changes.locale,
-        },
-      }),
-    );
-  }
+function generateCase(seed: number): Problem {
+  const parsed = Number.isSafeInteger(seed) ? seed : 17;
+  return generateTotalFromPartsCase({
+    seed: parsed,
+    config: defaultTotalFromPartsGenerationConfig,
+  }).problem;
 }
 
 if (customElements.get('math-modeling-puzzle') === undefined) {

@@ -16,7 +16,9 @@ const excludedDirectories = new Set([
 const testOnlyPathPattern = /(?:^|\/)(?:__tests__|__screenshots__)\//;
 const testOnlyFilePattern = /\.(?:test|fixture)(?:\.ts)?$/;
 const domainFilePattern =
-  /^features\/(?:problem-model|problem-dsl|named-expression|problem-generation|scenarios)\//;
+  /^features\/(?:problem-model|problem-dsl|named-expression|problem-generation|themes|puzzle\/modes)\//;
+const modeFilePattern = /^features\/puzzle\/modes\//;
+const themeModulePattern = /^features\/themes(?:\/|$)/;
 const uiModulePattern = /^features\/puzzle\/ui(?:\/|$)/;
 const testOnlyPackagePattern =
   /^(?:vitest|@vitest\/[^/]+|approvals|playwright|@playwright\/[^/]+|fast-check|@fast-check\/[^/]+)(?:\/|$)/;
@@ -157,6 +159,16 @@ test('domain modules do not import Lit or UI modules', () => {
     violationLines(
       productionImports.filter(({ file }) => domainFilePattern.test(file)),
       isUiImport,
+    ),
+  );
+});
+
+test('mode modules do not import theme modules', () => {
+  expectNoViolations(
+    'Mode modules must work with canonical quantity IDs only and must not import concrete Theme implementations:',
+    violationLines(
+      productionImports.filter(({ file }) => modeFilePattern.test(file)),
+      (_file, specifier) => themeModulePattern.test(resolveSpecifier(_file, specifier)),
     ),
   );
 });
