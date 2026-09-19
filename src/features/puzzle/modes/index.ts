@@ -7,6 +7,7 @@ export {
   type ModeStartOptions,
   type ModeSubmitOptions,
   type ModeState,
+  type ModeSubmission,
   type PuzzleFeedback,
   type QuantitySelection,
   type StoryToQuantitiesState,

@@ -102,7 +102,10 @@ test('switches tasks and input modes while the story stays visible and the math 
   expect(shellText(puzzle)).toContain(
     'The equation grouping does not match the quantity model.',
   );
-
+  const checkedRadio = choiceInput!.shadowRoot?.querySelector(
+    'input[value="factor-into-group"]',
+  ) as HTMLInputElement | null;
+  expect(checkedRadio?.checked).toBe(true);
   const textButton = Array.from(
     puzzle.shadowRoot?.querySelectorAll<HTMLButtonElement>('nav button') ?? [],
   ).find((button) => button.textContent?.trim() === 'Text input');

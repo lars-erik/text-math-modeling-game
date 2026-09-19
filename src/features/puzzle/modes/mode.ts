@@ -3,7 +3,7 @@ import type {
   SourceRange,
 } from '../../named-expression';
 import type { Problem } from '../../problem-model/problem';
-import type { QuantityId } from '../../problem-model/expression';
+import type { QuantityId, Relation } from '../../problem-model/expression';
 import type { LearnerAnswer } from '../learner-answer';
 import type { PuzzleLocale } from '../lang';
 
@@ -65,6 +65,16 @@ export type QuantitySelection = {
   unknownId?: QuantityId;
 };
 
+export type ModeSubmission =
+  | ({ kind: 'quantity-selection' } & QuantitySelection)
+  | {
+      kind: 'named-equation';
+      answerKind: 'text' | 'relation-choice';
+      input: string;
+      choiceId?: string;
+      relation?: Relation;
+    };
+
 export type StoryToQuantitiesState = {
   modeId: 'story-to-quantities';
   source: { kind: 'story' };
@@ -95,6 +105,7 @@ export type ModeState =
 export type ModeResult = {
   state: ModeState;
   feedback?: PuzzleFeedback;
+  submission?: ModeSubmission;
 };
 
 export type ModeStartOptions = {

@@ -30,6 +30,13 @@ export const storyToQuantitiesMode: Mode = {
     const resources = puzzleResources[options.locale].storyToQuantities;
     return {
       state: composeState(options, selection),
+      submission: {
+        kind: 'quantity-selection',
+        knownIds: [...new Set(selection.knownIds)],
+        ...(selection.unknownId === undefined
+          ? {}
+          : { unknownId: selection.unknownId }),
+      },
       feedback: accepted
         ? { kind: 'quantity-selection-accepted', message: resources.accepted }
         : { kind: 'incorrect', message: resources.incorrect },

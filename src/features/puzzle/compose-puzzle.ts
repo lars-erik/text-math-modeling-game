@@ -20,6 +20,7 @@ import type {
   ModeId,
   ModeResult,
   ModeState,
+  ModeSubmission,
   PuzzleFeedback,
   QuantitySelection,
 } from './modes';
@@ -72,24 +73,10 @@ export type PuzzleScreenTask =
   | StoryToQuantitiesScreen
   | QuantitiesToNamedEquationScreen;
 
-export type PuzzleSubmission =
-  | {
-      kind: 'quantity-selection';
-      knownIds: readonly string[];
-      unknownId?: string;
-    }
-  | {
-      kind: 'named-equation';
-      answerKind: LearnerAnswer['kind'];
-      input: string;
-      choiceId?: string;
-      relation?: Relation;
-    };
-
 export type PuzzleScreen = {
   screen: PuzzleScreenTask;
   context: PuzzleScreenContext;
-  submission?: PuzzleSubmission;
+  submission?: ModeSubmission;
   feedback?: PuzzleFeedback;
 };
 
@@ -111,13 +98,13 @@ export function submitPuzzle(
   },
 ): PuzzleScreen {
   const presentation = presentThemeOf(options);
-  const { state, feedback } = modes[options.modeId].submit({
+  const { state, feedback, submission } = modes[options.modeId].submit({
     problem: options.problem,
     locale: options.locale,
     answer: options.answer,
     names: presentation.learnerNames,
   });
-  return mergeModeWithTheme(options, { state, feedback });
+  return mergeModeWithTheme(options, { state, feedback, submission });
 }
 
 function startMode(options: ComposePuzzleOptions): ModeResult {
@@ -142,34 +129,9 @@ function mergeModeWithTheme(
       quantities,
       replay: composeReplay(options, presentation),
     },
-    submission: submissionOf(modeResult),
+    submission: modeResult.submission,
     feedback: modeResult.feedback,
   };
-}
-
-function submissionOf(modeResult: ModeResult): PuzzleSubmission | undefined {
-  const state = modeResult.state;
-  if (state.modeId === 'story-to-quantities') {
-    return state.input.knownIds.length === 0 && state.input.unknownId === undefined
-      ? undefined
-      : {
-          kind: 'quantity-selection',
-          knownIds: state.input.knownIds,
-          ...(state.input.unknownId === undefined
-            ? {}
-            : { unknownId: state.input.unknownId }),
-        };
-  }
-  return state.input.value === ''
-    ? undefined
-    : {
-        kind: 'named-equation',
-        answerKind: 'text',
-        input: state.input.value,
-        ...(modeResult.feedback?.kind === 'accepted'
-          ? {}
-          : { relation: undefined }),
-      };
 }
 
 function mergeTask(

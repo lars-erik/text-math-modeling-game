@@ -216,5 +216,22 @@ test('the same story and problem serve both modes and both input providers', () 
   });
   expect(choiceSubmission.feedback?.kind).toBe('structural-mismatch');
   expect(choiceSubmission.context.story).toBe(storyScreen.context.story);
+  expect(choiceSubmission.submission).toMatchObject({
+    kind: 'named-equation',
+    answerKind: 'relation-choice',
+    choiceId: 'factor-into-group',
+  });
+  const textOnlySubmission = submitPuzzle({
+    problem: generated.problem,
+    themeId: 'gaming.drone-power',
+    modeId: 'quantities-to-named-equation',
+    locale: 'en',
+    answer: { kind: 'text', input: 'totalPower = basePower + droneCount * dronePower' },
+  });
+  expect(textOnlySubmission.submission).toMatchObject({
+    kind: 'named-equation',
+    answerKind: 'text',
+  });
+  expect(textOnlySubmission.submission).not.toHaveProperty('choiceId');
   expect(generated.problem).toEqual(problemBefore);
 });

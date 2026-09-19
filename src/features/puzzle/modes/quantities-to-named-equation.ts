@@ -1,6 +1,7 @@
 import {
   parseNamedRelation,
 } from '../../named-expression';
+import type { Relation } from '../../problem-model/expression';
 import {
   namedEquationStructurePolicy,
   relationsHaveNormalizedStructure,
@@ -11,6 +12,7 @@ import type {
   Mode,
   ModeResult,
   ModeStartOptions,
+  ModeSubmission,
   ModeSubmitOptions,
   PuzzleFeedback,
   QuantitiesToNamedEquationState,
@@ -32,6 +34,7 @@ export const quantitiesToNamedEquationMode: Mode = {
       return {
         state: composeState(options, displayInput),
         feedback: parsed as PuzzleFeedback,
+        submission: submissionOf(answer, displayInput),
       };
     }
     const accepted = relationsHaveNormalizedStructure(
@@ -63,6 +66,7 @@ export const quantitiesToNamedEquationMode: Mode = {
             checkPolicy: 'normalized-structure',
             equationSides: namedEquationStructurePolicy.equationSides,
           },
+      submission: submissionOf(answer, displayInput, parsed.relation),
     };
   },
 };
@@ -83,5 +87,21 @@ function composeState(
       prompt: resources.prompt,
     },
     input: { kind: 'expression', value: input },
+  };
+}
+
+function submissionOf(
+  answer: PuzzleLearnerAnswer,
+  displayInput: string,
+  relation?: Relation,
+): ModeSubmission {
+  return {
+    kind: 'named-equation',
+    answerKind: answer.kind,
+    input: displayInput,
+    ...(answer.kind === 'relation-choice'
+      ? { choiceId: answer.choiceId }
+      : {}),
+    relation,
   };
 }
