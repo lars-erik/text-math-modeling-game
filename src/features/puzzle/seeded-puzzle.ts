@@ -4,9 +4,7 @@ import {
   type TotalFromPartsGenerationConfig,
 } from '../problem-generation/generate-total-from-parts';
 import type { ConceptId } from '../problem-model/problem';
-import {
-  type ModelingCase,
-} from './puzzle-definition';
+import type { ModelingCase } from './puzzle-definition';
 import { bindDronePowerScenario } from '../scenarios/gaming-drone-power/scenario';
 import { createDronePowerStoryQuantitiesDefinition } from '../scenarios/gaming-drone-power/story-quantities-definition';
 import { createDronePowerNamedEquationDefinition } from '../scenarios/gaming-drone-power/named-equation-definition';

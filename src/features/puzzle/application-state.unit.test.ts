@@ -39,6 +39,9 @@ test('composes the URL-selected task into the generated puzzle registry entry', 
   expect(registry[generatedPuzzleKey]?.task).toBe(
     'quantities-to-named-equation',
   );
+  expect(JSON.stringify(registry[generatedPuzzleKey])).not.toContain(
+    'answerKey',
+  );
   expect(puzzleElement.attributes.get('locale')).toBe('nb');
 });
 
