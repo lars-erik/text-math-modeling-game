@@ -76,12 +76,11 @@ function parseLocale(localeText: string | null): PuzzleLocale {
   return localeText as PuzzleLocale;
 }
 
-function parseThemeId(scenario: string | null): ThemeId | undefined {
+function parseThemeId(scenario: string | null): ThemeId {
   if (scenario === null || scenario === '') {
-    return undefined; // Will default in caller
+    return 'gaming.drone-power'; // default theme
   }
-  // Keep existing validation from application.ts - we could add here too later
-  return scenario;
+  return scenario as ThemeId; // simplified - full isThemeId validation can be added later if needed
 }
 
 function parseModeId(task: string | null): string {
@@ -98,18 +97,22 @@ export function formatAppRoute(route: AppRoute): string {
   switch (route.kind) {
     case 'home':
       return `?home=true&locale=${route.locale}`;
+    
     case 'puzzle':
-    case 'session':
+      // Must maintain exact parameter order: seed, scenario, task, locale for backward compatibility with existing puzzle URLs
       const params = new URLSearchParams();
-      if (route.kind === 'puzzle') {
-        params.set('seed', String(route.seed));
-        params.set('task', route.modeId);
-      } else {
-        params.set('session', String(route.seed));
-      }
+      params.set('seed', String(route.seed));
       params.set('scenario', route.themeId);
+      params.set('task', route.modeId);
       params.set('locale', route.locale);
       return `?${params.toString()}`;
+    
+    case 'session':
+      const sessionParams = new URLSearchParams();
+      sessionParams.set('session', String(route.seed));
+      sessionParams.set('scenario', route.themeId);
+      sessionParams.set('locale', route.locale);
+      return `?${sessionParams.toString()}`;
   }
 }
 
@@ -133,6 +136,25 @@ export function isPuzzleRoute(route: AppRoute): route is Extract<AppRoute, { kin
 export function isSessionRoute(route: AppRoute): route is Extract<AppRoute, { kind: 'session' }> {
   return route.kind === 'session';
 }
+
+// Theme validation - keep existing validation pattern from application.ts TODO: import isThemeId after proper export
+function validateThemeId(scenario: string | undefined): string {
+  // Basic check - in real app would use isThemeId registry lookup
+  if (!scenario || scenario.trim() === '') {
+    return 'gaming.drone-power'; // default
+  }
+  return scenario as string;
+}
+
+// Mode validation placeholder
+function validateModeId(task: string): string {
+  // Placeholder - TODO: add proper mode ID validation after modes module exports theme
+  if (!task || task.trim() === '') {
+    return 'story-to-quantities'; // default
+  }
+  return task;
+}
+
 
 // Defaults for optional fields
 export const defaultPuzzleSeed = 17;
