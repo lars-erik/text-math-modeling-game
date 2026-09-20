@@ -38,12 +38,7 @@ function findBaseMovedIntoCountProduct(
   expected: Expression,
   submitted: Expression,
 ): MovedBase | undefined {
-  if (
-    expected.kind !== 'add' ||
-    submitted.kind !== 'multiply' ||
-    submitted.left.kind !== 'quantity' ||
-    submitted.right.kind !== 'add'
-  ) {
+  if (expected.kind !== 'add' || submitted.kind !== 'multiply') {
     return undefined;
   }
   const expectedBase = expected.left;
@@ -57,7 +52,17 @@ function findBaseMovedIntoCountProduct(
   }
   const countQuantityId = expectedProduct.left.id;
   const expectedUnitValue = expectedProduct.right;
-  const submittedSum = submitted.right;
+  const submittedSum =
+    submitted.left.kind === 'add' &&
+    expressionsEqual(submitted.right, expectedProduct.left)
+      ? submitted.left
+      : submitted.right.kind === 'add' &&
+          expressionsEqual(submitted.left, expectedProduct.left)
+        ? submitted.right
+        : undefined;
+  if (submittedSum === undefined) {
+    return undefined;
+  }
   const baseInSubmittedSum = [submittedSum.left, submittedSum.right].find(
     (operand) => expressionsEqual(operand, expectedBase),
   );
@@ -69,9 +74,6 @@ function findBaseMovedIntoCountProduct(
     unitValueInSubmittedSum === undefined ||
     baseInSubmittedSum === unitValueInSubmittedSum
   ) {
-    return undefined;
-  }
-  if (!expressionsEqual(submitted.left, expectedProduct.left)) {
     return undefined;
   }
   return { baseQuantityId: expectedBase.id, countQuantityId };
