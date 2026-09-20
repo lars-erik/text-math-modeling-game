@@ -9,6 +9,7 @@ import {
   type SessionSelectionRequest,
 } from './features/puzzle/puzzle-request';
 import { navigateHomeRequestEvent } from './features/navigation/navigation-request';
+import { parseAppRoute, formatAppRoute, isSessionRoute, type AppRoute } from './features/app-routes/app-route-types';
 import { isThemeId, type ThemeId } from './features/themes';
 import { isModeId, type ModeId } from './features/puzzle/modes';
 import { maximumTotalFromPartsSeed } from './features/problem-generation/generate-total-from-parts';
@@ -36,6 +37,22 @@ export function startMathModelingApplication({
   replaceSearch?: (search: string) => void;
 }): void {
   const puzzleElement = root.querySelector('math-modeling-puzzle');
+  
+  // Render home screen - clear all attributes and show menu placeholder
+  const showHome = (locale?: PuzzleLocale, updateSearch: boolean = true) => {
+    if (!locale) locale = 'en';
+    
+    puzzleElement?.removeAttribute('seed');
+    puzzleElement?.removeAttribute('theme');
+    puzzleElement?.removeAttribute('mode');
+    puzzleElement?.removeAttribute('session');
+    puzzleElement?.setAttribute('locale', locale);
+    
+    if (updateSearch) {
+      replaceSearch?.(`?home=true&locale=${locale}`);
+    }
+  };
+  
   const showPuzzle = (
     request: PuzzleSelectionRequest,
     updateSearch: boolean,
@@ -74,16 +91,24 @@ export function startMathModelingApplication({
     showSession((event as CustomEvent<SessionSelectionRequest>).detail, true);
   });
   puzzleElement?.addEventListener(navigateHomeRequestEvent, () => {
-    showPuzzle(
-      {
-        seed: defaultPuzzleSeed,
-        themeId: 'gaming.drone-power',
-        modeId: 'story-to-quantities',
-        locale: 'en',
-      },
-      true,
-    );
+    // Parse current route to preserve locale when going home
+    const appRoute = parseAppRoute(search);
+    showHome(appRoute.locale);
   });
+  
+  // Check initial state - if URL indicates home, render home screen immediately
+  const paramSearch = new URLSearchParams(search);
+  const localeParam = paramSearch.get('locale');
+  const hasSeed = paramSearch.has('seed');
+  
+  // Home route is: ?home=true&locale=X OR just locale without seed (not puzzle)
+  if ((paramSearch.get('home') === 'true' || (!hasSeed && localeParam)) && localeParam !== null) {
+    showHome(localeParam as PuzzleLocale);
+  } else if (localeParam === null) {
+    // No locale in URL - use default
+    const defaultLocale: PuzzleLocale = 'en';
+    showHome(defaultLocale, false);
+  }
 }
 
 export function parseApplicationState(search: string): ApplicationState {
