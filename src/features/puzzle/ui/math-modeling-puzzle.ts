@@ -565,7 +565,7 @@ export class MathModelingPuzzle extends LitElement {
     const locale = this.locale as PuzzleLocale;
     const resources = puzzleResources[locale];
     const sessionResources = resources.session;
-    if (session.status === 'complete' && session.screen === undefined) {
+    if (session.status === 'complete') {
       return html`
         <puzzle-shell
           .heading=${sessionResources.completionHeading}

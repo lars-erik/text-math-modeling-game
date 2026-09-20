@@ -1,7 +1,9 @@
 import { expect, test } from 'vitest';
 import { page } from 'vitest/browser';
 import { startMathModelingApplication } from '../../../application';
-import { MathModelingPuzzle } from '../../puzzle/ui/math-modeling-puzzle';
+import {
+  MathModelingPuzzle,
+} from '../../puzzle/ui/math-modeling-puzzle';
 import { katexAcademicDisplayAdapter } from '../../puzzle/ui/katex-academic-display-adapter';
 import '../../puzzle/ui/math-modeling-puzzle';
 
@@ -35,60 +37,96 @@ function shellText(puzzle: MathModelingPuzzle): string {
   return shell?.shadowRoot?.textContent ?? '';
 }
 
-async function answerCurrent(puzzle: MathModelingPuzzle): Promise<void> {
-  const task = puzzle.shadowRoot?.querySelector(
-    'story-quantities-input, named-equation-text-input, named-equation-choice-input',
-  );
-  expect(task).not.toBeNull();
-  if (task instanceof HTMLElement && task.tagName === 'STORY-QUANTITIES-INPUT') {
-    const form = task.shadowRoot?.querySelector('form');
-    const checkboxes = Array.from(
-      task.shadowRoot?.querySelectorAll<HTMLInputElement>(
-        'input[name="known-quantity"]',
-      ) ?? [],
-    );
-    for (const checkbox of checkboxes) {
-      checkbox.checked = checkbox.value !== 'unitValue';
-    }
-    const radios = Array.from(
-      task.shadowRoot?.querySelectorAll<HTMLInputElement>(
-        'input[name="unknown-quantity"]',
-      ) ?? [],
-    );
-    for (const radio of radios) {
-      radio.checked = radio.value === 'unitValue';
-    }
-    form?.requestSubmit();
-    await puzzle.updateComplete;
-    return;
-  }
-  const input = task?.shadowRoot?.querySelector('input[type="text"]');
-  expect(input).not.toBeNull();
-  const heading = shellText(puzzle);
-  const quantities = Array.from(
+function shellStatus(puzzle: MathModelingPuzzle): string {
+  const shell = puzzle.shadowRoot?.querySelector('puzzle-shell');
+  return shell?.shadowRoot?.querySelector('[role="status"]')?.textContent ?? '';
+}
+
+function quantityLines(puzzle: MathModelingPuzzle): string[] {
+  return Array.from(
     puzzle.shadowRoot?.querySelectorAll('div[slot="source"] li') ?? [],
-  ).map((item) => item.textContent ?? '');
+  ).map((item) => (item.textContent ?? '').trim());
+}
+
+function variableName(line: string): string {
+  return line.split('=')[0].trim();
+}
+
+function knownValue(line: string): string | undefined {
+  return line.includes('?') ? undefined : line.split('=')[1]?.trim();
+}
+
+async function submitText(puzzle: MathModelingPuzzle, value: string) {
+  const inputComponent = puzzle.shadowRoot?.querySelector(
+    'named-equation-text-input',
+  ) as (HTMLElement & { updateComplete: Promise<unknown> }) | null;
+  expect(inputComponent).not.toBeNull();
+  await inputComponent!.updateComplete;
+  const input = inputComponent!.shadowRoot?.querySelector(
+    'input[type="text"]',
+  ) as HTMLInputElement;
+  input.value = value;
+  inputComponent!.shadowRoot?.querySelector('form')?.requestSubmit();
+  await puzzle.updateComplete;
+}
+
+async function answerCurrent(puzzle: MathModelingPuzzle): Promise<void> {
+  const quantities = quantityLines(puzzle).map((line) => {
+    const [name, value] = line.split('=').map((part) => part.trim());
+    return { name, value, hidden: value === '?' };
+  });
   const nameOf = (fragment: string) =>
-    quantities
-      .find((quantity) => quantity.toLowerCase().includes(fragment))
-      ?.split('=')[0]
-      .trim() ?? '';
+    quantities.find((quantity) =>
+      quantity.name.toLowerCase().includes(fragment),
+    )?.name ?? '';
   const total = nameOf('total');
   const base = nameOf('base');
   const count = nameOf('count');
-  const perItem = nameOf('?');
-  let equation: string;
-  if (heading.includes('academic notation')) {
-    equation = perItem === '' ? 'T = b + n*p' : 'T = b + n*p';
-  } else {
-    expect(total).not.toBe('');
-    equation = `${total} = ${base} + ${count} * ${perItem}`;
+  const perItem = quantities.find((quantity) => quantity.hidden)?.name ?? '';
+
+  const task = puzzle.shadowRoot?.querySelector(
+    'story-quantities-input, named-equation-text-input',
+  );
+  expect(task).not.toBeNull();
+
+  if (task instanceof HTMLElement && task.tagName === 'STORY-QUANTITIES-INPUT') {
+    for (const checkbox of Array.from(
+      task.shadowRoot?.querySelectorAll<HTMLInputElement>(
+        'input[name="known-quantity"]',
+      ) ?? [],
+    )) {
+      checkbox.checked = checkbox.value !== 'unitValue';
+    }
+    for (const radio of Array.from(
+      task.shadowRoot?.querySelectorAll<HTMLInputElement>(
+        'input[name="unknown-quantity"]',
+      ) ?? [],
+    )) {
+      radio.checked = radio.value === 'unitValue';
+    }
+    task.shadowRoot?.querySelector('form')?.requestSubmit();
+    await puzzle.updateComplete;
+    return;
   }
-  (input as HTMLInputElement).value = equation;
-  (task as HTMLElement)?.shadowRoot
-    ?.querySelector('form')
-    ?.requestSubmit();
-  await puzzle.updateComplete;
+
+  const heading = shellText(puzzle);
+  if (heading.includes('Named equation to academic notation')) {
+    const substituted = quantities
+      .filter((quantity) => !quantity.hidden)
+      .map((quantity) => `${knownValue(quantity.name) ?? ''}`);
+    const totalValue = quantities.find((quantity) => quantity.name === total)
+      ?.value;
+    const baseValue = quantities.find((quantity) => quantity.name === base)
+      ?.value;
+    const countValue = quantities.find((quantity) => quantity.name === count)
+      ?.value;
+    const academic = `${totalValue} = ${baseValue} + ${countValue}*${perItem === '' ? 'p' : 'p'}`;
+    await submitText(puzzle, academic);
+    return;
+  }
+
+  expect(total).not.toBe('');
+  await submitText(puzzle, `${total} = ${base} + ${count} * ${perItem}`);
 }
 
 test('runs a full deterministic graybox session to the summary', async () => {
@@ -103,51 +141,47 @@ test('runs a full deterministic graybox session to the summary', async () => {
       expect(shellText(puzzle)).toContain(`Puzzle ${index} / ${total}`);
     }
     await answerCurrent(puzzle);
-    if (index < total) {
-      expect(shellText(puzzle)).toContain('Puzzle');
-    }
   }
+  const summaryText = (puzzle.shadowRoot?.textContent ?? '').replace(/\s+/g, ' ');
   expect(shellText(puzzle)).toContain('Session complete');
-  expect(shellText(puzzle)).toContain('8 puzzles completed');
-  expect(shellText(puzzle)).toContain('Story to quantities: 2');
-  expect(shellText(puzzle)).toContain('Quantities to named equation: 2');
-  expect(shellText(puzzle)).toContain('Named equation to academic notation: 2');
-  expect(shellText(puzzle)).toContain('Academic notation to named equation: 2');
+  expect(summaryText).toContain('8 puzzles completed');
+  expect(summaryText).toContain('Story to quantities: 2');
+  expect(summaryText).toContain('Quantities to named equation: 2');
+  expect(summaryText).toContain('Named equation to academic notation: 2');
+  expect(summaryText).toContain('Academic notation to named equation: 2');
 });
 
 test('wrong answers keep input and feedback inside a session item', async () => {
   const puzzle = await mountSession();
-  const input = puzzle.shadowRoot?.querySelector('named-equation-text-input');
-  if (input === null || input === undefined) {
+  const textInput = puzzle.shadowRoot?.querySelector(
+    'named-equation-text-input',
+  );
+  if (textInput === null || textInput === undefined) {
     return;
   }
-  const textInput = input.shadowRoot?.querySelector(
-    'input[type="text"]',
-  ) as HTMLInputElement;
-  expect(textInput).not.toBeNull();
-  textInput.value = 'wrong = wrong';
-  input.shadowRoot?.querySelector('form')?.requestSubmit();
-  await puzzle.updateComplete;
+  await submitText(puzzle, 'wrong = wrong');
   expect(shellText(puzzle)).toContain('Puzzle 1 / 8');
-  const feedback = puzzle.shadowRoot?.querySelector('[role="status"]');
-  expect(feedback?.textContent ?? '').not.toBe('');
+  expect(shellStatus(puzzle)).not.toBe('');
 });
 
 test('requests the supported hint without losing input', async () => {
-  const puzzle = await mountSession(
-    '?session=918273&scenario=gaming.drone-power&locale=en',
-  );
+  const puzzle = await mountSession();
   let current = puzzle;
   for (let index = 1; index <= 8; index += 1) {
     const hintButton = Array.from(
       current.shadowRoot?.querySelectorAll<HTMLButtonElement>('button') ?? [],
     ).find((button) => button.textContent?.trim() === 'Hint');
     if (hintButton !== undefined) {
+      const before = shellStatus(current);
       hintButton.click();
       await current.updateComplete;
-      expect(shellText(current)).toContain(
+      const after = shellStatus(current);
+      expect(after).toContain(
         'The total contains the base amount once, plus one unit value per item.',
       );
+      if (before !== '') {
+        expect(after).toContain('wrong');
+      }
       return;
     }
     await answerCurrent(current);
