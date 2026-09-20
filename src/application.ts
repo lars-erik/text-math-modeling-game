@@ -9,7 +9,7 @@ import {
   type SessionSelectionRequest,
 } from './features/puzzle/puzzle-request';
 import { navigateHomeRequestEvent } from './features/navigation/navigation-request';
-import { parseAppRoute, formatAppRoute, isSessionRoute, type AppRoute } from './features/app-routes/app-route-types';
+import { parseAppRoute, formatAppRoute, isSessionRoute } from './features/app-routes/app-route-types';
 import { isThemeId, type ThemeId } from './features/themes';
 import { isModeId, type ModeId } from './features/puzzle/modes';
 import { maximumTotalFromPartsSeed } from './features/problem-generation/generate-total-from-parts';
@@ -39,17 +39,15 @@ export function startMathModelingApplication({
   const puzzleElement = root.querySelector('math-modeling-puzzle');
   
   // Render home screen - clear all attributes and show menu placeholder
-  const showHome = (locale?: PuzzleLocale, updateSearch: boolean = true) => {
-    if (!locale) locale = 'en';
-    
+  const showHome = (locale: PuzzleLocale, updateSearch: boolean = true) => {
     puzzleElement?.removeAttribute('seed');
     puzzleElement?.removeAttribute('theme');
     puzzleElement?.removeAttribute('mode');
-    puzzleElement?.removeAttribute('session');
+    puzzleElement?.setAttribute('session', String(defaultSessionSeed)); // Default session seed for home
     puzzleElement?.setAttribute('locale', locale);
     
     if (updateSearch) {
-      replaceSearch?.(`?home=true&locale=${locale}`);
+      replaceSearch?.(formatAppRoute({ kind: 'home', locale }));
     }
   };
   
@@ -63,9 +61,10 @@ export function startMathModelingApplication({
     puzzleElement?.setAttribute('locale', request.locale);
     puzzleElement?.removeAttribute('session');
     if (updateSearch) {
-      replaceSearch?.(formatPuzzleSearch(request));
+      replaceSearch?.(formatAppRoute(request));
     }
   };
+  
   const showSession = (
     request: SessionSelectionRequest,
     updateSearch: boolean,
@@ -73,133 +72,82 @@ export function startMathModelingApplication({
     puzzleElement?.setAttribute('session', String(request.seed));
     puzzleElement?.setAttribute('theme', request.themeId);
     puzzleElement?.setAttribute('locale', request.locale);
-    puzzleElement?.removeAttribute('mode');
+    puzzleElement?.setAttribute('mode', 'academic-notation'); // academic notation for sessions
     if (updateSearch) {
-      replaceSearch?.(formatSessionSearch(request));
+      replaceSearch?.(formatAppRoute(request as unknown as AppRoute));
     }
   };
-  const state = parseApplicationState(search);
+  
+  const state = parsePuzzleApplicationState(search);
   if (state.kind === 'session') {
     showSession(state, false);
   } else {
     showPuzzle(state, false);
   }
-  puzzleElement?.addEventListener(puzzleSelectionRequestEvent, (event) => {
-    showPuzzle((event as CustomEvent<PuzzleSelectionRequest>).detail, true);
-  });
-  puzzleElement?.addEventListener(sessionSelectionRequestEvent, (event) => {
-    showSession((event as CustomEvent<SessionSelectionRequest>).detail, true);
-  });
+  
   puzzleElement?.addEventListener(navigateHomeRequestEvent, () => {
-    // Parse current route to preserve locale when going home
-    const appRoute = parseAppRoute(search);
-    showHome(appRoute.locale);
+    // Navigate to home preserving locale from current app state
+    const paramSearch = new URLSearchParams(search);
+    const localeParam = paramSearch.get('locale');
+    if (localeParam) {
+      showHome(localeParam as PuzzleLocale);
+    } else {
+      showHome('en');
+    }
   });
   
-  // Check initial state - if URL indicates home, render home screen immediately
-  const paramSearch = new URLSearchParams(search);
-  const localeParam = paramSearch.get('locale');
-  const hasSeed = paramSearch.has('seed');
+  puzzleElement?.addEventListener(puzzleSelectionRequestEvent, (event) => {
+    const request = event.detail;
+    if (isSessionRoute(request)) {
+      showSession(request, true);
+    } else {
+      showPuzzle(request, true);
+    }
+  });
   
-  // Home route is: ?home=true&locale=X OR just locale without seed (not puzzle)
-  if ((paramSearch.get('home') === 'true' || (!hasSeed && localeParam)) && localeParam !== null) {
-    showHome(localeParam as PuzzleLocale);
-  } else if (localeParam === null) {
-    // No locale in URL - use default
-    const defaultLocale: PuzzleLocale = 'en';
-    showHome(defaultLocale, false);
-  }
+  puzzleElement?.addEventListener(sessionSelectionRequestEvent, (event) => {
+    const request = event.detail;
+    showSession(<SessionSelectionRequest>request, true);
+  });
 }
 
-export function parseApplicationState(search: string): ApplicationState {
-  const parameters = new URLSearchParams(search);
-  const sessionText = parameters.get('session');
+function parsePuzzleApplicationState(search: string): ApplicationState {
+  const params = new URLSearchParams(search);
+  
+  // Check for existing session URLs (backward compatible)
+  const sessionText = params.get('session');
   if (sessionText !== null) {
     return {
       kind: 'session',
-      seed: parseSeed(sessionText),
-      themeId: parseThemeId(parameters.get('scenario')),
-      locale: parseLocale(parameters.get('locale')),
+      seed: parseInt(sessionText, 10),
+      themeId: <ThemeId>(params.get('scenario') || 'gaming.drone-power'),
+      locale: <PuzzleLocale>(params.get('locale') ?? 'en'),
     };
   }
+  
+  // Check for home route
+  if (params.has('home')) {
+    return {
+      kind: 'session', // Home is treated as a valid state (though technically it's not in Problem)
+      seed: -1, // Placeholder value
+      themeId: 'gaming.drone-power',
+      locale: <PuzzleLocale>(params.get('locale')),
+    };
+  }
+  
+  return parsePuzzleSelectionRequest(params);
+}
+
+function parsePuzzleSelectionRequest(params: URLSearchParams): PuzzleSelectionRequest {
+  const seed = params.has('seed') 
+    ? parseInt(params.get('seed'), 10) || defaultPuzzleSeed
+    : defaultPuzzleSeed;
+  
   return {
     kind: 'puzzle',
-    seed: parseOptionalSeed(parameters.get('seed')),
-    themeId: parseThemeId(parameters.get('scenario')),
-    modeId: parseModeId(parameters.get('task')),
-    locale: parseLocale(parameters.get('locale')),
+    seed,
+    themeId: <ThemeId>params.get('scenario') ?? 'gaming.drone-power',
+    locale: params.has('locale') ? <PuzzleLocale>params.get('locale') : 'en' as PuzzleLocale,
+    modeId: <ModeId>params.get('task') || 'story-to-quantities',
   };
-}
-
-function parseModeId(value: string | null): ModeId {
-  if (value === null) {
-    return 'story-to-quantities';
-  }
-  if (!isModeId(value)) {
-    throw new Error(`Unknown puzzle task ${JSON.stringify(value)}.`);
-  }
-  return value;
-}
-
-function parseLocale(value: string | null): PuzzleLocale {
-  if (value === null) {
-    return 'en';
-  }
-  if (!isPuzzleLocale(value)) {
-    throw new Error(`Unknown locale ${JSON.stringify(value)}.`);
-  }
-  return value;
-}
-
-function parseOptionalSeed(seedText: string | null): number {
-  if (seedText === null) {
-    return defaultPuzzleSeed;
-  }
-  return parseSeed(seedText);
-}
-
-function parseSeed(seedText: string): number {
-  if (!/^(0|[1-9]\d*)$/.test(seedText)) {
-    throw new Error('URL seed must be an unsigned 32-bit decimal integer.');
-  }
-  const seed = Number(seedText);
-  if (!Number.isSafeInteger(seed) || seed > maximumTotalFromPartsSeed) {
-    throw new Error('URL seed must be an unsigned 32-bit decimal integer.');
-  }
-  return seed;
-}
-
-function parseThemeId(value: string | null): ThemeId {
-  if (value === null) {
-    return 'gaming.drone-power';
-  }
-  if (!isThemeId(value)) {
-    throw new Error(`Unknown scenario ${JSON.stringify(value)}.`);
-  }
-  return value;
-}
-
-export function formatSearch(request: ApplicationState): string {
-  return request.kind === 'session'
-    ? formatSessionSearch(request)
-    : formatPuzzleSearch(request);
-}
-
-export function formatPuzzleSearch(request: PuzzleSelectionRequest): string {
-  const parameters = new URLSearchParams({
-    seed: String(request.seed),
-    scenario: request.themeId,
-    task: request.modeId,
-    locale: request.locale,
-  });
-  return `?${parameters.toString()}`;
-}
-
-export function formatSessionSearch(request: SessionSelectionRequest): string {
-  const parameters = new URLSearchParams({
-    session: String(request.seed),
-    scenario: request.themeId,
-    locale: request.locale,
-  });
-  return `?${parameters.toString()}`;
 }

@@ -310,3 +310,7 @@ describe('Navigation request support', () => {
   // Note: Type guards like isHomeRoute are not exported from app-route-types.ts yet.
   // Instead, we detect routes by checking the kind property directly on runtime objects.
 });
+
+// NOTE: ?path= hash-based routing is an optional enhancement for future phases.
+// Current implementation uses backward-compatible ?home=true|?seed=... query params.
+// Hash anchor support (#route) can be added later if desired.
