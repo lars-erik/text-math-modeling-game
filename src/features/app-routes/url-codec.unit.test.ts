@@ -232,29 +232,33 @@ describe('AppRoute formatter (formatAppRoute)', () => {
 });
 
 describe('Round-trip format/parse determinism', () => {
-  test.each([
-    [ 'Home (en)', { kind: 'home', locale: 'en' } ],
-    [ 'Home (nb)', { kind: 'home', locale: 'nb' } ],
-    [ 'Puzzle 1', {
+  const roundTripCases = [
+    ['Home (en)', { kind: 'home', locale: 'en' } as AppRoute],
+    ['Home (nb)', { kind: 'home', locale: 'nb' } as AppRoute],
+    ['Puzzle 1', {
       kind: 'puzzle',
       seed: 17,
       themeId: 'gaming.drone-power',
       modeId: 'story-to-quantities',
       locale: enLocale,
-    }],
-    [ 'Session', {
+    } as AppRoute],
+    ['Session', {
       kind: 'session',
       seed: 918273,
       themeId: 'gaming.drone-power',
       locale: enLocale,
-    }],
-  ])(('produces deterministic round-trip for %s', (_name, route) => {
-    const search = formatAppRoute(route);
-    const parsed = parseAppRoute(search);
-    
-    // Using toEqual with normalized comparison since we may have different defaults
-    expect(parsed).toEqual(route);
-  }));
+    } as AppRoute],
+  ] as const;
+
+  for (const [name, route] of roundTripCases) {
+    test(`produces deterministic round-trip for ${name}`, () => {
+      const search = formatAppRoute(route);
+      const parsed = parseAppRoute(search);
+      
+      // Using toEqual with normalized comparison since we may have different defaults
+      expect(parsed).toEqual(route);
+    });
+  }
 
   test('existing puzzle URL round-trips correctly', () => {
     const originalSearch = '?seed=17&scenario=gaming.drone-power&task=story-to-quantities&locale=en';
