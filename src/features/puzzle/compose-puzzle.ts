@@ -1,3 +1,4 @@
+import { createCaseInsensitiveLearnerNameResolver } from '../named-expression';
 import type { Relation } from '../problem-model/expression';
 import { collectReferences } from '../problem-model/expression';
 import type { Problem } from '../problem-model/problem';
@@ -145,7 +146,7 @@ export function submitPuzzle(
     problem: options.problem,
     locale: options.locale,
     answer: options.answer,
-    names: presentation.learnerNames,
+    names: createCaseInsensitiveLearnerNameResolver(presentation.learnerNames),
   });
   return mergeModeWithTheme(options, { state, feedback, submission });
 }
