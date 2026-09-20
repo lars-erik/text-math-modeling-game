@@ -56,15 +56,29 @@ test('wrong submit keeps the learner on the same item with preserved input', () 
   expect(submitted.completedItems).toEqual([]);
 });
 
-test('correct submit completes the item and exposes next', () => {
+test('correct submit accepts the item and exposes next without counting it', () => {
   const session = start();
   const submitted = session.submit(correctAnswerFor(session));
   expect(submitted.currentIndex).toBe(0);
-  expect(submitted.completedItems).toEqual([
-    { index: 1, modeId: session.plan.items[0].modeId },
-  ]);
+  expect(submitted.completedItems).toEqual([]);
+  expect(submitted.completedCounts).toEqual(emptyCounts());
   expect(submitted.availableNext).toBe(true);
   expect(submitted.status).toBe('active');
+  expect(submitted.screen?.feedback?.kind).toBe('accepted');
+});
+
+test('next() counts the accepted item and advances to the next planned item', () => {
+  const session = start();
+  const advanced = session.submit(correctAnswerFor(session)).next();
+  expect(advanced.completedItems).toEqual([
+    { index: 1, modeId: session.plan.items[0].modeId },
+  ]);
+  expect(advanced.completedCounts).toEqual({
+    ...emptyCounts(),
+    [session.plan.items[0].modeId]: 1,
+  });
+  expect(advanced.currentIndex).toBe(1);
+  expect(advanced.availableNext).toBe(false);
 });
 
 test('next() advances to the next planned item with a fresh problem', () => {
@@ -80,6 +94,22 @@ test('next() advances to the next planned item with a fresh problem', () => {
   expect(advanced.availableNext).toBe(false);
 });
 
+test('an accepted submit clears a previously requested hint', () => {
+  const current = seekToMode(start(), 'quantities-to-named-equation');
+  const withHint = current.requestHint();
+  const submitted = withHint.submit(correctAnswerFor(withHint));
+  expect(submitted.hint).toBeUndefined();
+  expect(submitted.screen?.feedback?.kind).toBe('accepted');
+});
+
+test('a rejected submit keeps a previously requested hint', () => {
+  const current = seekToMode(start(), 'quantities-to-named-equation');
+  const withHint = current.requestHint();
+  const submitted = withHint.submit({ kind: 'text', input: 'wrong = wrong' });
+  expect(submitted.hint?.content).toBe(withHint.hint?.content);
+  expect(submitted.screen?.feedback?.kind).not.toBe('accepted');
+});
+
 test('next() composes from the recorded seed, not the previous problem', () => {
   const session = start();
   const firstProblemSeed = session.screen?.context.replay?.seed;
@@ -92,13 +122,16 @@ test('finishing the final item transitions to the completion state', () => {
   for (let index = 0; index < session.plan.length; index += 1) {
     const submitted = session.submit(correctAnswerFor(session));
     if (index === session.plan.length - 1) {
-      expect(submitted.status).toBe('complete');
-      expect(submitted.availableNext).toBe(false);
+      expect(submitted.status).toBe('active');
+      expect(submitted.availableNext).toBe(true);
       expect(submitted.screen?.feedback?.kind).toBe('accepted');
-      expect(submitted.completedCounts).toEqual(
+      const finished = submitted.next();
+      expect(finished.status).toBe('complete');
+      expect(finished.availableNext).toBe(false);
+      expect(finished.completedCounts).toEqual(
         perModeCounts(session.plan.items.map((item) => item.modeId)),
       );
-      expect(submitted.summary?.total).toBe(session.plan.length);
+      expect(finished.summary?.total).toBe(session.plan.length);
       return;
     }
     session = submitted.next();
@@ -169,7 +202,9 @@ test('misconception feedback still works unchanged inside a session', () => {
     input: 'totalPower = basePower + droneCount * dronePower',
   });
   expect(corrected.screen?.feedback?.kind).toBe('accepted');
-  expect(corrected.completedItems).toEqual([
+  expect(corrected.completedItems).toEqual(current.completedItems);
+  const advanced = corrected.next();
+  expect(advanced.completedItems).toEqual([
     ...current.completedItems,
     { index: item.index, modeId: item.modeId },
   ]);

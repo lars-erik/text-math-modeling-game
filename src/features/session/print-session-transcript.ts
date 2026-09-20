@@ -4,6 +4,7 @@ import type { SessionPlan } from './plan-session';
 export type TranscriptStep = {
   session: GrayboxSession;
   submitted: GrayboxSession;
+  advanced: GrayboxSession | undefined;
 };
 
 export type SessionTranscript = {
@@ -84,14 +85,14 @@ function describeResult(submitted: GrayboxSession): string {
 }
 
 function describeTransition(step: TranscriptStep): string {
-  const submitted = step.submitted;
-  if (submitted.status === 'complete') {
+  const advanced = step.advanced;
+  if (advanced === undefined) {
+    return 'stayed-on-item';
+  }
+  if (advanced.status === 'complete') {
     return 'completed-session';
   }
-  if (submitted.availableNext) {
-    return 'item-completed';
-  }
-  return 'stayed-on-item';
+  return 'item-completed';
 }
 
 function printSummary(session: GrayboxSession): string[] {

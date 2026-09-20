@@ -181,6 +181,9 @@ test('runs a full deterministic graybox session to the summary', async () => {
     }
     await answerCurrent(puzzle);
   }
+  const finalNextButton = page.getByRole('button', { name: 'Next puzzle' });
+  await finalNextButton.click();
+  await puzzle.updateComplete;
   const summaryText = (puzzle.shadowRoot?.textContent ?? '').replace(/\s+/g, ' ');
   expect(shellText(puzzle)).toContain('Session complete');
   expect(summaryText).toContain('8 puzzles completed');
@@ -188,6 +191,46 @@ test('runs a full deterministic graybox session to the summary', async () => {
   expect(summaryText).toContain('Quantities to named equation: 2');
   expect(summaryText).toContain('Named equation to academic notation: 2');
   expect(summaryText).toContain('Academic notation to named equation: 2');
+});
+
+test('multiple choice inside a session accepts the matching equation', async () => {
+  const puzzle = await mountSession();
+  let current = puzzle;
+  for (let index = 1; index <= 8; index += 1) {
+    if (shellText(current).includes('Quantities to named equation')) {
+      const choiceButton = Array.from(
+        current.shadowRoot?.querySelectorAll<HTMLButtonElement>('button') ?? [],
+      ).find((button) =>
+        button.textContent?.trim() === 'Multiple choice',
+      );
+      expect(choiceButton).toBeDefined();
+      choiceButton!.click();
+      await current.updateComplete;
+      const choiceInput = current.shadowRoot?.querySelector(
+        'named-equation-choice-input',
+      ) as (HTMLElement & { updateComplete: Promise<unknown> }) | null;
+      expect(choiceInput).not.toBeNull();
+      await choiceInput!.updateComplete;
+      const matchingRadio = Array.from(
+        choiceInput!.shadowRoot?.querySelectorAll<HTMLInputElement>(
+          'input[name="named-equation-choice"]',
+        ) ?? [],
+      ).find((radio) => radio.value === 'matching');
+      expect(matchingRadio).toBeDefined();
+      matchingRadio!.checked = true;
+      choiceInput!.shadowRoot?.querySelector('form')?.requestSubmit();
+      await current.updateComplete;
+      expect(shellStatus(current)).toContain('The equation matches the quantity model.');
+      return;
+    }
+    await answerCurrent(current);
+    const nextButton = Array.from(
+      current.shadowRoot?.querySelectorAll<HTMLButtonElement>('button') ?? [],
+    ).find((button) => button.textContent?.trim() === 'Next puzzle');
+    nextButton?.click();
+    await current.updateComplete;
+  }
+  throw new Error('The fixed session never exposed the multiple-choice item.');
 });
 
 test('wrong answers keep input and feedback inside a session item', async () => {

@@ -460,15 +460,16 @@ export class MathModelingPuzzle extends LitElement {
     if (screen === undefined || !isThemeId(this.themeId)) {
       return html``;
     }
+    const problem = this.currentProblemFor();
     const resources = puzzleResources[locale];
     const inputProvider = puzzleInputProviders[this.inputMode];
     const choices = createNamedEquationChoices(
-      this.generatedProblem,
+      problem,
       presentTheme(
         this.themeId,
-        this.generatedProblem,
+        problem,
         locale,
-        Number(this.seed),
+        screen.context.replay?.storySeed ?? Number(this.seed),
       ),
     );
     return html`<div @puzzle-answer=${this.handleAnswer}>
@@ -522,7 +523,18 @@ export class MathModelingPuzzle extends LitElement {
 
   private selectInputMode(mode: PuzzleInputMode): void {
     this.inputMode = mode;
-    this.screen = this.composeCurrentScreen();
+    if (this.activeSession === undefined) {
+      this.screen = this.composeCurrentScreen();
+    }
+  }
+
+  private currentProblemFor(): Problem {
+    if (this.activeSession !== undefined) {
+      return (
+        this.activeSession.currentProblem ?? this.generatedProblem
+      );
+    }
+    return this.generatedProblem;
   }
 
   private handleQuantitySelection(
@@ -599,10 +611,13 @@ export class MathModelingPuzzle extends LitElement {
       session.total,
     );
     const hint = session.hint;
+    const feedbackMessage = screen.feedback?.message ?? '';
     const feedbackText =
-      hint !== undefined
+      hint !== undefined && feedbackMessage === ''
         ? hint.content
-        : (screen.feedback?.message ?? '');
+        : [feedbackMessage, hint?.content ?? '']
+            .filter((part) => part !== '')
+            .join(' ');
     return this.renderShell({
       locale,
       heading,

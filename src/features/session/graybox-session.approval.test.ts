@@ -53,12 +53,17 @@ test('approves a full fixed-seed graybox session transcript', () => {
   });
   while (session.status === 'active') {
     const submitted = session.submit(correctAnswerFor(session));
-    steps.push({ session, submitted });
-    if (submitted.status === 'complete') {
-      session = submitted;
+    if (!submitted.availableNext) {
+      steps.push({ session, submitted, advanced: undefined });
       break;
     }
-    session = submitted.next();
+    const advanced = submitted.next();
+    steps.push({ session, submitted, advanced });
+    if (advanced.status === 'complete') {
+      session = advanced;
+      break;
+    }
+    session = advanced;
   }
   verifyApproval(
     import.meta.url,

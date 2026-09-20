@@ -50,6 +50,7 @@ export type GrayboxSession = {
   position: number;
   total: number;
   screen: PuzzleScreen | undefined;
+  currentProblem: Problem | undefined;
   hint: SessionHint | undefined;
   completedItems: readonly CompletedSessionItem[];
   completedCounts: Readonly<Record<ModeId, number>>;
@@ -120,6 +121,7 @@ function createActiveSession(
     position: currentIndex + 1,
     total: plan.length,
     screen: state.currentScreen,
+    currentProblem: requireProblem(state),
     hint,
     completedItems,
     completedCounts: countByMode(completedItems),
@@ -136,31 +138,13 @@ function createActiveSession(
       });
       const accepted =
         acceptedKinds.has(submittedScreen.feedback?.kind ?? 'none');
-      const nextCompletedItems = accepted
-        ? [
-            ...completedItems,
-            {
-              index: plan.items[currentIndex].index,
-              modeId: plan.items[currentIndex].modeId,
-            },
-          ]
-        : completedItems;
-      const sessionComplete = accepted && currentIndex + 1 === plan.length;
-      if (sessionComplete) {
-        return createCompletedSession(
-          options,
-          plan,
-          nextCompletedItems,
-          submittedScreen,
-        );
-      }
       return createActiveSession(
         options,
         plan,
         currentIndex,
-        nextCompletedItems,
+        completedItems,
         submittedScreen,
-        hint,
+        accepted ? undefined : hint,
         accepted,
       );
     },
@@ -183,14 +167,27 @@ function createActiveSession(
       );
     },
     next() {
-      if (!state.currentCompleted || currentIndex + 1 >= plan.length) {
+      if (!state.currentCompleted) {
         return this;
+      }
+      const item = plan.items[currentIndex];
+      const countedItems = [
+        ...completedItems,
+        { index: item.index, modeId: item.modeId },
+      ];
+      if (currentIndex + 1 >= plan.length) {
+        return createCompletedSession(
+          options,
+          plan,
+          countedItems,
+          state.currentScreen,
+        );
       }
       return createActiveSession(
         options,
         plan,
         currentIndex + 1,
-        completedItems,
+        countedItems,
         undefined,
         undefined,
       );
@@ -218,6 +215,7 @@ function createCompletedSession(
     position: plan.length,
     total: plan.length,
     screen: finalScreen,
+    currentProblem: undefined,
     hint: undefined,
     completedItems,
     completedCounts: counts,
