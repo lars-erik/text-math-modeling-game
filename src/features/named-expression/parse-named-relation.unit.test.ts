@@ -8,7 +8,7 @@ import {
   englishLearnerNames,
   norwegianLearnerNames,
 } from './learner-name-maps.fixture';
-import { parseNamedRelation } from '.';
+import { createCaseInsensitiveLearnerNameResolver, parseNamedRelation } from '.';
 
 const canonicalNames = {
   a: 'a',
@@ -104,6 +104,38 @@ test('parentheses produce a different AST from multiplication precedence', () =>
 });
 
 describe('identifier resolution', () => {
+
+  test('case-insensitive learner names resolve to the same canonical AST', () => {
+    const regular = parseNamedRelation(
+      'totalPower = basePower + droneCount * dronePower',
+      createCaseInsensitiveLearnerNameResolver(englishLearnerNames),
+    );
+    const mixedCase = parseNamedRelation(
+      'TOTALPOWER = basepower + DRONECOUNT * DronePower',
+      createCaseInsensitiveLearnerNameResolver(englishLearnerNames),
+    );
+
+    expect(mixedCase).toEqual(regular);
+    expect(mixedCase.kind).toBe('success');
+  });
+
+  test('case-insensitive name collisions remain explicit ambiguity', () => {
+    expect(
+      parseNamedRelation(
+        'result = RATE',
+        createCaseInsensitiveLearnerNameResolver({
+          rate: 'base',
+          Rate: 'unitValue',
+          result: 'total',
+        }),
+      ),
+    ).toMatchObject({
+      kind: 'ambiguous-identifier',
+      identifier: 'RATE',
+      candidateIds: ['base', 'unitValue'],
+    });
+  });
+
   test('English and Norwegian learner names resolve to the same canonical AST', () => {
     const english = parseNamedRelation(
       'totalPower = basePower + droneCount * dronePower',
