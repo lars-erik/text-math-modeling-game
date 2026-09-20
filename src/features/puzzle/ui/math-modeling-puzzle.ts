@@ -18,7 +18,7 @@ import {
   type GrayboxSession,
 } from '../../session/graybox-session';
 import { modeIds } from '../modes';
-import type { QuantitySelection } from '../modes/mode';
+import type { ModeSubmission, QuantitySelection } from '../modes/mode';
 import type { LearnerAnswer } from '../learner-answer';
 import {
   isPuzzleLocale,
@@ -142,6 +142,22 @@ export class MathModelingPuzzle extends LitElement {
       padding: 0;
       list-style: none;
     }
+    .answer-log {
+      margin-block: 0.5rem 1rem;
+    }
+    .answer-log h3 {
+      margin-block: 0 0.4rem;
+      font-size: 0.9rem;
+    }
+    .answer-log-list {
+      display: grid;
+      gap: 0.25rem;
+      margin: 0;
+      padding-inline-start: 1.25rem;
+    }
+    .answer-log-list li {
+      overflow-wrap: anywhere;
+    }
     .quantity-list li {
       padding: 0.65rem 0.75rem;
       border: 1px solid #c5cbd1;
@@ -239,7 +255,8 @@ export class MathModelingPuzzle extends LitElement {
       changedProperties.has('seed') ||
       changedProperties.has('themeId') ||
       changedProperties.has('modeId') ||
-      changedProperties.has('locale')
+      changedProperties.has('locale') ||
+      changedProperties.has('session')
     ) {
       this.screen =
         this.activeSession === undefined
@@ -249,7 +266,11 @@ export class MathModelingPuzzle extends LitElement {
   }
 
   private composeCurrentSession(): GrayboxSession | undefined {
-    if (this.session === '' || !isThemeId(this.themeId) || !isPuzzleLocale(this.locale)) {
+    if (
+      !this.session ||
+      !isThemeId(this.themeId) ||
+      !isPuzzleLocale(this.locale)
+    ) {
       return undefined;
     }
     return startSession({
@@ -595,12 +616,21 @@ export class MathModelingPuzzle extends LitElement {
               ${modeIds.map(
                 (modeId) => html`<li>
                   ${this.modeLabel(modeId, resources)}:
-                  ${session.completedCounts[modeId]}
+                  ${session.summary?.counts[modeId] ?? 0}
                 </li>`,
               )}
             </ul>
           </div>
-          <div slot="input"></div>
+          <div slot="input">
+            ${this.renderAnswerLog(session, sessionResources, resources)}
+            <button
+              type="button"
+              class="session-next"
+              @click=${this.handleBackToPuzzle}
+            >
+              ${sessionResources.backToPuzzle}
+            </button>
+          </div>
         </puzzle-shell>
       `;
     }
@@ -628,6 +658,7 @@ export class MathModelingPuzzle extends LitElement {
       source: this.renderSource(screen, resources),
       input: html`
         ${this.renderInput(screen, resources)}
+        ${this.renderAnswerLog(session, sessionResources, resources)}
         ${session.availableNext
           ? html`<button
               type="button"
@@ -648,6 +679,49 @@ export class MathModelingPuzzle extends LitElement {
           : ''}
       `,
     });
+  }
+
+  private renderAnswerLog(
+    session: GrayboxSession,
+    sessionResources: (typeof puzzleResources)[PuzzleLocale]['session'],
+    resources: (typeof puzzleResources)[PuzzleLocale],
+  ) {
+    if (session.answerLog.length === 0) {
+      return '';
+    }
+    return html`
+      <section class="answer-log" aria-label=${sessionResources.answerLogHeading}>
+        <h3>${sessionResources.answerLogHeading}</h3>
+        <ol class="answer-log-list">
+          ${session.answerLog.map(
+            (entry, index) => html`<li>
+              ${index + 1}.
+              ${this.modeLabel(entry.modeId, resources)}:
+              ${this.describeSubmission(entry.submission)}
+              (${entry.accepted
+                ? sessionResources.answerLogCorrect
+                : sessionResources.answerLogIncorrect})
+            </li>`,
+          )}
+        </ol>
+      </section>
+    `;
+  }
+
+  private describeSubmission(submission: ModeSubmission): string {
+    switch (submission.kind) {
+      case 'quantity-selection':
+        return `known=[${submission.knownIds.join(', ')}] unknown=${
+          submission.unknownId ?? 'none'
+        }`;
+      case 'named-equation':
+      case 'academic-notation':
+        return submission.input;
+    }
+  }
+
+  private handleBackToPuzzle(): void {
+    this.requestApplicationState({ locale: this.locale as PuzzleLocale });
   }
 
   private supportsHint(session: GrayboxSession): boolean {

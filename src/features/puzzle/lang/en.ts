@@ -91,5 +91,9 @@ export const en = {
     completedTotal: (total) => `${total} puzzles completed`,
     perEdgeHeading: 'Completed representation edges',
     sessionReplayLabel: 'Session replay',
+    answerLogHeading: 'Answers',
+    answerLogCorrect: 'correct',
+    answerLogIncorrect: 'incorrect',
+    backToPuzzle: 'Back to the puzzle',
   },
 } satisfies PuzzleLocaleResources;

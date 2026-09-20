@@ -9,7 +9,7 @@ import {
   type PuzzleScreen,
 } from '../puzzle/compose-puzzle';
 import type { LearnerAnswer } from '../puzzle/learner-answer';
-import type { QuantitySelection } from '../puzzle/modes';
+import type { ModeSubmission, QuantitySelection } from '../puzzle/modes';
 import { modeIds, type ModeId } from '../puzzle/modes';
 import { puzzleResources, type PuzzleLocale } from '../puzzle/lang';
 import type { ThemeId } from '../themes';
@@ -26,9 +26,11 @@ export type SessionReplay = {
   locale: PuzzleLocale;
 };
 
-export type CompletedSessionItem = {
-  index: number;
+export type SessionItemLog = {
+  itemIndex: number;
   modeId: ModeId;
+  submission: ModeSubmission;
+  accepted: boolean;
 };
 
 export type SessionCompletionSummary = {
@@ -52,8 +54,7 @@ export type GrayboxSession = {
   screen: PuzzleScreen | undefined;
   currentProblem: Problem | undefined;
   hint: SessionHint | undefined;
-  completedItems: readonly CompletedSessionItem[];
-  completedCounts: Readonly<Record<ModeId, number>>;
+  answerLog: readonly SessionItemLog[];
   availableNext: boolean;
   summary: SessionCompletionSummary | undefined;
   submit: (answer: LearnerAnswer | QuantitySelection) => GrayboxSession;
@@ -71,12 +72,11 @@ export function startSession(options: StartSessionOptions): GrayboxSession {
   const plan = planSession({ seed: options.seed });
   return createActiveSession(options, plan, 0, [], undefined, undefined);
 }
-
 type InternalSessionState = {
   options: StartSessionOptions;
   plan: SessionPlan;
   currentIndex: number;
-  completedItems: readonly CompletedSessionItem[];
+  answerLog: readonly SessionItemLog[];
   currentScreen: PuzzleScreen | undefined;
   currentProblem: Problem | undefined;
   hint: SessionHint | undefined;
@@ -87,7 +87,7 @@ function createActiveSession(
   options: StartSessionOptions,
   plan: SessionPlan,
   currentIndex: number,
-  completedItems: readonly CompletedSessionItem[],
+  answerLog: readonly SessionItemLog[],
   currentScreen: PuzzleScreen | undefined,
   hint: SessionHint | undefined,
   currentCompleted = false,
@@ -96,7 +96,7 @@ function createActiveSession(
     options,
     plan,
     currentIndex,
-    completedItems,
+    answerLog,
     currentScreen: currentScreen ?? composeItemScreen(options, plan, currentIndex),
     currentProblem:
       currentScreen === undefined
@@ -106,7 +106,7 @@ function createActiveSession(
     currentCompleted,
   };
   if (state.currentScreen === undefined) {
-    return createCompletedSession(options, plan, completedItems, undefined);
+    return createCompletedSession(options, plan, answerLog, undefined);
   }
   return {
     replay: {
@@ -123,8 +123,7 @@ function createActiveSession(
     screen: state.currentScreen,
     currentProblem: requireProblem(state),
     hint,
-    completedItems,
-    completedCounts: countByMode(completedItems),
+    answerLog,
     availableNext: state.currentCompleted,
     summary: undefined,
     submit(answer) {
@@ -142,7 +141,12 @@ function createActiveSession(
         options,
         plan,
         currentIndex,
-        completedItems,
+        upsertAnswerLog(answerLog, {
+          itemIndex: plan.items[currentIndex].index,
+          modeId: plan.items[currentIndex].modeId,
+          submission: requireSubmission(submittedScreen),
+          accepted,
+        }),
         submittedScreen,
         accepted ? undefined : hint,
         accepted,
@@ -160,7 +164,7 @@ function createActiveSession(
         options,
         plan,
         currentIndex,
-        completedItems,
+        answerLog,
         state.currentScreen,
         { kind: 'structured', modeId: plan.items[currentIndex].modeId, content },
         currentCompleted,
@@ -170,16 +174,11 @@ function createActiveSession(
       if (!state.currentCompleted) {
         return this;
       }
-      const item = plan.items[currentIndex];
-      const countedItems = [
-        ...completedItems,
-        { index: item.index, modeId: item.modeId },
-      ];
       if (currentIndex + 1 >= plan.length) {
         return createCompletedSession(
           options,
           plan,
-          countedItems,
+          answerLog,
           state.currentScreen,
         );
       }
@@ -187,7 +186,7 @@ function createActiveSession(
         options,
         plan,
         currentIndex + 1,
-        countedItems,
+        answerLog,
         undefined,
         undefined,
       );
@@ -198,10 +197,12 @@ function createActiveSession(
 function createCompletedSession(
   options: StartSessionOptions,
   plan: SessionPlan,
-  completedItems: readonly CompletedSessionItem[],
+  answerLog: readonly SessionItemLog[],
   finalScreen: PuzzleScreen | undefined,
 ): GrayboxSession {
-  const counts = countByMode(completedItems);
+  const counts = countByMode(
+    answerLog.filter((entry) => entry.accepted).map((entry) => entry.modeId),
+  );
   return {
     replay: {
       seed: options.seed,
@@ -217,10 +218,12 @@ function createCompletedSession(
     screen: finalScreen,
     currentProblem: undefined,
     hint: undefined,
-    completedItems,
-    completedCounts: counts,
+    answerLog,
     availableNext: false,
-    summary: { total: completedItems.length, counts },
+    summary: {
+      total: answerLog.filter((entry) => entry.accepted).length,
+      counts,
+    },
     submit: () => {
       throw new Error('The session is complete; there is nothing to submit.');
     },
@@ -235,15 +238,37 @@ function createCompletedSession(
 
 const acceptedKinds = new Set(['accepted', 'quantity-selection-accepted']);
 
+function upsertAnswerLog(
+  answerLog: readonly SessionItemLog[],
+  entry: SessionItemLog,
+): readonly SessionItemLog[] {
+  const existing = answerLog.findIndex(
+    (candidate) => candidate.itemIndex === entry.itemIndex,
+  );
+  if (existing === -1) {
+    return [...answerLog, entry];
+  }
+  return answerLog.map((candidate, index) =>
+    index === existing ? entry : candidate,
+  );
+}
+
+function requireSubmission(screen: PuzzleScreen): ModeSubmission {
+  if (screen.submission === undefined) {
+    throw new Error('A submitted session item requires a submission.');
+  }
+  return screen.submission;
+}
+
 function countByMode(
-  completedItems: readonly CompletedSessionItem[],
+  modeIdList: readonly ModeId[],
 ): Readonly<Record<ModeId, number>> {
   const counts = {} as Record<ModeId, number>;
   for (const modeId of modeIds) {
     counts[modeId] = 0;
   }
-  for (const item of completedItems) {
-    counts[item.modeId] += 1;
+  for (const item of modeIdList) {
+    counts[item] += 1;
   }
   return counts;
 }

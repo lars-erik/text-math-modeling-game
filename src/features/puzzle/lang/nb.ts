@@ -91,5 +91,9 @@ export const nb = {
     completedTotal: (total) => `${total} oppgaver fullført`,
     perEdgeHeading: 'Fullførte representasjonskanter',
     sessionReplayLabel: 'Gjentakelse av økt',
+    answerLogHeading: 'Svar',
+    answerLogCorrect: 'riktig',
+    answerLogIncorrect: 'feil',
+    backToPuzzle: 'Tilbake til oppgaven',
   },
 } satisfies PuzzleLocaleResources;

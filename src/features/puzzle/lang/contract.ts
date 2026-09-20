@@ -84,5 +84,9 @@ export type PuzzleLocaleResources = {
     completedTotal: (total: number) => string;
     perEdgeHeading: string;
     sessionReplayLabel: string;
+    answerLogHeading: string;
+    answerLogCorrect: string;
+    answerLogIncorrect: string;
+    backToPuzzle: string;
   };
 };

@@ -1,4 +1,5 @@
-import type { GrayboxSession } from './graybox-session';
+import type { GrayboxSession, SessionItemLog } from './graybox-session';
+import type { ModeSubmission } from '../puzzle/modes';
 import type { SessionPlan } from './plan-session';
 
 export type TranscriptStep = {
@@ -54,6 +55,15 @@ function printStep(step: TranscriptStep): string[] {
     `result ${describeResult(submitted)}`,
     `transition ${describeTransition(step)}`,
   ];
+  const entry = submitted.answerLog.find(
+    (candidate) =>
+      candidate.itemIndex === session.plan.items[session.currentIndex].index,
+  );
+  if (entry !== undefined) {
+    lines.push(
+      `log item ${entry.itemIndex} ${entry.accepted ? 'accepted' : 'rejected'} ${describeLoggedSubmission(entry.submission)}`,
+    );
+  }
   if (submitted.hint !== undefined) {
     lines.push(`hint ${submitted.hint.modeId}: ${submitted.hint.content}`);
   }
@@ -65,6 +75,10 @@ function describeSubmission(submitted: GrayboxSession): string {
   if (submission === undefined) {
     return 'none';
   }
+  return describeLoggedSubmission(submission);
+}
+
+function describeLoggedSubmission(submission: ModeSubmission): string {
   switch (submission.kind) {
     case 'quantity-selection':
       return `quantity-selection known=[${submission.knownIds.join(', ')}] unknown=${submission.unknownId ?? 'none'}`;

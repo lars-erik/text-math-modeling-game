@@ -6,7 +6,7 @@ import {
 import { composePuzzle } from '../puzzle/compose-puzzle';
 import type { LearnerAnswer } from '../puzzle/learner-answer';
 import type { QuantitySelection } from '../puzzle/modes';
-import { modeIds } from '../puzzle/modes';
+
 import type { PuzzleLocale } from '../puzzle/lang';
 import {
   formatAcademicInput,
@@ -26,10 +26,6 @@ function start(options = sessionOptions): GrayboxSession {
   return startSession(options);
 }
 
-function emptyCounts(): Record<string, number> {
-  return Object.fromEntries(modeIds.map((modeId) => [modeId, 0]));
-}
-
 test('starts a session on the first planned item as an ordinary puzzle screen', () => {
   const session = start();
   expect(session.status).toBe('active');
@@ -40,45 +36,70 @@ test('starts a session on the first planned item as an ordinary puzzle screen', 
     session.plan.items[0].problemSeed,
   );
   expect(session.screen?.screen.modeId).toBe(session.plan.items[0].modeId);
-  expect(session.completedCounts).toEqual(emptyCounts());
+  expect(session.answerLog).toEqual([]);
   expect(session.availableNext).toBe(false);
 });
 
-test('wrong submit keeps the learner on the same item with preserved input', () => {
+test('wrong submit keeps the learner on the same item and logs the answer', () => {
   const session = start();
   const submitted = session.submit({ kind: 'text', input: 'wrong = wrong' });
   expect(submitted.currentIndex).toBe(0);
   expect(submitted.position).toBe(1);
   expect(submitted.status).toBe('active');
-  expect(submitted.completedCounts).toEqual(emptyCounts());
   expect(submitted.availableNext).toBe(false);
   expect(submitted.screen?.feedback).toBeDefined();
-  expect(submitted.completedItems).toEqual([]);
+  expect(submitted.answerLog).toEqual([
+    {
+      itemIndex: session.plan.items[0].index,
+      modeId: session.plan.items[0].modeId,
+      submission: {
+        kind: 'academic-notation',
+        input: 'wrong = wrong',
+      },
+      accepted: false,
+    },
+  ]);
 });
 
-test('correct submit accepts the item and exposes next without counting it', () => {
+test('correct submit accepts the item and logs it as accepted', () => {
   const session = start();
   const submitted = session.submit(correctAnswerFor(session));
   expect(submitted.currentIndex).toBe(0);
-  expect(submitted.completedItems).toEqual([]);
-  expect(submitted.completedCounts).toEqual(emptyCounts());
   expect(submitted.availableNext).toBe(true);
   expect(submitted.status).toBe('active');
   expect(submitted.screen?.feedback?.kind).toBe('accepted');
+  expect(submitted.answerLog).toHaveLength(1);
+  expect(submitted.answerLog[0].accepted).toBe(true);
 });
 
-test('next() counts the accepted item and advances to the next planned item', () => {
+test('repeated answers on the same item update the same log entry', () => {
+  const session = start();
+  const first = session.submit({ kind: 'text', input: 'wrong = wrong' });
+  const second = first.submit({ kind: 'text', input: 'still = wrong' });
+  const third = second.submit(correctAnswerFor(second));
+  expect(third.answerLog).toHaveLength(1);
+  expect(third.answerLog[0].itemIndex).toBe(session.plan.items[0].index);
+  expect(third.answerLog[0].accepted).toBe(true);
+  expect(third.answerLog[0].submission.kind).toBe('academic-notation');
+  const submission = third.answerLog[0].submission;
+  expect(
+    submission.kind === 'named-equation' ||
+      submission.kind === 'academic-notation'
+      ? submission.input
+      : '',
+  ).toEqual(expect.stringContaining('='));
+});
+
+test('next() freezes the item log entry and starts a new one on the next item', () => {
   const session = start();
   const advanced = session.submit(correctAnswerFor(session)).next();
-  expect(advanced.completedItems).toEqual([
-    { index: 1, modeId: session.plan.items[0].modeId },
-  ]);
-  expect(advanced.completedCounts).toEqual({
-    ...emptyCounts(),
-    [session.plan.items[0].modeId]: 1,
-  });
-  expect(advanced.currentIndex).toBe(1);
-  expect(advanced.availableNext).toBe(false);
+  expect(advanced.answerLog).toHaveLength(1);
+  expect(advanced.answerLog[0].itemIndex).toBe(session.plan.items[0].index);
+  expect(advanced.answerLog[0].accepted).toBe(true);
+  const answered = advanced.submit({ kind: 'text', input: 'wrong = wrong' });
+  expect(answered.answerLog).toHaveLength(2);
+  expect(answered.answerLog[1].itemIndex).toBe(advanced.plan.items[1].index);
+  expect(answered.answerLog[1].accepted).toBe(false);
 });
 
 test('next() advances to the next planned item with a fresh problem', () => {
@@ -128,10 +149,14 @@ test('finishing the final item transitions to the completion state', () => {
       const finished = submitted.next();
       expect(finished.status).toBe('complete');
       expect(finished.availableNext).toBe(false);
-      expect(finished.completedCounts).toEqual(
+      expect(finished.answerLog).toHaveLength(session.plan.length);
+      expect(
+        finished.answerLog.map((entry) => entry.accepted),
+      ).toEqual(session.plan.items.map(() => true));
+      expect(finished.summary?.total).toBe(session.plan.length);
+      expect(finished.summary?.counts).toEqual(
         perModeCounts(session.plan.items.map((item) => item.modeId)),
       );
-      expect(finished.summary?.total).toBe(session.plan.length);
       return;
     }
     session = submitted.next();
@@ -139,21 +164,20 @@ test('finishing the final item transitions to the completion state', () => {
   throw new Error('The fixed session plan unexpectedly ran out of items.');
 });
 
-test('completed counts per representation edge stay exact after next()', () => {
+test('the item log keeps only the latest answer per item index', () => {
   const session = start();
-  const advanced = session.submit(correctAnswerFor(session)).next();
-  expect(advanced.completedCounts).toEqual({
-    ...emptyCounts(),
-    [session.plan.items[0].modeId]: 1,
-  });
-  const advancedAgain = advanced
-    .submit(correctAnswerFor(advanced))
+  const advanced = session
+    .submit({ kind: 'text', input: 'wrong = wrong' })
+    .submit(correctAnswerFor(session))
     .next();
-  expect(advancedAgain.completedCounts).toEqual({
-    ...emptyCounts(),
-    [session.plan.items[0].modeId]: 1,
-    [session.plan.items[1].modeId]: 1,
-  });
+  expect(advanced.answerLog.map((entry) => entry.itemIndex)).toEqual([
+    session.plan.items[0].index,
+  ]);
+  const advancedAgain = advanced.submit({ kind: 'text', input: 'wrong = wrong' });
+  expect(advancedAgain.answerLog).toHaveLength(2);
+  expect(advancedAgain.answerLog[1].accepted).toBe(false);
+  expect(advancedAgain.currentIndex).toBe(advanced.currentIndex);
+  expect(advancedAgain.next()).toBe(advancedAgain);
 });
 
 test('a session item composed directly matches the playback item', () => {
@@ -202,12 +226,14 @@ test('misconception feedback still works unchanged inside a session', () => {
     input: 'totalPower = basePower + droneCount * dronePower',
   });
   expect(corrected.screen?.feedback?.kind).toBe('accepted');
-  expect(corrected.completedItems).toEqual(current.completedItems);
+  expect(
+    corrected.answerLog.some(
+      (entry) => entry.itemIndex === item.index && entry.accepted,
+    ),
+  ).toBe(true);
   const advanced = corrected.next();
-  expect(advanced.completedItems).toEqual([
-    ...current.completedItems,
-    { index: item.index, modeId: item.modeId },
-  ]);
+  expect(advanced.answerLog).toHaveLength(current.answerLog.length + 1);
+  expect(advanced.answerLog.at(-1)?.itemIndex).toBe(item.index);
 });
 
 test('requests a hint without submitting', () => {
@@ -219,7 +245,7 @@ test('requests a hint without submitting', () => {
     'The total contains the base amount once, plus one unit value per item.',
   );
   expect(withHint.currentIndex).toBe(current.currentIndex);
-  expect(withHint.completedItems).toEqual(current.completedItems);
+  expect(withHint.answerLog).toEqual(current.answerLog);
   expect(withHint.screen?.feedback).toBeUndefined();
 });
 

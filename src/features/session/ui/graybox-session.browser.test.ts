@@ -191,6 +191,56 @@ test('runs a full deterministic graybox session to the summary', async () => {
   expect(summaryText).toContain('Quantities to named equation: 2');
   expect(summaryText).toContain('Named equation to academic notation: 2');
   expect(summaryText).toContain('Academic notation to named equation: 2');
+  const logItems = Array.from(
+    puzzle.shadowRoot?.querySelectorAll('.answer-log-list li') ?? [],
+  ).map((item) => (item.textContent ?? '').replace(/\s+/g, ' ').trim());
+  expect(logItems).toHaveLength(8);
+  for (const entry of logItems) {
+    expect(entry).toContain('(correct)');
+  }
+});
+
+test('the answer log marks a wrong answer as incorrect during the session', async () => {
+  const puzzle = await mountSession();
+  await submitText(puzzle, 'wrong = wrong');
+  await puzzle.updateComplete;
+  const logItems = Array.from(
+    puzzle.shadowRoot?.querySelectorAll('.answer-log-list li') ?? [],
+  ).map((item) => (item.textContent ?? '').replace(/\s+/g, ' ').trim());
+  expect(logItems).toHaveLength(1);
+  expect(logItems[0]).toContain('wrong = wrong');
+  expect(logItems[0]).toContain('(incorrect)');
+  await answerCurrent(puzzle);
+  await puzzle.updateComplete;
+  const correctedItems = Array.from(
+    puzzle.shadowRoot?.querySelectorAll('.answer-log-list li') ?? [],
+  ).map((item) => (item.textContent ?? '').replace(/\s+/g, ' ').trim());
+  expect(correctedItems).toHaveLength(1);
+  expect(correctedItems[0]).toContain('(correct)');
+});
+
+test('the completed session offers a way back to the single puzzle', async () => {
+  const puzzle = await mountSession();
+  const total = 8;
+  for (let index = 1; index <= total; index += 1) {
+    if (index > 1) {
+      const nextButton = page.getByRole('button', { name: 'Next puzzle' });
+      await nextButton.click();
+      await puzzle.updateComplete;
+    }
+    await answerCurrent(puzzle);
+  }
+  const finalNextButton = page.getByRole('button', { name: 'Next puzzle' });
+  await finalNextButton.click();
+  await puzzle.updateComplete;
+  const backButton = page.getByRole('button', { name: 'Back to the puzzle' });
+  await backButton.click();
+  await puzzle.updateComplete;
+  expect(window.location.search).toBe(
+    '?seed=17&scenario=gaming.drone-power&task=story-to-quantities&locale=en',
+  );
+  expect(shellText(puzzle)).toContain('Story to quantities');
+  expect(shellText(puzzle)).not.toContain('Session complete');
 });
 
 test('multiple choice inside a session accepts the matching equation', async () => {
