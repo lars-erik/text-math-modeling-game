@@ -167,6 +167,24 @@ test('both named-equation Modes reuse the same semantic classifier', () => {
   expect(fromQuantities.feedback).toEqual(fromAcademic.feedback);
 });
 
+test('reversed outer multiplication gets the same misconception feedback', () => {
+  const submission = submitPuzzle({
+    problem: totalFromPartsProblem,
+    themeId: 'gaming.drone-power',
+    modeId: 'quantities-to-named-equation',
+    locale: 'en',
+    storySeed: 0,
+    answer: {
+      kind: 'text',
+      input: 'totalPower = (basePower + dronePower) * droneCount',
+    },
+  });
+  expect(submission.feedback).toMatchObject({
+    kind: 'misconception',
+    misconception: expectedMisconception,
+  });
+});
+
 test('unrelated wrong answers keep the generic structural mismatch', () => {
   const submission = submitPuzzle({
     problem: totalFromPartsProblem,
