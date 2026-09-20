@@ -1,4 +1,5 @@
 export {
+  createCaseInsensitiveLearnerNameResolver,
   createLearnerNameResolver,
   parseNamedRelation,
   type LearnerIdentifier,

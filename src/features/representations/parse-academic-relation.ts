@@ -1,4 +1,5 @@
 import {
+  createLearnerNameResolver,
   parseNamedRelation,
   type LearnerNameMap,
   type ParseNamedRelationResult,
@@ -10,7 +11,10 @@ export function parseAcademicRelation(
   input: string,
   symbols: AcademicSymbolMap,
 ): ParseNamedRelationResult {
-  return parseNamedRelation(input, invertSymbols(symbols));
+  return parseNamedRelation(
+    input,
+    createLearnerNameResolver(invertSymbols(symbols)),
+  );
 }
 
 function invertSymbols(symbols: AcademicSymbolMap): LearnerNameMap {

@@ -40,3 +40,16 @@ test('parses the academic display juxtaposition without a trailing newline', () 
     relation: substituteVisibleValues(totalFromPartsProblem),
   });
 });
+
+
+test('academic symbols remain case-sensitive', () => {
+  expect(
+    parseAcademicRelation(
+      't = b + n*p',
+      createAcademicSymbolMap(totalFromPartsProblem),
+    ),
+  ).toMatchObject({
+    kind: 'unknown-identifier',
+    identifier: 't',
+  });
+});

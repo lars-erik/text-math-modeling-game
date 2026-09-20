@@ -163,6 +163,7 @@ function mergeModeWithTheme(
 ): PuzzleScreen {
   const presentation = presentThemeOf(options);
   const quantities = toScreenQuantities(presentation);
+  const resources = puzzleResources[options.locale];
   return {
     screen: mergeTask(options, modeResult.state, quantities, presentation),
     context: {
@@ -173,8 +174,40 @@ function mergeModeWithTheme(
       replay: composeReplay(options, presentation),
     },
     submission: modeResult.submission,
-    feedback: modeResult.feedback,
+    feedback:
+      modeResult.feedback === undefined
+        ? undefined
+        : localizeFeedback(modeResult.feedback, presentation, resources),
   };
+}
+
+function localizeFeedback(
+  feedback: PuzzleFeedback,
+  presentation: ThemePresentation,
+  resources: (typeof puzzleResources)[PuzzleLocale],
+): PuzzleFeedback {
+  if (feedback.kind !== 'misconception' || feedback.message !== undefined) {
+    return feedback;
+  }
+  const labels = new Map(
+    presentation.facts.map((fact) => [fact.canonicalId, fact.label]),
+  );
+  const baseLabel = labels.get(feedback.misconception.baseQuantityId);
+  const countLabel = labels.get(feedback.misconception.countQuantityId);
+  if (baseLabel === undefined || countLabel === undefined) {
+    return feedback;
+  }
+  return {
+    ...feedback,
+    message: resources.misconceptions.baseAppliedPerItem(
+      capitalizeFirst(baseLabel),
+      countLabel,
+    ),
+  };
+}
+
+function capitalizeFirst(value: string): string {
+  return `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 }
 
 function mergeTask(

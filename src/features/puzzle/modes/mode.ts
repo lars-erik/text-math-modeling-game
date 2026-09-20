@@ -4,6 +4,7 @@ import type {
 } from '../../named-expression';
 import type { Problem } from '../../problem-model/problem';
 import type { QuantityId, Relation } from '../../problem-model/expression';
+import type { Misconception } from '../../problem-model/misconception';
 import type { LearnerAnswer } from '../learner-answer';
 import type { PuzzleLocale } from '../lang';
 import type { AcademicSymbolMap } from '../../representations/academic-symbol-map';
@@ -31,6 +32,13 @@ export type PuzzleFeedback =
   | {
       kind: 'structural-mismatch';
       message: string;
+      checkPolicy: 'normalized-structure';
+      equationSides: 'ordered';
+    }
+  | {
+      kind: 'misconception';
+      misconception: Misconception;
+      message?: string;
       checkPolicy: 'normalized-structure';
       equationSides: 'ordered';
     }

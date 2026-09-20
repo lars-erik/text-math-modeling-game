@@ -242,7 +242,7 @@ test('the same story and problem serve both modes and both input providers', () 
       relation: distractor!.relation,
     },
   });
-  expect(choiceSubmission.feedback?.kind).toBe('structural-mismatch');
+  expect(choiceSubmission.feedback?.kind).toBe('misconception');
   expect(choiceSubmission.context.story).toBe(storyScreen.context.story);
   expect(choiceSubmission.submission).toMatchObject({
     kind: 'named-equation',

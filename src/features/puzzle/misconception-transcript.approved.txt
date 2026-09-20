@@ -1,0 +1,32 @@
+=== Start ===
+puzzle quantities -> named-equation
+replay seed=0 generator=hand-built-v1 theme=gaming.drone-power story-seed=0 locale=en
+prompt Write an equation that relates these quantities.
+quantities
+  basePower [base] = 30
+  droneCount [count] = 4
+  dronePower [per-item] = ?
+  totalPower [total] = 210
+input expression = ""
+=== Submit ===
+puzzle quantities -> named-equation
+replay seed=0 generator=hand-built-v1 theme=gaming.drone-power story-seed=0 locale=en
+prompt Write an equation that relates these quantities.
+quantities
+  basePower [base] = 30
+  droneCount [count] = 4
+  dronePower [per-item] = ?
+  totalPower [total] = 210
+input expression = "totalPower = droneCount * (basePower + dronePower)"
+submission named-equation
+  answer-kind text
+  equation
+    quantity total
+    multiply
+      quantity count
+      add
+        quantity base
+        quantity unitValue
+check normalized-structure equation-sides=ordered
+misconception base-applied-per-item base=base count=count
+feedback misconception: Base power is added once overall. In your equation it is multiplied by the number of drones, so it is applied once per item.

@@ -1,4 +1,5 @@
 import { parseNamedRelation } from '../../named-expression';
+import { classifyMisconception } from '../../problem-model/misconception';
 import {
   namedEquationStructurePolicy,
   relationsHaveNormalizedStructure,
@@ -40,6 +41,10 @@ export const academicNotationToNamedEquationMode: Mode = {
       parsed.relation,
       namedEquationStructurePolicy,
     );
+    const misconception =
+      !accepted
+        ? classifyMisconception(options.problem.relation, parsed.relation)
+        : undefined;
     const resources =
       puzzleResources[options.locale].academicNotationToNamedEquation;
     return {
@@ -51,12 +56,19 @@ export const academicNotationToNamedEquationMode: Mode = {
             checkPolicy: 'normalized-structure',
             equationSides: 'ordered',
           }
-        : {
-            kind: 'structural-mismatch',
-            message: resources.groupingMismatch,
-            checkPolicy: 'normalized-structure',
-            equationSides: 'ordered',
-          },
+        : misconception !== undefined
+          ? {
+              kind: 'misconception',
+              misconception,
+              checkPolicy: 'normalized-structure',
+              equationSides: 'ordered',
+            }
+          : {
+              kind: 'structural-mismatch',
+              message: resources.groupingMismatch,
+              checkPolicy: 'normalized-structure',
+              equationSides: 'ordered',
+            },
       submission: {
         kind: 'named-equation',
         answerKind: answer.kind,

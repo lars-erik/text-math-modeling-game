@@ -210,6 +210,47 @@ export function parseNamedRelation(
   };
 }
 
+export function createCaseInsensitiveLearnerNameResolver(
+  names: LearnerNameMap,
+): LearnerNameResolver {
+  const availableIdentifiers = Object.keys(names).sort();
+  const normalizedNames = new Map<string, QuantityId[]>();
+
+  for (const [identifier, mapped] of Object.entries(names)) {
+    const normalized = normalizeLearnerIdentifier(identifier);
+    const ids = typeof mapped === 'string' ? [mapped] : mapped;
+    normalizedNames.set(normalized, [
+      ...(normalizedNames.get(normalized) ?? []),
+      ...ids,
+    ]);
+  }
+
+  return {
+    availableIdentifiers,
+    resolve(identifier) {
+      const mapped = normalizedNames.get(normalizeLearnerIdentifier(identifier));
+      if (mapped === undefined) {
+        return { kind: 'unknown' };
+      }
+
+      const candidateIds = [...new Set(mapped)].sort();
+      if (candidateIds.length === 0) {
+        return { kind: 'unknown' };
+      }
+
+      if (candidateIds.length === 1) {
+        return { kind: 'resolved', quantityId: candidateIds[0] };
+      }
+
+      return { kind: 'ambiguous', candidateIds };
+    },
+  };
+}
+
+function normalizeLearnerIdentifier(identifier: LearnerIdentifier): string {
+  return identifier.toLowerCase();
+}
+
 export function createLearnerNameResolver(
   names: LearnerNameMap,
 ): LearnerNameResolver {
@@ -244,7 +285,7 @@ export function createLearnerNameResolver(
 function asResolver(names: LearnerNameSource): LearnerNameResolver {
   return isLearnerNameResolver(names)
     ? names
-    : createLearnerNameResolver(names);
+    : createCaseInsensitiveLearnerNameResolver(names);
 }
 
 function isLearnerNameResolver(

@@ -225,3 +225,28 @@ test('the academic display adapter contract is AST-based', () => {
     /import type \{ AcademicSymbolMap \} from '..\/..\/representations\/academic-symbol-map';/,
   );
 });
+
+test('misconception classification stays a canonical domain concern', () => {
+  const misconceptionFiles = productionImports.filter(({ file }) =>
+    /^features\/problem-model\/misconception(?:\.ts)?$/.test(file),
+  );
+  expect(misconceptionFiles.length).toBeGreaterThan(0);
+  expectNoViolations(
+    'Misconception classification must not import Theme, UI, or localization modules:',
+    violationLines(misconceptionFiles, (file, specifier) => {
+      const resolved = resolveSpecifier(file, specifier);
+      return (
+        themeModulePattern.test(resolved) ||
+        uiModulePattern.test(resolved) ||
+        puzzleModulePattern.test(resolved)
+      );
+    }),
+  );
+  const classifierSource = readFileSync(
+    join(sourceRoot, 'features/problem-model/misconception.ts'),
+    'utf8',
+  );
+  expect(classifierSource).not.toMatch(
+    /dronePower|droneCount|basePower|followersPerPost|promotedPostCount|startingFollowers|finalFollowers|gaming\.drone-power|creator\.followers/,
+  );
+});
