@@ -94,6 +94,6 @@ export const nb = {
     answerLogHeading: 'Svar',
     answerLogCorrect: 'riktig',
     answerLogIncorrect: 'feil',
-    backToPuzzle: 'Tilbake til oppgaven',
+    backToPuzzle: 'Tilbake til start',
   },
 } satisfies PuzzleLocaleResources;

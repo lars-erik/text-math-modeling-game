@@ -94,6 +94,6 @@ export const en = {
     answerLogHeading: 'Answers',
     answerLogCorrect: 'correct',
     answerLogIncorrect: 'incorrect',
-    backToPuzzle: 'Back to the puzzle',
+    backToPuzzle: 'Back to start',
   },
 } satisfies PuzzleLocaleResources;

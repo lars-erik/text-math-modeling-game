@@ -33,6 +33,10 @@ import { isThemeId } from '../../themes';
 import type { Problem } from '../../problem-model/problem';
 import { isModeId, type ModeId } from '../modes/mode';
 import {
+  navigateHomeRequestEvent,
+  type NavigateHomeRequest,
+} from '../../navigation/navigation-request';
+import {
   generateTotalFromPartsCase,
   defaultTotalFromPartsGenerationConfig,
 } from '../../problem-generation/generate-total-from-parts';
@@ -626,7 +630,7 @@ export class MathModelingPuzzle extends LitElement {
             <button
               type="button"
               class="session-next"
-              @click=${this.handleBackToPuzzle}
+              @click=${this.handleNavigateHome}
             >
               ${sessionResources.backToPuzzle}
             </button>
@@ -720,8 +724,14 @@ export class MathModelingPuzzle extends LitElement {
     }
   }
 
-  private handleBackToPuzzle(): void {
-    this.requestApplicationState({ locale: this.locale as PuzzleLocale });
+  private handleNavigateHome(): void {
+    this.dispatchEvent(
+      new CustomEvent<NavigateHomeRequest>(navigateHomeRequestEvent, {
+        bubbles: true,
+        composed: true,
+        detail: { reason: 'session-complete' },
+      }),
+    );
   }
 
   private supportsHint(session: GrayboxSession): boolean {

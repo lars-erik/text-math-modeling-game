@@ -8,6 +8,7 @@ import {
   type PuzzleSelectionRequest,
   type SessionSelectionRequest,
 } from './features/puzzle/puzzle-request';
+import { navigateHomeRequestEvent } from './features/navigation/navigation-request';
 import { isThemeId, type ThemeId } from './features/themes';
 import { isModeId, type ModeId } from './features/puzzle/modes';
 import { maximumTotalFromPartsSeed } from './features/problem-generation/generate-total-from-parts';
@@ -71,6 +72,17 @@ export function startMathModelingApplication({
   });
   puzzleElement?.addEventListener(sessionSelectionRequestEvent, (event) => {
     showSession((event as CustomEvent<SessionSelectionRequest>).detail, true);
+  });
+  puzzleElement?.addEventListener(navigateHomeRequestEvent, () => {
+    showPuzzle(
+      {
+        seed: defaultPuzzleSeed,
+        themeId: 'gaming.drone-power',
+        modeId: 'story-to-quantities',
+        locale: 'en',
+      },
+      true,
+    );
   });
 }
 

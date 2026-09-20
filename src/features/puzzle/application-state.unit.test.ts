@@ -10,6 +10,9 @@ import {
   type PuzzleSelectionRequest,
   type SessionSelectionRequest,
 } from './puzzle-request';
+import {
+  navigateHomeRequestEvent,
+} from '../navigation/navigation-request';
 
 class TestPuzzleElement extends EventTarget {
   readonly attributes = new Map<string, string>();
@@ -238,4 +241,27 @@ test('rejects unknown replay URL values with typed errors', () => {
   expect(() => parseApplicationState('?seed=-1')).toThrowError(
     /unsigned 32-bit/,
   );
+});
+test('navigate home requests reset to the default puzzle screen', () => {
+  const puzzleElement = new TestPuzzleElement();
+  const replacedSearches: string[] = [];
+  const root = {
+    querySelector: () => puzzleElement,
+  } as unknown as ParentNode;
+  startMathModelingApplication({
+    search: '?session=918273&scenario=creator.followers&locale=nb',
+    root,
+    replaceSearch: (search) => replacedSearches.push(search),
+  });
+  expect(puzzleElement.attributes.has('session')).toBe(true);
+  puzzleElement.dispatchEvent(
+    new CustomEvent(navigateHomeRequestEvent, { detail: {} }),
+  );
+  expect(puzzleElement.attributes.has('session')).toBe(false);
+  expect(puzzleElement.attributes.get('seed')).toBe('17');
+  expect(puzzleElement.attributes.get('theme')).toBe('gaming.drone-power');
+  expect(puzzleElement.attributes.get('mode')).toBe('story-to-quantities');
+  expect(replacedSearches).toEqual([
+    '?seed=17&scenario=gaming.drone-power&task=story-to-quantities&locale=en',
+  ]);
 });

@@ -233,7 +233,7 @@ test('the completed session offers a way back to the single puzzle', async () =>
   const finalNextButton = page.getByRole('button', { name: 'Next puzzle' });
   await finalNextButton.click();
   await puzzle.updateComplete;
-  const backButton = page.getByRole('button', { name: 'Back to the puzzle' });
+  const backButton = page.getByRole('button', { name: 'Back to start' });
   await backButton.click();
   await puzzle.updateComplete;
   expect(window.location.search).toBe(
