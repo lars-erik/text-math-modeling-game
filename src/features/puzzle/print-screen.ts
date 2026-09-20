@@ -67,6 +67,11 @@ export function printScreen(puzzleScreen: PuzzleScreen): string {
         `check ${feedback.checkPolicy} equation-sides=${feedback.equationSides}`,
       );
     }
+    if (feedback.kind === 'misconception') {
+      lines.push(
+        `misconception ${feedback.misconception.kind} base=${feedback.misconception.baseQuantityId} count=${feedback.misconception.countQuantityId}`,
+      );
+    }
     if ('range' in feedback) {
       const { start, end } = feedback.range;
       const expected =

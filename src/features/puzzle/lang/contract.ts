@@ -71,4 +71,7 @@ export type PuzzleLocaleResources = {
     groupingMismatch: string;
     unknownIdentifier: (identifier: string, available: string) => string;
   };
+  misconceptions: {
+    baseAppliedPerItem: (baseLabel: string, countLabel: string) => string;
+  };
 };

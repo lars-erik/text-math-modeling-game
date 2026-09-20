@@ -76,4 +76,8 @@ export const en = {
     unknownIdentifier: (identifier, available) =>
       `Unknown identifier ${JSON.stringify(identifier)}. Available identifiers: ${available}.`,
   },
+  misconceptions: {
+    baseAppliedPerItem: (baseLabel, countLabel) =>
+      `${baseLabel} is added once overall. In your equation it is multiplied by the ${countLabel}, so it is applied once per item.`,
+  },
 } satisfies PuzzleLocaleResources;

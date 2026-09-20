@@ -76,4 +76,8 @@ export const nb = {
     unknownIdentifier: (identifier, available) =>
       `Ukjent navn ${JSON.stringify(identifier)}. Tilgjengelige navn: ${available}.`,
   },
+  misconceptions: {
+    baseAppliedPerItem: (baseLabel, countLabel) =>
+      `${baseLabel} skal legges til én gang totalt. I likningen din blir det ganget med ${countLabel}, slik at det brukes én gang per enhet.`,
+  },
 } satisfies PuzzleLocaleResources;

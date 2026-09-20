@@ -2,6 +2,7 @@ import {
   parseNamedRelation,
 } from '../../named-expression';
 import type { Relation } from '../../problem-model/expression';
+import { classifyMisconception } from '../../problem-model/misconception';
 import {
   namedEquationStructurePolicy,
   relationsHaveNormalizedStructure,
@@ -48,6 +49,10 @@ export const quantitiesToNamedEquationMode: Mode = {
         ...namedEquationStructurePolicy,
         equationSides: 'swappable',
       });
+    const misconception =
+      !accepted && !sidesAreReversed
+        ? classifyMisconception(options.problem.relation, parsed.relation)
+        : undefined;
     const resources = puzzleResources[options.locale].quantitiesToNamedEquation;
     return {
       state: composeState(options, displayInput),
@@ -58,14 +63,21 @@ export const quantitiesToNamedEquationMode: Mode = {
             checkPolicy: 'normalized-structure',
             equationSides: namedEquationStructurePolicy.equationSides,
           }
-        : {
-            kind: 'structural-mismatch',
-            message: sidesAreReversed
-              ? resources.reversedSides
-              : resources.groupingMismatch,
-            checkPolicy: 'normalized-structure',
-            equationSides: namedEquationStructurePolicy.equationSides,
-          },
+        : misconception !== undefined
+          ? {
+              kind: 'misconception',
+              misconception,
+              checkPolicy: 'normalized-structure',
+              equationSides: namedEquationStructurePolicy.equationSides,
+            }
+          : {
+              kind: 'structural-mismatch',
+              message: sidesAreReversed
+                ? resources.reversedSides
+                : resources.groupingMismatch,
+              checkPolicy: 'normalized-structure',
+              equationSides: namedEquationStructurePolicy.equationSides,
+            },
       submission: submissionOf(answer, displayInput, parsed.relation),
     };
   },

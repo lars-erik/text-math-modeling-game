@@ -1,7 +1,9 @@
 import type { Expression, Relation } from './expression';
 
+export type MisconceptionKind = 'base-applied-per-item';
+
 export type Misconception = {
-  kind: 'base-applied-per-item';
+  kind: MisconceptionKind;
   baseQuantityId: string;
   countQuantityId: string;
 };
