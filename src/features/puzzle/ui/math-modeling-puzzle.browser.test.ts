@@ -258,3 +258,28 @@ test('explains the base-applied-per-item misconception and preserves the learner
     'The equation matches the quantity model.',
   );
 });
+
+
+test('accepts mixed-case named equation identifiers', async () => {
+  const puzzle = mountPuzzle(
+    '?seed=17&scenario=gaming.drone-power&task=quantities-to-named-equation&locale=en',
+  );
+  await puzzle.updateComplete;
+
+  const inputComponent = puzzle.shadowRoot?.querySelector(
+    'named-equation-text-input',
+  ) as (HTMLElement & { updateComplete: Promise<unknown> }) | null;
+  expect(inputComponent).not.toBeNull();
+  await inputComponent!.updateComplete;
+
+  const input = inputComponent!.shadowRoot?.querySelector('input');
+  expect(input).not.toBeNull();
+  input!.value =
+    'TOTALPOWER = basepower + DRONECOUNT * DronePower';
+  inputComponent!.shadowRoot?.querySelector('form')?.requestSubmit();
+  await puzzle.updateComplete;
+
+  expect(shellText(puzzle)).toContain(
+    'The equation matches the quantity model.',
+  );
+});
