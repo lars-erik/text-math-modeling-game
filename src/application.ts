@@ -13,7 +13,9 @@ import { maximumTotalFromPartsSeed } from './features/problem-generation/generat
 export const defaultPuzzleSeed = 17;
 export const defaultSessionSeed = 918273;
 
-export type PuzzleApplicationState = PuzzleSelectionRequest;
+export type PuzzleApplicationState = PuzzleSelectionRequest & {
+  kind: 'puzzle';
+};
 
 export type SessionApplicationState = {
   kind: 'session';
@@ -81,6 +83,7 @@ export function parseApplicationState(search: string): ApplicationState {
     };
   }
   return {
+    kind: 'puzzle',
     seed: parseOptionalSeed(parameters.get('seed')),
     themeId: parseThemeId(parameters.get('scenario')),
     modeId: parseModeId(parameters.get('task')),

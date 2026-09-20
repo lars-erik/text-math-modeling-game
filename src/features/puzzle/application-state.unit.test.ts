@@ -27,12 +27,14 @@ test('parses the replay URL into theme, mode, and locale with defaults', () => {
       '?seed=321&scenario=creator.followers&task=quantities-to-named-equation&locale=nb',
     ),
   ).toEqual({
+    kind: 'puzzle',
     seed: 321,
     themeId: 'creator.followers',
     modeId: 'quantities-to-named-equation',
     locale: 'nb',
   });
   expect(parseApplicationState('')).toEqual({
+    kind: 'puzzle',
     seed: 17,
     themeId: 'gaming.drone-power',
     modeId: 'story-to-quantities',
@@ -43,6 +45,7 @@ test('parses the replay URL into theme, mode, and locale with defaults', () => {
 test('reformats the composed selection with replay URL parameters', () => {
   expect(
     formatSearch({
+      kind: 'puzzle',
       seed: 321,
       themeId: 'creator.followers',
       modeId: 'quantities-to-named-equation',
@@ -60,7 +63,8 @@ test('parses and reproduces both academic notation task URLs', () => {
   ] as const) {
     const search = `?seed=321&scenario=creator.followers&task=${modeId}&locale=nb`;
     const state = parseApplicationState(search);
-    expect(state.modeId).toBe(modeId);
+    expect(state.kind).toBe('puzzle');
+    expect(state.kind === 'puzzle' ? state.modeId : undefined).toBe(modeId);
     expect(formatSearch(state)).toBe(search);
   }
 });
