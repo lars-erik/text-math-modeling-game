@@ -62,6 +62,27 @@ test('does not classify the misconception with a different total side', () => {
   expect(classifyMisconception(totalFromParts, wrongTotal)).toBeUndefined();
 });
 
+test('classification is independent of operand order in the outer product', () => {
+  const reordered: Relation = {
+    kind: 'equation',
+    left: { kind: 'quantity', id: 'total' },
+    right: {
+      kind: 'multiply',
+      left: {
+        kind: 'add',
+        left: { kind: 'quantity', id: 'base' },
+        right: { kind: 'quantity', id: 'unitValue' },
+      },
+      right: { kind: 'quantity', id: 'count' },
+    },
+  };
+  expect(classifyMisconception(totalFromParts, reordered)).toEqual({
+    kind: 'base-applied-per-item',
+    baseQuantityId: 'base',
+    countQuantityId: 'count',
+  } satisfies Misconception);
+});
+
 test('classification is independent of operand order inside the regrouped sum', () => {
   const reordered: Relation = {
     kind: 'equation',
