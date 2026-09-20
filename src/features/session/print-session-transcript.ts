@@ -66,7 +66,7 @@ function printStep(step: TranscriptStep): string[] {
   }
   const hint = session.hint ?? submitted.hint;
   if (hint !== undefined) {
-    lines.push(`hint ${hint.modeId}: ${hint.kind}`);
+    lines.push(`hint guidance=${hint.guidanceId}`);
   }
   return lines;
 }

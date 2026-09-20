@@ -2,7 +2,10 @@ import type {
   LearnerNameSource,
   SourceRange,
 } from '../../named-expression';
-import type { Problem } from '../../problem-model/problem';
+import type {
+  GuidanceEntry,
+  Problem,
+} from '../../problem-model/problem';
 import type { QuantityId, Relation } from '../../problem-model/expression';
 import type { Misconception } from '../../problem-model/misconception';
 import type { LearnerAnswer } from '../learner-answer';
@@ -162,4 +165,5 @@ export type Mode = {
   id: ModeId;
   start: (options: ModeStartOptions) => ModeResult;
   submit: (options: ModeSubmitOptions) => ModeResult;
+  selectGuidance?: (guidance: readonly GuidanceEntry[]) => GuidanceEntry | undefined;
 };

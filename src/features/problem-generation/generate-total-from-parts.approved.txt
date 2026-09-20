@@ -43,6 +43,16 @@ problem total-from-parts-seed-17 {
         total = base + count * unitValue
     }
 
+    guidance {
+        watch base-applied-once {
+            quantity base
+        }
+
+        watch per-item-scaled-by-count {
+            count count
+            unit unitValue
+        }
+    }
 
     replay {
         seed 17
@@ -88,6 +98,16 @@ dsl
           total = base + count * unitValue
       }
   
+      guidance {
+          watch base-applied-once {
+              quantity base
+          }
+  
+          watch per-item-scaled-by-count {
+              count count
+              unit unitValue
+          }
+      }
   
       replay {
           seed 17

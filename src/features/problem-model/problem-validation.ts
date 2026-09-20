@@ -159,9 +159,15 @@ function validateUndefinedQuantityReferences({
 }: ProblemAstValidationContext): readonly ProblemReferenceIssue[] {
   const declaredIds = new Set(problem.quantities.map((quantity) => quantity.id));
 
-  return collectReferences(problem.relation)
+  const relationIssues = collectReferences(problem.relation)
     .filter((id) => !declaredIds.has(id))
-    .map((id) => ({ kind: 'undefined-quantity', id }));
+    .map((id) => ({ kind: 'undefined-quantity' as const, id }));
+  const guidanceIssues = (problem.guidance ?? []).flatMap((entry) =>
+    Object.values(entry.quantities)
+      .filter((id) => !declaredIds.has(id))
+      .map((id) => ({ kind: 'undefined-quantity' as const, id })),
+  );
+  return [...relationIssues, ...guidanceIssues];
 }
 
 function validateKnownNumberSafety({

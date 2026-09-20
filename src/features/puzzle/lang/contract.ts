@@ -1,4 +1,4 @@
-export type SessionHintKind = 'base-once-plus-per-item';
+import type { GuidanceEntry } from '../../problem-model/problem';
 
 export type PuzzleLocaleResources = {
   language: {
@@ -82,7 +82,7 @@ export type PuzzleLocaleResources = {
     positionLabel: (position: number, total: number) => string;
     next: string;
     hint: string;
-    hintText: (kind: SessionHintKind) => string;
+    hintText: (guidance: GuidanceEntry) => string;
     completionHeading: string;
     completedTotal: (total: number) => string;
     perEdgeHeading: string;

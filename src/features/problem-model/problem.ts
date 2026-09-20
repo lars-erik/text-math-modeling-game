@@ -31,6 +31,13 @@ export type AnswerKey = {
   bindings: Bindings;
 };
 
+export type GuidanceEntry = {
+  id: string;
+  quantities: Readonly<Record<string, QuantityId>>;
+};
+
+export type GuidanceId = string;
+
 export type ProblemReplay = {
   seed: number;
   generatorVersion: string;
@@ -41,6 +48,7 @@ export type Problem = {
   concepts: readonly ConceptId[];
   quantities: readonly Quantity[];
   relation: Relation;
+  guidance?: readonly GuidanceEntry[];
   replay?: ProblemReplay;
 };
 

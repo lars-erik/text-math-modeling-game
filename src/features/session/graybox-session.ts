@@ -2,12 +2,17 @@ import {
   defaultTotalFromPartsGenerationConfig,
   generateTotalFromPartsCase,
 } from '../problem-generation/generate-total-from-parts';
-import type { Problem } from '../problem-model/problem';
+import type {
+  GuidanceEntry,
+  GuidanceId,
+  Problem,
+} from '../problem-model/problem';
 import {
   composePuzzle,
   submitPuzzle,
   type PuzzleScreen,
 } from '../puzzle/compose-puzzle';
+import { selectGuidanceForMode } from '../puzzle/modes';
 import type { LearnerAnswer } from '../puzzle/learner-answer';
 import type { ModeSubmission, QuantitySelection } from '../puzzle/modes';
 import { modeIds, type ModeId } from '../puzzle/modes';
@@ -39,8 +44,7 @@ export type SessionCompletionSummary = {
 };
 
 export type SessionHint = {
-  kind: 'base-once-plus-per-item';
-  modeId: ModeId;
+  guidanceId: GuidanceId;
 };
 
 export type GrayboxSession = {
@@ -59,6 +63,7 @@ export type GrayboxSession = {
   submit: (answer: LearnerAnswer | QuantitySelection) => GrayboxSession;
   requestHint: () => GrayboxSession;
   next: () => GrayboxSession;
+  withLocale: (locale: PuzzleLocale) => GrayboxSession;
 };
 
 export type StartSessionOptions = {
@@ -152,8 +157,11 @@ function createActiveSession(
       );
     },
     requestHint() {
-      const modeId = plan.items[currentIndex].modeId;
-      if (!supportedHintKinds.has(modeId)) {
+      const selected = selectGuidanceForMode({
+        modeId: plan.items[currentIndex].modeId,
+        guidance: requireProblem(state).guidance ?? [],
+      });
+      if (selected === undefined || hint?.guidanceId === selected.id) {
         return this;
       }
       return createActiveSession(
@@ -162,7 +170,7 @@ function createActiveSession(
         currentIndex,
         answerLog,
         state.currentScreen,
-        { kind: 'base-once-plus-per-item', modeId },
+        { guidanceId: selected.id },
         currentCompleted,
       );
     },
@@ -186,6 +194,25 @@ function createActiveSession(
         undefined,
         undefined,
       );
+    },
+    withLocale(locale) {
+      if (locale === options.locale) {
+        return this;
+      }
+      const recomposed = createActiveSession(
+        { ...options, locale },
+        plan,
+        currentIndex,
+        answerLog,
+        recomposeScreenWithLocale(
+          state,
+          options,
+          locale,
+        ),
+        hint,
+        state.currentCompleted,
+      );
+      return recomposed;
     },
   };
 }
@@ -229,14 +256,28 @@ function createCompletedSession(
     next: () => {
       throw new Error('The session is complete; there is no next item.');
     },
+    withLocale: (locale) =>
+      createCompletedSession(
+        { ...options, locale },
+        plan,
+        answerLog,
+        finalScreen,
+      ),
   };
 }
 
 const acceptedKinds = new Set(['accepted', 'quantity-selection-accepted']);
 
-const supportedHintKinds = new Set<ModeId>([
-  'quantities-to-named-equation',
-]);
+export function guidanceEntryForHint(
+  session: GrayboxSession,
+): GuidanceEntry | undefined {
+  if (session.hint === undefined || session.currentProblem === undefined) {
+    return undefined;
+  }
+  return session.currentProblem.guidance?.find(
+    (entry) => entry.id === session.hint?.guidanceId,
+  );
+}
 
 function upsertAnswerLog(
   answerLog: readonly SessionItemLog[],
@@ -271,6 +312,24 @@ function countByMode(
     counts[item] += 1;
   }
   return counts;
+}
+
+function recomposeScreenWithLocale(
+  state: InternalSessionState,
+  options: StartSessionOptions,
+  locale: PuzzleLocale,
+): PuzzleScreen | undefined {
+  const item = state.plan.items[state.currentIndex];
+  if (item === undefined) {
+    return undefined;
+  }
+  return composePuzzle({
+    problem: requireProblem(state),
+    themeId: options.themeId,
+    modeId: item.modeId,
+    locale,
+    storySeed: item.problemSeed,
+  });
 }
 
 function generateItemProblem(plan: SessionPlan, index: number): Problem {

@@ -2,6 +2,7 @@ import {
   parseNamedRelation,
 } from '../../named-expression';
 import type { Relation } from '../../problem-model/expression';
+import type { GuidanceEntry } from '../../problem-model/problem';
 import { classifyMisconception } from '../../problem-model/misconception';
 import {
   namedEquationStructurePolicy,
@@ -23,6 +24,11 @@ export const quantitiesToNamedEquationMode: Mode = {
   id: 'quantities-to-named-equation',
   start(options: ModeStartOptions): ModeResult {
     return { state: composeState(options, '') };
+  },
+  selectGuidance(
+    guidance: readonly GuidanceEntry[],
+  ): GuidanceEntry | undefined {
+    return guidance.find((entry) => entry.id === 'per-item-scaled-by-count');
   },
   submit(options: ModeSubmitOptions): ModeResult {
     const answer = options.answer as PuzzleLearnerAnswer;

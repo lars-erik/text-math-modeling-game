@@ -31,7 +31,7 @@ submit named-equation "totalPower = basePower + droneCount * dronePower"
 result accepted: The equation matches the quantity model.
 transition stayed-on-item
 log item 4 accepted named-equation "totalPower = basePower + droneCount * dronePower"
-hint quantities-to-named-equation: base-once-plus-per-item
+hint guidance=per-item-scaled-by-count
 item 4/10
 mode quantities-to-named-equation edge quantities -> named-equation
 problem 2754909060 generator=total-from-parts-v1

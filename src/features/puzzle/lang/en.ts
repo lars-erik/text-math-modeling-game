@@ -85,8 +85,8 @@ export const en = {
     positionLabel: (position, total) => `Puzzle ${position} / ${total}`,
     next: 'Next puzzle',
     hint: 'Hint',
-    hintText: (kind) =>
-      kind === 'base-once-plus-per-item'
+    hintText: (guidance) =>
+      guidance.id === 'per-item-scaled-by-count'
         ? 'The total contains the base amount once, plus one unit value per item.'
         : '',
     completionHeading: 'Session complete',

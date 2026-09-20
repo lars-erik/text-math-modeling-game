@@ -345,6 +345,35 @@ test('approves the semantic session completion fragment', async () => {
   expect(fragment).toBe(approvedCompletionFragment);
 });
 
+test('switching locale during an active session stays in the same session', async () => {
+  const puzzle = await mountSession(
+    '?session=918273&scenario=gaming.drone-power&locale=en',
+  );
+  expect(shellText(puzzle)).toContain('Puzzle 1 / 10');
+  await submitText(puzzle, 'wrong = wrong');
+  await puzzle.updateComplete;
+
+  const localeSelect = puzzle.shadowRoot?.querySelector(
+    'label.language-control select',
+  ) as HTMLSelectElement;
+  expect(localeSelect).not.toBeNull();
+  localeSelect.value = 'nb';
+  localeSelect.dispatchEvent(new Event('change'));
+  await puzzle.updateComplete;
+
+  expect(window.location.search).toBe(
+    '?session=918273&scenario=gaming.drone-power&locale=nb',
+  );
+  expect(shellText(puzzle)).toContain('Oppgave 1 / 10');
+  expect(shellText(puzzle)).not.toContain('Story to quantities');
+  const logItems = Array.from(
+    puzzle.shadowRoot?.querySelectorAll('.answer-log-list li') ?? [],
+  ).map((item) => (item.textContent ?? '').replace(/\s+/g, ' ').trim());
+  expect(logItems).toHaveLength(1);
+  expect(logItems[0]).toContain('wrong = wrong');
+  expect(logItems[0]).toContain('(feil)');
+});
+
 function completionFragment(puzzle: MathModelingPuzzle): string {
   const shell = puzzle.shadowRoot?.querySelector('puzzle-shell');
   const heading = shell?.shadowRoot?.querySelector('h1')?.textContent?.trim() ?? '';

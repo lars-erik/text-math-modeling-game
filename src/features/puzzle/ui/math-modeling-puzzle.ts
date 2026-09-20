@@ -14,10 +14,11 @@ import {
   type PuzzleScreenTask,
 } from '../compose-puzzle';
 import {
+  guidanceEntryForHint,
   startSession,
   type GrayboxSession,
 } from '../../session/graybox-session';
-import { modeIds } from '../modes';
+import { modeIds, selectGuidanceForMode } from '../modes';
 import type { ModeSubmission, QuantitySelection } from '../modes/mode';
 import type { LearnerAnswer } from '../learner-answer';
 import {
@@ -27,7 +28,9 @@ import {
 } from '../lang';
 import {
   puzzleSelectionRequestEvent,
+  sessionSelectionRequestEvent,
   type PuzzleSelectionRequest,
+  type SessionSelectionRequest,
 } from '../puzzle-request';
 import { isThemeId } from '../../themes';
 import type { Problem } from '../../problem-model/problem';
@@ -250,7 +253,14 @@ export class MathModelingPuzzle extends LitElement {
       changedProperties.has('themeId') ||
       changedProperties.has('locale')
     ) {
-      this.activeSession = this.composeCurrentSession();
+      const localeOnlyChange =
+        changedProperties.has('locale') &&
+        !changedProperties.has('session') &&
+        !changedProperties.has('themeId') &&
+        this.activeSession !== undefined;
+      this.activeSession = localeOnlyChange
+        ? this.activeSession?.withLocale(this.locale as PuzzleLocale)
+        : this.composeCurrentSession();
     }
     if (changedProperties.has('seed')) {
       this.generatedProblem = generateCase(Number(this.seed));
@@ -575,8 +585,30 @@ export class MathModelingPuzzle extends LitElement {
     ) {
       const locale = event.currentTarget.value;
       this.locale = locale;
+      if (this.activeSession !== undefined && this.session !== '') {
+        this.requestSessionState({ locale });
+        return;
+      }
       this.requestApplicationState({ locale });
     }
+  }
+
+  private requestSessionState(
+    changes: Pick<SessionSelectionRequest, 'locale'>,
+  ): void {
+    this.dispatchEvent(
+      new CustomEvent<SessionSelectionRequest>(sessionSelectionRequestEvent, {
+        bubbles: true,
+        composed: true,
+        detail: {
+          seed: Number(this.session),
+          themeId: isThemeId(this.themeId)
+            ? this.themeId
+            : 'gaming.drone-power',
+          locale: changes.locale,
+        },
+      }),
+    );
   }
 
   private requestApplicationState(
@@ -645,8 +677,11 @@ export class MathModelingPuzzle extends LitElement {
       session.total,
     );
     const hint = session.hint;
+    const hintEntry = guidanceEntryForHint(session);
     const hintMessage =
-      hint === undefined ? '' : sessionResources.hintText(hint.kind);
+      hint === undefined || hintEntry === undefined
+        ? ''
+        : sessionResources.hintText(hintEntry);
     const feedbackMessage = screen.feedback?.message ?? '';
     const feedbackText =
       hintMessage !== '' && feedbackMessage === ''
@@ -737,9 +772,19 @@ export class MathModelingPuzzle extends LitElement {
   }
 
   private supportsHint(session: GrayboxSession): boolean {
+    if (session.status !== 'active') {
+      return false;
+    }
+    const problem = session.currentProblem;
     const item = session.plan.items[session.currentIndex];
+    if (problem === undefined || item === undefined) {
+      return false;
+    }
     return (
-      session.status === 'active' && item?.modeId === 'quantities-to-named-equation'
+      selectGuidanceForMode({
+        modeId: item.modeId,
+        guidance: problem.guidance ?? [],
+      }) !== undefined
     );
   }
 

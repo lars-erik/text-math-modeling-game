@@ -240,11 +240,13 @@ test('misconception feedback still works unchanged inside a session', () => {
 test('requests a hint without submitting', () => {
   const current = seekToMode(start(), 'quantities-to-named-equation');
   const withHint = current.requestHint();
-  expect(withHint.hint?.kind).toBe('base-once-plus-per-item');
-  expect(withHint.hint?.modeId).toBe('quantities-to-named-equation');
+  expect(withHint.hint?.guidanceId).toBe('per-item-scaled-by-count');
   expect(withHint.currentIndex).toBe(current.currentIndex);
   expect(withHint.answerLog).toEqual(current.answerLog);
   expect(withHint.screen?.feedback).toBeUndefined();
+  expect(withHint.currentProblem?.guidance).toContainEqual(
+    expect.objectContaining({ id: 'per-item-scaled-by-count' }),
+  );
 });
 
 test('the same semantic hint renders EN and NB wording and survives a theme switch', () => {
@@ -262,7 +264,46 @@ test('the same semantic hint renders EN and NB wording and survives a theme swit
   ).requestHint();
   expect(english.hint).toEqual(norwegian.hint);
   expect(norwegian.hint).toEqual(norwegianDrone.hint);
-  expect(english.hint?.kind).toBe('base-once-plus-per-item');
+  expect(english.hint?.guidanceId).toBe('per-item-scaled-by-count');
+});
+
+test('withLocale keeps progress, answer log, and hint while changing presentation only', () => {
+  const english = seekToMode(
+    start({ seed: sessionSeed, themeId: 'gaming.drone-power', locale: 'en' }),
+    'quantities-to-named-equation',
+  );
+  const withHint = english.requestHint();
+  const wrongFirst = withHint.submit({ kind: 'text', input: 'wrong = wrong' });
+  const norwegian = wrongFirst.withLocale('nb');
+  expect(norwegian.status).toBe('active');
+  expect(norwegian.currentIndex).toBe(wrongFirst.currentIndex);
+  expect(norwegian.position).toBe(wrongFirst.position);
+  expect(norwegian.answerLog).toEqual(wrongFirst.answerLog);
+  expect(norwegian.hint).toEqual(wrongFirst.hint);
+  expect(norwegian.replay.locale).toBe('nb');
+  expect(norwegian.replay.themeId).toBe(wrongFirst.replay.themeId);
+  expect(norwegian.screen?.context.locale).toBe('nb');
+  expect(norwegian.screen?.screen.modeId).toBe(
+    wrongFirst.screen?.screen.modeId,
+  );
+  expect(norwegian.screen?.context.story).not.toBe(
+    wrongFirst.screen?.context.story,
+  );
+  const sameLocale = wrongFirst.withLocale('en');
+  expect(sameLocale).toBe(wrongFirst);
+});
+
+test('withLocale preserves progress after next() on an active item', () => {
+  const session = start();
+  const advanced = session.submit(correctAnswerFor(session)).next();
+  const norwegian = advanced.withLocale('nb');
+  expect(norwegian.currentIndex).toBe(advanced.currentIndex);
+  expect(norwegian.position).toBe(advanced.position);
+  expect(norwegian.answerLog).toEqual(advanced.answerLog);
+  expect(norwegian.screen?.screen.modeId).toBe(advanced.screen?.screen.modeId);
+  expect(norwegian.screen?.context.replay?.seed).toBe(
+    advanced.screen?.context.replay?.seed,
+  );
 });
 
 test('the session core stays free of locale resources', () => {

@@ -1,4 +1,7 @@
-import { totalFromParts } from '../problem-model/total-from-parts';
+import {
+  totalFromParts,
+  totalFromPartsGuidance,
+} from '../problem-model/total-from-parts';
 import type { AnswerKey, ConceptId, Problem } from '../problem-model/problem';
 
 export const totalFromPartsGeneratorVersion = 'total-from-parts-v1';
@@ -100,6 +103,7 @@ export function generateTotalFromPartsCase({
         },
       ],
       relation: totalFromParts,
+      guidance: totalFromPartsGuidance,
       replay: {
         seed,
         generatorVersion: totalFromPartsGeneratorVersion,
