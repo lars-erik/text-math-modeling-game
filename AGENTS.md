@@ -38,6 +38,39 @@ Hard boundaries:
 
 When introducing the second implementation on an axis (second theme, second mode, second mathematical family), refactor duplicated branching into the axis abstraction before merge rather than copying the first implementation.
 
+## Repository investigation and evidence
+
+Before proposing or implementing work: 
+
+1. Establish the current branch and working-tree state. 
+2. Inspect existing source code before proposing new functionality. 
+3. Use GitHub CLI (gh) through the terminal to inspect relevant issues and pull requests. 
+4. Distinguish implemented functionality on the current branch from changes in open PRs. 
+5. Treat historical milestone documents as historical context. Verify current behavior against source code and authoritative architecture documentation. 
+6. Support findings with exact file paths and relevant code references. 
+7. Verify that a proposed task is not already implemented or tracked by an existing issue. 
+
+If a required command fails, report the exact error and explain what could not be verified. 
+
+During Plan mode, use read-only terminal commands for investigation. Keep the working tree unchanged.
+
+## Investigation and task proposals
+
+Before proposing new work:
+
+1. Inspect the current branch, relevant source files, and existing tests.
+2. Use GitHub CLI (gh) to verify relevant issue and PR status.
+3. Distinguish current implementation, open PRs, and future roadmap ideas.
+4. Identify a concrete missing behavior, failing test, or demonstrated maintenance problem.
+5. Provide evidence for each proposed task, including exact file paths and relevant references.
+
+A roadmap idea is not evidence of missing functionality.  
+An absent abstraction is not necessarily a design problem.
+
+If no concrete improvement is found, report that conclusion instead of inventing work.
+
+If a tool appears unavailable, attempt to use it and report the actual error before concluding that access is missing.
+
 ## Source work
 
 For files under `src/`, also follow `src/AGENTS.md` for the TDD rhythm, source layout, approvals and test commands.
