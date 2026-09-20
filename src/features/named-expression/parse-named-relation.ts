@@ -285,7 +285,7 @@ export function createLearnerNameResolver(
 function asResolver(names: LearnerNameSource): LearnerNameResolver {
   return isLearnerNameResolver(names)
     ? names
-    : createLearnerNameResolver(names);
+    : createCaseInsensitiveLearnerNameResolver(names);
 }
 
 function isLearnerNameResolver(
