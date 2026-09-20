@@ -103,7 +103,7 @@ test('switches tasks and input modes while the story stays visible and the math 
   ]);
   await puzzle.updateComplete;
   expect(shellText(puzzle)).toContain(
-    'The equation grouping does not match the quantity model.',
+    'Base power is added once overall. In your equation it is multiplied by the number of drones, so it is applied once per item.',
   );
   const checkedRadio = choiceInput!.shadowRoot?.querySelector(
     'input[value="factor-into-group"]',
@@ -216,5 +216,45 @@ test('replays academic notation to named equation and accepts Theme-localized na
 
   expect(shellText(puzzle)).toContain(
     'Den navngitte likningen stemmer med sammenhengen.',
+  );
+});
+
+test('explains the base-applied-per-item misconception and preserves the learner input', async () => {
+  const puzzle = mountPuzzle(
+    '?seed=17&scenario=gaming.drone-power&task=quantities-to-named-equation&locale=en',
+  );
+  await puzzle.updateComplete;
+  const inputComponent = puzzle.shadowRoot?.querySelector(
+    'named-equation-text-input',
+  ) as (HTMLElement & { updateComplete: Promise<unknown> }) | null;
+  expect(inputComponent).not.toBeNull();
+  await inputComponent!.updateComplete;
+  const input = inputComponent!.shadowRoot?.querySelector('input');
+  expect(input).not.toBeNull();
+  input!.value = 'totalPower = droneCount * (basePower + dronePower)';
+  inputComponent!.shadowRoot?.querySelector('form')?.requestSubmit();
+  await puzzle.updateComplete;
+  expect(shellText(puzzle)).toContain(
+    'Base power is added once overall. In your equation it is multiplied by the number of drones, so it is applied once per item.',
+  );
+  const preservedInput = puzzle.shadowRoot?.querySelector(
+    'named-equation-text-input',
+  ) as (HTMLElement & { value: string }) | null;
+  expect(preservedInput?.value).toBe(
+    'totalPower = droneCount * (basePower + dronePower)',
+  );
+  const preservedField = (
+    preservedInput as (HTMLElement & { shadowRoot: ShadowRoot }) | null
+  )?.shadowRoot?.querySelector('input');
+  expect(preservedField?.value).toBe(
+    'totalPower = droneCount * (basePower + dronePower)',
+  );
+  expect(preservedField?.hasAttribute('disabled')).toBe(false);
+  expect(preservedField?.getAttribute('readonly')).toBeNull();
+  preservedField!.value = 'totalPower = basePower + droneCount * dronePower';
+  inputComponent!.shadowRoot?.querySelector('form')?.requestSubmit();
+  await puzzle.updateComplete;
+  expect(shellText(puzzle)).toContain(
+    'The equation matches the quantity model.',
   );
 });
