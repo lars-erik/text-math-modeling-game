@@ -61,7 +61,8 @@ export function generateTotalFromPartsCase({
   randomSource?: RandomSource;
 }): GeneratedProblemCase {
   validateGenerationRequest(seed, config);
-  const resolvedRandomSource = randomSource ?? createMulberry32Random(seed);
+  const resolvedRandomSource =
+    randomSource ?? createMulberry32Random(seed);
 
   const base = nextInteger(resolvedRandomSource, config.base);
   const count = nextInteger(resolvedRandomSource, config.count);
@@ -153,7 +154,7 @@ function validateGenerationRequest(
   }
 }
 
-function createMulberry32Random(seed: number): RandomSource {
+export function createMulberry32Random(seed: number): RandomSource {
   let state = seed >>> 0;
 
   return {
