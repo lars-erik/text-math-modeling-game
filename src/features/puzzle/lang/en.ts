@@ -20,6 +20,8 @@ export const en = {
     task: 'Task',
     storyToQuantities: 'Story to quantities',
     quantitiesToNamedEquation: 'Quantities to named equation',
+    namedEquationToAcademicNotation: 'Named equation to academic notation',
+    academicNotationToNamedEquation: 'Academic notation to named equation',
     seed: 'Seed',
     show: 'Show puzzle',
   },
@@ -51,6 +53,26 @@ export const en = {
     accepted: 'The equation matches the quantity model.',
     groupingMismatch: 'The equation grouping does not match the quantity model.',
     reversedSides: 'The equation sides are reversed; keep them in the requested order.',
+    unknownIdentifier: (identifier, available) =>
+      `Unknown identifier ${JSON.stringify(identifier)}. Available identifiers: ${available}.`,
+  },
+  namedEquationToAcademicNotation: {
+    heading: 'Named equation to academic notation',
+    prompt: 'Write the relationship using the academic symbols.',
+    inputLabel: 'Academic notation',
+    symbolKey: 'Symbol key',
+    accepted: 'The academic notation matches the relationship.',
+    groupingMismatch: 'The academic notation does not match the relationship.',
+    unknownIdentifier: (identifier, available) =>
+      `Unknown symbol ${JSON.stringify(identifier)}. Available symbols: ${available}.`,
+  },
+  academicNotationToNamedEquation: {
+    heading: 'Academic notation to named equation',
+    prompt: 'Write the relationship using the named quantities.',
+    inputLabel: 'Named equation',
+    symbolKey: 'Symbol key',
+    accepted: 'The named equation matches the relationship.',
+    groupingMismatch: 'The named equation does not match the relationship.',
     unknownIdentifier: (identifier, available) =>
       `Unknown identifier ${JSON.stringify(identifier)}. Available identifiers: ${available}.`,
   },

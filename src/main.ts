@@ -1,4 +1,5 @@
 import { startMathModelingApplication } from './application';
+import { katexAcademicDisplayAdapter } from './features/puzzle/ui/katex-academic-display-adapter';
 
 startMathModelingApplication({
   search: globalThis.location.search,
@@ -12,4 +13,10 @@ startMathModelingApplication({
   },
 });
 
-await import('./features/puzzle/ui/math-modeling-puzzle');
+const { MathModelingPuzzle } = await import(
+  './features/puzzle/ui/math-modeling-puzzle'
+);
+const puzzle = document.querySelector('math-modeling-puzzle');
+if (puzzle instanceof MathModelingPuzzle) {
+  puzzle.academicDisplayAdapter = katexAcademicDisplayAdapter;
+}

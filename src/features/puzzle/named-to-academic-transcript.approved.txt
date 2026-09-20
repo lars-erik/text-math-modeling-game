@@ -1,0 +1,37 @@
+=== Start ===
+puzzle named-equation -> academic-notation
+replay seed=0 generator=hand-built-v1 theme=gaming.drone-power story-seed=0 locale=en
+prompt Write the relationship using the academic symbols.
+quantities
+  basePower [base] = 30
+  droneCount [count] = 4
+  dronePower [per-item] = ?
+  totalPower [total] = 210
+named 210 = 30 + 4 * dronePower
+symbols
+  p = dronePower
+input academic = ""
+=== Submit ===
+puzzle named-equation -> academic-notation
+replay seed=0 generator=hand-built-v1 theme=gaming.drone-power story-seed=0 locale=en
+prompt Write the relationship using the academic symbols.
+quantities
+  basePower [base] = 30
+  droneCount [count] = 4
+  dronePower [per-item] = ?
+  totalPower [total] = 210
+named 210 = 30 + 4 * dronePower
+symbols
+  p = dronePower
+input academic = "210 = 30 + 4*p"
+submission academic-notation
+  input "210 = 30 + 4*p"
+  equation
+    literal 210
+    add
+      literal 30
+      multiply
+        literal 4
+        quantity unitValue
+check normalized-structure equation-sides=ordered
+feedback accepted: The academic notation matches the relationship.

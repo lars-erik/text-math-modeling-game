@@ -49,6 +49,18 @@ test('reformats the composed selection with replay URL parameters', () => {
   );
 });
 
+test('parses and reproduces both academic notation task URLs', () => {
+  for (const modeId of [
+    'named-equation-to-academic-notation',
+    'academic-notation-to-named-equation',
+  ] as const) {
+    const search = `?seed=321&scenario=creator.followers&task=${modeId}&locale=nb`;
+    const state = parseApplicationState(search);
+    expect(state.modeId).toBe(modeId);
+    expect(formatSearch(state)).toBe(search);
+  }
+});
+
 test('drives the puzzle element through theme, mode, seed, and locale attributes', () => {
   const puzzleElement = new TestPuzzleElement();
   startMathModelingApplication({

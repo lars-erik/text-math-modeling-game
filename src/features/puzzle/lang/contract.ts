@@ -18,6 +18,8 @@ export type PuzzleLocaleResources = {
     task: string;
     storyToQuantities: string;
     quantitiesToNamedEquation: string;
+    namedEquationToAcademicNotation: string;
+    academicNotationToNamedEquation: string;
     seed: string;
     show: string;
   };
@@ -49,6 +51,24 @@ export type PuzzleLocaleResources = {
     accepted: string;
     groupingMismatch: string;
     reversedSides: string;
+    unknownIdentifier: (identifier: string, available: string) => string;
+  };
+  namedEquationToAcademicNotation: {
+    heading: string;
+    prompt: string;
+    inputLabel: string;
+    symbolKey: string;
+    accepted: string;
+    groupingMismatch: string;
+    unknownIdentifier: (identifier: string, available: string) => string;
+  };
+  academicNotationToNamedEquation: {
+    heading: string;
+    prompt: string;
+    inputLabel: string;
+    symbolKey: string;
+    accepted: string;
+    groupingMismatch: string;
     unknownIdentifier: (identifier: string, available: string) => string;
   };
 };

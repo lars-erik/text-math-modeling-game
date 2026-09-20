@@ -11,6 +11,7 @@ import {
   presentTheme,
   submitPuzzle,
   type PuzzleScreen,
+  type PuzzleScreenTask,
 } from '../compose-puzzle';
 import type { QuantitySelection } from '../modes/mode';
 import type { LearnerAnswer } from '../learner-answer';
@@ -35,9 +36,15 @@ import {
   puzzleInputProviders,
   type PuzzleInputMode,
 } from './puzzle-input-providers';
+import {
+  textAcademicDisplayAdapter,
+  type AcademicDisplayAdapter,
+} from './academic-display-adapter';
+import { formatNamedRelation } from '../../representations/named-relation';
 import './story-quantities-input';
 import './puzzle-shell';
 import './puzzle-menu';
+import './academic-notation-display';
 
 export class MathModelingPuzzle extends LitElement {
   static properties = {
@@ -46,6 +53,7 @@ export class MathModelingPuzzle extends LitElement {
     modeId: { attribute: 'mode', type: String },
     inputMode: { attribute: 'input-mode', reflect: true, type: String },
     locale: { reflect: true, type: String },
+    academicDisplayAdapter: { attribute: false },
     screen: { state: true },
   };
 
@@ -116,6 +124,35 @@ export class MathModelingPuzzle extends LitElement {
       background: #f7f8f9;
       overflow-wrap: anywhere;
     }
+    .equation {
+      margin-block: 1rem;
+      padding: 0.85rem;
+      border: 1px solid #c5cbd1;
+      border-radius: 0.35rem;
+      background: #f7f8f9;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      overflow-wrap: anywhere;
+    }
+    .symbol-key {
+      margin-block-start: 1rem;
+    }
+    .symbol-key h3 {
+      margin-block: 0 0.4rem;
+      font-size: 0.9rem;
+    }
+    .symbol-key dl {
+      display: grid;
+      grid-template-columns: max-content minmax(0, 1fr);
+      gap: 0.25rem 0.75rem;
+      margin: 0;
+    }
+    .symbol-key dt {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-weight: 700;
+    }
+    .symbol-key dd {
+      margin: 0;
+    }
     .replay-list {
       display: grid;
       grid-template-columns: max-content minmax(0, 1fr);
@@ -142,6 +179,7 @@ export class MathModelingPuzzle extends LitElement {
   declare modeId: string;
   declare inputMode: string;
   declare locale: string;
+  declare academicDisplayAdapter: AcademicDisplayAdapter;
   private declare screen: PuzzleScreen | undefined;
   private declare generatedProblem: Problem;
 
@@ -152,6 +190,7 @@ export class MathModelingPuzzle extends LitElement {
     this.modeId = 'story-to-quantities';
     this.inputMode = 'text';
     this.locale = 'en';
+    this.academicDisplayAdapter = textAcademicDisplayAdapter;
     this.screen = undefined;
     this.generatedProblem = generateCase(17);
   }
@@ -204,42 +243,158 @@ export class MathModelingPuzzle extends LitElement {
     }
     const screen = this.screen;
     const resources = puzzleResources[this.locale];
-    const heading =
-      screen.screen.modeId === 'story-to-quantities'
-        ? resources.storyToQuantities.heading
-        : resources.quantitiesToNamedEquation.heading;
+    const heading = this.headingFor(screen.screen, resources);
     return this.renderShell({
       locale: this.locale,
       heading,
       prompt: screen.screen.target.prompt,
       feedback: screen.feedback?.message ?? '',
       replay: screen.context.replay,
-      source:
-        screen.screen.modeId === 'story-to-quantities'
-          ? html`<p>${screen.context.story}</p>`
-          : html`<p>${screen.context.story}</p>
-              <ul class="quantity-list">
-                ${screen.context.quantities.map(
-                  (quantity) => html`<li>
-                    ${quantity.variableName} =
-                    ${quantity.given.kind === 'known'
-                      ? quantity.given.value
-                      : '?'}
-                  </li>`,
-                )}
-              </ul>`,
-      input:
-        screen.screen.modeId === 'story-to-quantities'
-          ? html`<div @puzzle-quantity-selection=${this.handleQuantitySelection}>
-              <story-quantities-input
-                .screen=${screen.screen}
-                .knownLegend=${resources.storyToQuantities.knownLegend}
-                .unknownLegend=${resources.storyToQuantities.unknownLegend}
-                .checkLabel=${resources.controls.check}
-              ></story-quantities-input>
-            </div>`
-          : this.renderNamedEquationInput(this.locale),
+      source: this.renderSource(screen, resources),
+      input: this.renderInput(screen, resources),
     });
+  }
+
+  private headingFor(
+    task: PuzzleScreenTask,
+    resources: (typeof puzzleResources)[PuzzleLocale],
+  ): string {
+    switch (task.modeId) {
+      case 'story-to-quantities':
+        return resources.storyToQuantities.heading;
+      case 'quantities-to-named-equation':
+        return resources.quantitiesToNamedEquation.heading;
+      case 'named-equation-to-academic-notation':
+        return resources.namedEquationToAcademicNotation.heading;
+      case 'academic-notation-to-named-equation':
+        return resources.academicNotationToNamedEquation.heading;
+    }
+  }
+
+  private renderSource(
+    screen: PuzzleScreen,
+    resources: (typeof puzzleResources)[PuzzleLocale],
+  ) {
+    const story = html`<p>${screen.context.story}</p>`;
+    switch (screen.screen.modeId) {
+      case 'story-to-quantities':
+        return story;
+      case 'quantities-to-named-equation':
+        return html`${story}${this.renderQuantityList(screen)}`;
+      case 'named-equation-to-academic-notation':
+        return html`${story}${this.renderQuantityList(screen)}
+          <p class="equation">
+            ${formatNamedRelation(
+              screen.screen.source.relation,
+              screen.screen.source.names,
+            )}
+          </p>
+          ${this.renderSymbolKey(
+            screen.screen,
+            resources.namedEquationToAcademicNotation.symbolKey,
+          )}`;
+      case 'academic-notation-to-named-equation':
+        return html`${story}${this.renderQuantityList(screen)}
+          <academic-notation-display
+            .relation=${screen.screen.source.relation}
+            .symbols=${screen.screen.source.symbols}
+            .adapter=${this.academicDisplayAdapter}
+          ></academic-notation-display>
+          ${this.renderSymbolKey(
+            screen.screen,
+            resources.academicNotationToNamedEquation.symbolKey,
+          )}`;
+    }
+  }
+
+  private renderQuantityList(screen: PuzzleScreen) {
+    return html`<ul class="quantity-list">
+      ${screen.context.quantities.map(
+        (quantity) => html`<li>
+          ${quantity.variableName} =
+          ${quantity.given.kind === 'known' ? quantity.given.value : '?'}
+        </li>`,
+      )}
+    </ul>`;
+  }
+
+  private renderSymbolKey(
+    task:
+      | Extract<PuzzleScreenTask, { modeId: 'named-equation-to-academic-notation' }>
+      | Extract<PuzzleScreenTask, { modeId: 'academic-notation-to-named-equation' }>,
+    label: string,
+  ) {
+    return html`<section class="symbol-key" aria-label=${label}>
+      <h3>${label}</h3>
+      <dl>
+        ${task.symbolKey.map(
+          (entry) => html`<dt>${entry.symbol}</dt><dd>${entry.variableName}</dd>`,
+        )}
+      </dl>
+    </section>`;
+  }
+
+  private renderInput(
+    screen: PuzzleScreen,
+    resources: (typeof puzzleResources)[PuzzleLocale],
+  ) {
+    switch (screen.screen.modeId) {
+      case 'story-to-quantities':
+        return html`<div @puzzle-quantity-selection=${this.handleQuantitySelection}>
+          <story-quantities-input
+            .screen=${screen.screen}
+            .knownLegend=${resources.storyToQuantities.knownLegend}
+            .unknownLegend=${resources.storyToQuantities.unknownLegend}
+            .checkLabel=${resources.controls.check}
+          ></story-quantities-input>
+        </div>`;
+      case 'quantities-to-named-equation':
+        return this.renderNamedEquationInput(this.locale as PuzzleLocale);
+      case 'named-equation-to-academic-notation':
+        return this.renderTextExpressionInput(
+          screen,
+          resources.namedEquationToAcademicNotation.inputLabel,
+          resources.controls.check,
+        );
+      case 'academic-notation-to-named-equation':
+        return this.renderTextExpressionInput(
+          screen,
+          resources.academicNotationToNamedEquation.inputLabel,
+          resources.controls.check,
+        );
+    }
+  }
+
+  private renderTextExpressionInput(
+    screen: PuzzleScreen,
+    inputLabel: string,
+    checkLabel: string,
+  ) {
+    const input =
+      screen.screen.input.kind === 'expression'
+        ? screen.screen.input.value
+        : '';
+    const acceptedAcademicRelation =
+      screen.screen.modeId === 'named-equation-to-academic-notation' &&
+      screen.feedback?.kind === 'accepted' &&
+      screen.submission?.kind === 'academic-notation'
+        ? screen.submission.relation
+        : undefined;
+    return html`<div @puzzle-answer=${this.handleAnswer}>
+      <named-equation-text-input
+        .value=${input}
+        .inputLabel=${inputLabel}
+        .checkLabel=${checkLabel}
+      ></named-equation-text-input>
+      ${acceptedAcademicRelation === undefined ||
+      screen.screen.modeId !== 'named-equation-to-academic-notation'
+        ? null
+        : html`<academic-notation-display
+            .relation=${acceptedAcademicRelation}
+            .symbols=${screen.screen.target.symbols}
+            .adapter=${this.academicDisplayAdapter}
+          ></academic-notation-display>`}
+    </div>`;
   }
 
   private renderNamedEquationInput(locale: PuzzleLocale) {
@@ -397,6 +552,8 @@ export class MathModelingPuzzle extends LitElement {
           .taskLabel=${resources.puzzleMenu.task}
           .storyToQuantitiesLabel=${resources.puzzleMenu.storyToQuantities}
           .quantitiesToNamedEquationLabel=${resources.puzzleMenu.quantitiesToNamedEquation}
+          .namedEquationToAcademicNotationLabel=${resources.puzzleMenu.namedEquationToAcademicNotation}
+          .academicNotationToNamedEquationLabel=${resources.puzzleMenu.academicNotationToNamedEquation}
           .seedLabel=${resources.puzzleMenu.seed}
           .showLabel=${resources.puzzleMenu.show}
         ></puzzle-menu>

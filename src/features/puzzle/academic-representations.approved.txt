@@ -1,0 +1,3 @@
+named: 210 = 30 + 4 * dronePower
+academic-input: 210 = 30 + 4*p
+academic-display: 210 = 30 + 4p
