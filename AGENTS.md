@@ -2,6 +2,20 @@
 
 Read `readme.md`, `docs/architecture-contract.md`, and the relevant document under `docs/` before editing product code. Approved ADRs and the architecture contract are authoritative when older milestone prose or existing code disagrees.
 
+## Issue and pull-request workflow
+
+For every issue or implementation task, make the work visible on GitHub before doing substantial local implementation:
+
+1. Create a dedicated branch from the current target branch.
+2. Push an initial start commit immediately (an empty commit is fine when supported).
+3. Open a **draft/WIP pull request** against the target branch before substantial implementation begins. Link the issue in the PR body when there is one.
+4. Work in small, coherent checkpoints. Commit and push each meaningful checkpoint as it is completed; do not accumulate a large stack of local-only commits before the first push.
+5. Keep pushing the same branch throughout the task so PR CI and the `/pr-N/` preview continuously reflect the latest deployable progress.
+6. Prefer checkpoints that leave CI green and the preview usable. When an intermediate push must be broken, make that state explicit and restore a deployable checkpoint promptly.
+7. Mark the PR ready for review only when the issue is complete, required tests/approvals pass, and the implementation is ready to merge.
+
+The draft PR is the shared progress surface for humans and other agents. Do not wait until the implementation is nearly finished to create it.
+
 ## Architecture preflight
 
 Before changing `Problem`, generation, DSL, themes/scenarios, puzzle modes/tasks, `PuzzleScreen`, or application composition, follow `.agents/skills/architecture-guardian/SKILL.md`. Codex may auto-select the skill; other agents must follow the same checklist explicitly.
