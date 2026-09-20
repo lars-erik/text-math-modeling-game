@@ -24,6 +24,7 @@ export const en = {
     academicNotationToNamedEquation: 'Academic notation to named equation',
     seed: 'Seed',
     show: 'Show puzzle',
+    startSession: 'Start session',
   },
   common: {
     puzzle: 'Puzzle',
@@ -79,5 +80,22 @@ export const en = {
   misconceptions: {
     baseAppliedPerItem: (baseLabel, countLabel) =>
       `${baseLabel} is added once overall. In your equation it is multiplied by the ${countLabel}, so it is applied once per item.`,
+  },
+  session: {
+    positionLabel: (position, total) => `Puzzle ${position} / ${total}`,
+    next: 'Next puzzle',
+    hint: 'Hint',
+    hintText: (guidance) =>
+      guidance.id === 'per-item-scaled-by-count'
+        ? 'The total contains the base amount once, plus one unit value per item.'
+        : '',
+    completionHeading: 'Session complete',
+    completedTotal: (total) => `${total} puzzles completed`,
+    perEdgeHeading: 'Completed representation edges',
+    sessionReplayLabel: 'Session replay',
+    answerLogHeading: 'Answers',
+    answerLogCorrect: 'correct',
+    answerLogIncorrect: 'incorrect',
+    backToPuzzle: 'Back to start',
   },
 } satisfies PuzzleLocaleResources;

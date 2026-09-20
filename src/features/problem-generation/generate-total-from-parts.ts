@@ -1,4 +1,7 @@
-import { totalFromParts } from '../problem-model/total-from-parts';
+import {
+  totalFromParts,
+  totalFromPartsGuidance,
+} from '../problem-model/total-from-parts';
 import type { AnswerKey, ConceptId, Problem } from '../problem-model/problem';
 
 export const totalFromPartsGeneratorVersion = 'total-from-parts-v1';
@@ -61,7 +64,8 @@ export function generateTotalFromPartsCase({
   randomSource?: RandomSource;
 }): GeneratedProblemCase {
   validateGenerationRequest(seed, config);
-  const resolvedRandomSource = randomSource ?? createMulberry32Random(seed);
+  const resolvedRandomSource =
+    randomSource ?? createMulberry32Random(seed);
 
   const base = nextInteger(resolvedRandomSource, config.base);
   const count = nextInteger(resolvedRandomSource, config.count);
@@ -99,6 +103,7 @@ export function generateTotalFromPartsCase({
         },
       ],
       relation: totalFromParts,
+      guidance: totalFromPartsGuidance,
       replay: {
         seed,
         generatorVersion: totalFromPartsGeneratorVersion,
@@ -153,7 +158,7 @@ function validateGenerationRequest(
   }
 }
 
-function createMulberry32Random(seed: number): RandomSource {
+export function createMulberry32Random(seed: number): RandomSource {
   let state = seed >>> 0;
 
   return {

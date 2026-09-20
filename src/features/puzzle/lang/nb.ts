@@ -24,6 +24,7 @@ export const nb = {
     academicNotationToNamedEquation: 'Fra akademisk notasjon til navngitt likning',
     seed: 'Frø',
     show: 'Vis oppgave',
+    startSession: 'Start økt',
   },
   common: {
     puzzle: 'Oppgave',
@@ -79,5 +80,22 @@ export const nb = {
   misconceptions: {
     baseAppliedPerItem: (baseLabel, countLabel) =>
       `${baseLabel} skal legges til én gang totalt. I likningen din blir det ganget med ${countLabel}, slik at det brukes én gang per enhet.`,
+  },
+  session: {
+    positionLabel: (position, total) => `Oppgave ${position} / ${total}`,
+    next: 'Neste oppgave',
+    hint: 'Hint',
+    hintText: (guidance) =>
+      guidance.id === 'per-item-scaled-by-count'
+        ? 'Totalen inneholder grunnbeløpet én gang, pluss én enhetsverdi per enhet.'
+        : '',
+    completionHeading: 'Økten er fullført',
+    completedTotal: (total) => `${total} oppgaver fullført`,
+    perEdgeHeading: 'Fullførte representasjonskanter',
+    sessionReplayLabel: 'Gjentakelse av økt',
+    answerLogHeading: 'Svar',
+    answerLogCorrect: 'riktig',
+    answerLogIncorrect: 'feil',
+    backToPuzzle: 'Tilbake til start',
   },
 } satisfies PuzzleLocaleResources;

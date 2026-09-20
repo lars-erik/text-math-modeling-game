@@ -1,3 +1,5 @@
+import type { GuidanceEntry } from '../../problem-model/problem';
+
 export type PuzzleLocaleResources = {
   language: {
     label: string;
@@ -22,6 +24,7 @@ export type PuzzleLocaleResources = {
     academicNotationToNamedEquation: string;
     seed: string;
     show: string;
+    startSession: string;
   };
   common: {
     puzzle: string;
@@ -73,5 +76,20 @@ export type PuzzleLocaleResources = {
   };
   misconceptions: {
     baseAppliedPerItem: (baseLabel: string, countLabel: string) => string;
+  };
+
+  session: {
+    positionLabel: (position: number, total: number) => string;
+    next: string;
+    hint: string;
+    hintText: (guidance: GuidanceEntry) => string;
+    completionHeading: string;
+    completedTotal: (total: number) => string;
+    perEdgeHeading: string;
+    sessionReplayLabel: string;
+    answerLogHeading: string;
+    answerLogCorrect: string;
+    answerLogIncorrect: string;
+    backToPuzzle: string;
   };
 };

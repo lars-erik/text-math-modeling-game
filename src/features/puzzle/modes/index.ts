@@ -1,3 +1,5 @@
+import type { GuidanceEntry } from '../../problem-model/problem';
+
 export {
   isModeId,
   modeIds,
@@ -35,3 +37,13 @@ export const modes: Readonly<Record<ModeId, Mode>> = {
   'named-equation-to-academic-notation': namedEquationToAcademicNotationMode,
   'academic-notation-to-named-equation': academicNotationToNamedEquationMode,
 };
+
+export function selectGuidanceForMode({
+  modeId,
+  guidance,
+}: {
+  modeId: ModeId;
+  guidance: readonly GuidanceEntry[];
+}): GuidanceEntry | undefined {
+  return modes[modeId].selectGuidance?.(guidance);
+}

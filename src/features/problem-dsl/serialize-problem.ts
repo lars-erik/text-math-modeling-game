@@ -16,6 +16,21 @@ export function serializeProblem(problem: Problem): string {
     `${indentation.repeat(2)}${serializeExpression(problem.relation.left)} = ${serializeExpression(problem.relation.right)}`,
     `${indentation}}`,
     '',
+    ...(problem.guidance
+      ? [
+          `${indentation}guidance {`,
+          ...problem.guidance.flatMap((entry, index) => [
+            ...(index === 0 ? [] : ['']),
+            `${indentation.repeat(2)}watch ${entry.id} {`,
+            ...Object.entries(entry.quantities).map(
+              ([label, id]) =>
+                `${indentation.repeat(3)}${label} ${id}`,
+            ),
+            `${indentation.repeat(2)}}`,
+          ]),
+          `${indentation}}`,
+        ]
+      : []),
     ...(problem.replay
       ? [
           '',

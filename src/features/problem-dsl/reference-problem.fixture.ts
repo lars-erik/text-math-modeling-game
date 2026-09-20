@@ -15,5 +15,15 @@ export const referenceProblemDsl = `problem total-from-parts {
         total = base + count * unitValue
     }
 
+    guidance {
+        watch base-applied-once {
+            quantity base
+        }
+
+        watch per-item-scaled-by-count {
+            count count
+            unit unitValue
+        }
+    }
 }
 `;

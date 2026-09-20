@@ -13,6 +13,10 @@ import {
   totalFromPartsAnswerKey,
   totalFromPartsProblem,
 } from './total-from-parts.fixture';
+import {
+  defaultTotalFromPartsGenerationConfig,
+  generateTotalFromPartsCase,
+} from '../problem-generation/generate-total-from-parts';
 
 describe('learner-visible problem boundary', () => {
   test('omits the hidden per-item value from visible bindings', () => {
@@ -328,5 +332,45 @@ describe('unified problem validation APIs', () => {
         },
       ]),
     );
+  });
+});
+describe('problem guidance', () => {
+  test('declares semantic watch-out guidance with stable IDs and quantity references', () => {
+    expect(totalFromPartsProblem.guidance).toBeDefined();
+    expect(totalFromPartsProblem.guidance?.map((entry) => entry.id)).toEqual([
+      'base-applied-once',
+      'per-item-scaled-by-count',
+    ]);
+    const first = totalFromPartsProblem.guidance?.[0];
+    expect(first?.quantities).toEqual({ quantity: 'base' });
+    const second = totalFromPartsProblem.guidance?.[1];
+    expect(second?.quantities).toEqual({
+      count: 'count',
+      unit: 'unitValue',
+    });
+  });
+
+  test('reports guidance references to undeclared quantities', () => {
+    const problemWithBadGuidance = {
+      ...totalFromPartsProblem,
+      guidance: [
+        {
+          id: 'base-applied-once',
+          quantities: { quantity: 'mysteryQuantity' },
+        },
+      ],
+    };
+    expect(validateProblemAst(problemWithBadGuidance)).toContainEqual({
+      kind: 'undefined-quantity',
+      id: 'mysteryQuantity',
+    });
+  });
+
+  test('generated problems carry the same guidance entries', () => {
+    const { problem } = generateTotalFromPartsCase({
+      seed: 918273,
+      config: defaultTotalFromPartsGenerationConfig,
+    });
+    expect(problem.guidance).toEqual(totalFromPartsProblem.guidance);
   });
 });

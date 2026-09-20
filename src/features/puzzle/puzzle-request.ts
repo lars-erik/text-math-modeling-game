@@ -13,6 +13,29 @@ export type PuzzleSelectionRequest = {
   locale: PuzzleLocale;
 };
 
+export const sessionSelectionRequestEvent = 'session-selection-request';
+
+export type SessionSelectionRequest = {
+  seed: number;
+  themeId: ThemeId;
+  locale: PuzzleLocale;
+};
+
+export function isSessionSelectionRequest(
+  value: unknown,
+): value is SessionSelectionRequest {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const request = value as Partial<SessionSelectionRequest>;
+  return (
+    typeof request.seed === 'number' &&
+    typeof request.themeId === 'string' &&
+    isThemeId(request.themeId) &&
+    (request.locale === 'en' || request.locale === 'nb')
+  );
+}
+
 export function isPuzzleSelectionRequest(
   value: unknown,
 ): value is PuzzleSelectionRequest {

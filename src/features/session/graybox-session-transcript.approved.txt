@@ -1,0 +1,88 @@
+session seed=918273 planner=session-plan-v1 theme=gaming.drone-power locale=en
+plan length=10
+  item 1/10 problem-seed=619058406 mode=named-equation-to-academic-notation
+  item 2/10 problem-seed=1613875155 mode=academic-notation-to-named-equation
+  item 3/10 problem-seed=2058463390 mode=story-to-quantities
+  item 4/10 problem-seed=2754909060 mode=quantities-to-named-equation
+  item 5/10 problem-seed=2035329318 mode=named-equation-to-academic-notation
+  item 6/10 problem-seed=3030019899 mode=academic-notation-to-named-equation
+  item 7/10 problem-seed=3474637422 mode=story-to-quantities
+  item 8/10 problem-seed=2801184052 mode=quantities-to-named-equation
+  item 9/10 problem-seed=2081593430 mode=named-equation-to-academic-notation
+  item 10/10 problem-seed=3076285507 mode=academic-notation-to-named-equation
+item 1/10
+mode named-equation-to-academic-notation edge named-equation -> academic-notation
+problem 619058406 generator=total-from-parts-v1
+submit academic-notation "68 = 36 + 4*p"
+result accepted: The academic notation matches the relationship.
+transition item-completed
+log item 1 accepted academic-notation "68 = 36 + 4*p"
+item 2/10
+mode academic-notation-to-named-equation edge academic-notation -> named-equation
+problem 1613875155 generator=total-from-parts-v1
+submit named-equation "totalPower = basePower + droneCount * dronePower"
+result accepted: The named equation matches the relationship.
+transition item-completed
+log item 2 accepted named-equation "totalPower = basePower + droneCount * dronePower"
+item 3/10
+mode story-to-quantities edge story -> quantities
+problem 2058463390 generator=total-from-parts-v1
+submit quantity-selection known=[base, count, total] unknown=unitValue
+result quantity-selection-accepted: The quantities match the story.
+transition item-completed
+log item 3 accepted quantity-selection known=[base, count, total] unknown=unitValue
+item 4/10
+mode quantities-to-named-equation edge quantities -> named-equation
+problem 2754909060 generator=total-from-parts-v1
+submit named-equation "totalPower = basePower + droneCount * dronePower"
+result accepted: The equation matches the quantity model.
+transition item-completed
+log item 4 accepted named-equation "totalPower = basePower + droneCount * dronePower"
+item 5/10
+mode named-equation-to-academic-notation edge named-equation -> academic-notation
+problem 2035329318 generator=total-from-parts-v1
+submit academic-notation "26 = 11 + 5*p"
+result accepted: The academic notation matches the relationship.
+transition item-completed
+log item 5 accepted academic-notation "26 = 11 + 5*p"
+item 6/10
+mode academic-notation-to-named-equation edge academic-notation -> named-equation
+problem 3030019899 generator=total-from-parts-v1
+submit named-equation "totalPower = basePower + droneCount * dronePower"
+result accepted: The named equation matches the relationship.
+transition item-completed
+log item 6 accepted named-equation "totalPower = basePower + droneCount * dronePower"
+item 7/10
+mode story-to-quantities edge story -> quantities
+problem 3474637422 generator=total-from-parts-v1
+submit quantity-selection known=[base, count, total] unknown=unitValue
+result quantity-selection-accepted: The quantities match the story.
+transition item-completed
+log item 7 accepted quantity-selection known=[base, count, total] unknown=unitValue
+item 8/10
+mode quantities-to-named-equation edge quantities -> named-equation
+problem 2801184052 generator=total-from-parts-v1
+submit named-equation "totalPower = basePower + droneCount * dronePower"
+result accepted: The equation matches the quantity model.
+transition item-completed
+log item 8 accepted named-equation "totalPower = basePower + droneCount * dronePower"
+item 9/10
+mode named-equation-to-academic-notation edge named-equation -> academic-notation
+problem 2081593430 generator=total-from-parts-v1
+submit academic-notation "47 = 39 + 2*p"
+result accepted: The academic notation matches the relationship.
+transition item-completed
+log item 9 accepted academic-notation "47 = 39 + 2*p"
+item 10/10
+mode academic-notation-to-named-equation edge academic-notation -> named-equation
+problem 3076285507 generator=total-from-parts-v1
+submit named-equation "totalPower = basePower + droneCount * dronePower"
+result accepted: The named equation matches the relationship.
+transition completed-session
+log item 10 accepted named-equation "totalPower = basePower + droneCount * dronePower"
+session complete
+completed 10
+  story-to-quantities: 2
+  quantities-to-named-equation: 2
+  named-equation-to-academic-notation: 3
+  academic-notation-to-named-equation: 3

@@ -15,6 +15,17 @@ export const totalFromParts: Relation = {
   },
 };
 
+export const totalFromPartsGuidance = [
+  {
+    id: 'base-applied-once',
+    quantities: { quantity: 'base' },
+  },
+  {
+    id: 'per-item-scaled-by-count',
+    quantities: { count: 'count', unit: 'unitValue' },
+  },
+] as const;
+
 export const totalFromPartsProblem = {
   id: 'total-from-parts',
   concepts: [
@@ -50,6 +61,7 @@ export const totalFromPartsProblem = {
     },
   ],
   relation: totalFromParts,
+  guidance: totalFromPartsGuidance,
   replay: {
     seed: 0,
     generatorVersion: 'hand-built-v1',

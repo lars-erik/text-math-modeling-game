@@ -49,6 +49,16 @@ test('parses the complete reference problem DSL into the domain model', () => {
           },
         },
       },
+      guidance: [
+        {
+          id: 'base-applied-once',
+          quantities: { quantity: 'base' },
+        },
+        {
+          id: 'per-item-scaled-by-count',
+          quantities: { count: 'count', unit: 'unitValue' },
+        },
+      ],
     },
   });
 });

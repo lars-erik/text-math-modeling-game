@@ -6,6 +6,7 @@ import {
 import type { Relation } from '../problem-model/expression';
 import type {
   Dimension,
+  GuidanceEntry,
   Problem,
   ProblemReplay,
   Quantity,
@@ -33,6 +34,7 @@ type ParsedProblem = {
   concepts: readonly string[];
   quantities: readonly Quantity[];
   equation: ParsedEquation;
+  guidance?: readonly GuidanceEntry[];
   replay?: ProblemReplay;
 };
 
@@ -43,6 +45,8 @@ type ParsedEquation = {
 
 type ParsedNode =
   | ParsedProblem
+  | GuidanceEntry
+  | readonly [string, string]
   | Quantity
   | QuantityGiven
   | ProblemReplay
@@ -60,6 +64,7 @@ const semantics = problemGrammar.createSemantics().addOperation<ParsedNode>(
       concepts,
       quantities,
       equation,
+      guidance,
       replay,
       _close,
     ) {
@@ -68,6 +73,9 @@ const semantics = problemGrammar.createSemantics().addOperation<ParsedNode>(
         concepts: concepts.toDomain(),
         quantities: quantities.children.map((quantity) => quantity.toDomain()),
         equation: equation.toDomain(),
+        ...(guidance.children.length === 0
+          ? {}
+          : { guidance: guidance.children[0].toDomain() }),
         ...(replay.children.length === 0
           ? {}
           : { replay: replay.children[0].toDomain() }),
@@ -111,6 +119,26 @@ const semantics = problemGrammar.createSemantics().addOperation<ParsedNode>(
         seed: Number(seed.sourceString),
         generatorVersion: generatorVersion.sourceString,
       } as ProblemReplay;
+    },
+    Guidance(_guidance, _open, watches, _close) {
+      return watches.children.map((watch) => watch.toDomain());
+    },
+    Watch(_watch, id, _open, references, _close) {
+      const quantities: Record<string, string> = {};
+      for (const reference of references.children) {
+        const [label, quantityId] = reference.toDomain() as readonly [
+          string,
+          string,
+        ];
+        quantities[label] = quantityId;
+      }
+      return { id: id.sourceString, quantities } as GuidanceEntry;
+    },
+    GuidanceRef(label, quantityId) {
+      return [
+        label.sourceString,
+        quantityId.sourceString,
+      ] as readonly [string, string];
     },
   },
 );
@@ -163,6 +191,7 @@ export function parseProblem(source: string): ParseProblemResult {
     concepts: parsed.concepts,
     quantities: parsed.quantities,
     relation: relationResult.relation as Relation,
+    ...(parsed.guidance ? { guidance: parsed.guidance } : {}),
     ...(parsed.replay ? { replay: parsed.replay } : {}),
   };
 

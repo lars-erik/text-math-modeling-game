@@ -2,7 +2,9 @@ import { css, html, LitElement } from 'lit';
 import { maximumTotalFromPartsSeed } from '../../problem-generation/generate-total-from-parts';
 import {
   puzzleSelectionRequestEvent,
+  sessionSelectionRequestEvent,
   type PuzzleSelectionRequest,
+  type SessionSelectionRequest,
 } from '../puzzle-request';
 import type { PuzzleLocale } from '../lang';
 import { isModeId, type ModeId } from '../modes/mode';
@@ -25,6 +27,7 @@ export class PuzzleMenu extends LitElement {
     academicNotationToNamedEquationLabel: { attribute: false },
     seedLabel: { attribute: false },
     showLabel: { attribute: false },
+    startSessionLabel: { attribute: false },
   };
 
   static styles = css`
@@ -101,6 +104,7 @@ export class PuzzleMenu extends LitElement {
   declare academicNotationToNamedEquationLabel: string;
   declare seedLabel: string;
   declare showLabel: string;
+  declare startSessionLabel: string;
 
   constructor() {
     super();
@@ -121,6 +125,7 @@ export class PuzzleMenu extends LitElement {
       'Academic notation to named equation';
     this.seedLabel = 'Seed';
     this.showLabel = 'Show puzzle';
+    this.startSessionLabel = 'Start session';
   }
 
   render() {
@@ -166,7 +171,12 @@ export class PuzzleMenu extends LitElement {
             required
           />
         </label>
-        <button type="submit">${this.showLabel}</button>
+        <button type="submit" name="action" value="puzzle">
+          ${this.showLabel}
+        </button>
+        <button type="submit" name="action" value="session">
+          ${this.startSessionLabel}
+        </button>
       </form>
     `;
   }
@@ -180,6 +190,10 @@ export class PuzzleMenu extends LitElement {
     const themeId = data.get('scenario');
     const modeId = data.get('task');
     const seed = Number(data.get('seed'));
+    const action =
+      event.submitter instanceof HTMLButtonElement
+        ? event.submitter.value
+        : undefined;
     if (
       typeof themeId !== 'string' ||
       !isThemeId(themeId) ||
@@ -187,6 +201,16 @@ export class PuzzleMenu extends LitElement {
       !isModeId(modeId) ||
       !Number.isInteger(seed)
     ) {
+      return;
+    }
+    if (action === 'session') {
+      this.dispatchEvent(
+        new CustomEvent<SessionSelectionRequest>(sessionSelectionRequestEvent, {
+          bubbles: true,
+          composed: true,
+          detail: { seed, themeId, locale: this.locale },
+        }),
+      );
       return;
     }
     this.dispatchEvent(
