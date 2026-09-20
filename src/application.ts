@@ -4,7 +4,9 @@ import {
 } from './features/localization/locale';
 import {
   puzzleSelectionRequestEvent,
+  sessionSelectionRequestEvent,
   type PuzzleSelectionRequest,
+  type SessionSelectionRequest,
 } from './features/puzzle/puzzle-request';
 import { isThemeId, type ThemeId } from './features/themes';
 import { isModeId, type ModeId } from './features/puzzle/modes';
@@ -17,11 +19,8 @@ export type PuzzleApplicationState = PuzzleSelectionRequest & {
   kind: 'puzzle';
 };
 
-export type SessionApplicationState = {
+export type SessionApplicationState = SessionSelectionRequest & {
   kind: 'session';
-  seed: number;
-  themeId: ThemeId;
-  locale: PuzzleLocale;
 };
 
 export type ApplicationState = PuzzleApplicationState | SessionApplicationState;
@@ -50,12 +49,13 @@ export function startMathModelingApplication({
     }
   };
   const showSession = (
-    request: SessionApplicationState,
+    request: SessionSelectionRequest,
     updateSearch: boolean,
   ) => {
     puzzleElement?.setAttribute('session', String(request.seed));
     puzzleElement?.setAttribute('theme', request.themeId);
     puzzleElement?.setAttribute('locale', request.locale);
+    puzzleElement?.removeAttribute('mode');
     if (updateSearch) {
       replaceSearch?.(formatSessionSearch(request));
     }
@@ -68,6 +68,9 @@ export function startMathModelingApplication({
   }
   puzzleElement?.addEventListener(puzzleSelectionRequestEvent, (event) => {
     showPuzzle((event as CustomEvent<PuzzleSelectionRequest>).detail, true);
+  });
+  puzzleElement?.addEventListener(sessionSelectionRequestEvent, (event) => {
+    showSession((event as CustomEvent<SessionSelectionRequest>).detail, true);
   });
 }
 
@@ -155,7 +158,7 @@ export function formatPuzzleSearch(request: PuzzleSelectionRequest): string {
   return `?${parameters.toString()}`;
 }
 
-export function formatSessionSearch(request: SessionApplicationState): string {
+export function formatSessionSearch(request: SessionSelectionRequest): string {
   const parameters = new URLSearchParams({
     session: String(request.seed),
     scenario: request.themeId,

@@ -24,6 +24,7 @@ export const nb = {
     academicNotationToNamedEquation: 'Fra akademisk notasjon til navngitt likning',
     seed: 'Frø',
     show: 'Vis oppgave',
+    startSession: 'Start økt',
   },
   common: {
     puzzle: 'Oppgave',

@@ -728,6 +728,7 @@ export class MathModelingPuzzle extends LitElement {
           .academicNotationToNamedEquationLabel=${resources.puzzleMenu.academicNotationToNamedEquation}
           .seedLabel=${resources.puzzleMenu.seed}
           .showLabel=${resources.puzzleMenu.show}
+          .startSessionLabel=${resources.puzzleMenu.startSession}
         ></puzzle-menu>
         <div slot="source">${source}</div>
         <div slot="input">${input}</div>

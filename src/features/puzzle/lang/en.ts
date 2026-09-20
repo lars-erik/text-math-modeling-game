@@ -24,6 +24,7 @@ export const en = {
     academicNotationToNamedEquation: 'Academic notation to named equation',
     seed: 'Seed',
     show: 'Show puzzle',
+    startSession: 'Start session',
   },
   common: {
     puzzle: 'Puzzle',

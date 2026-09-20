@@ -22,6 +22,7 @@ export type PuzzleLocaleResources = {
     academicNotationToNamedEquation: string;
     seed: string;
     show: string;
+    startSession: string;
   };
   common: {
     puzzle: string;

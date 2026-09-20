@@ -6,7 +6,9 @@ import {
 } from '../../application';
 import {
   puzzleSelectionRequestEvent,
+  sessionSelectionRequestEvent,
   type PuzzleSelectionRequest,
+  type SessionSelectionRequest,
 } from './puzzle-request';
 
 class TestPuzzleElement extends EventTarget {
@@ -185,6 +187,35 @@ test('clears the session attribute when a direct puzzle selection is requested',
   expect(puzzleElement.attributes.has('session')).toBe(false);
   expect(replacedSearches).toEqual([
     '?seed=42&scenario=gaming.drone-power&task=quantities-to-named-equation&locale=nb',
+  ]);
+});
+
+test('session selection requests update the element and the replay URL', () => {
+  const puzzleElement = new TestPuzzleElement();
+  const replacedSearches: string[] = [];
+  const root = {
+    querySelector: () => puzzleElement,
+  } as unknown as ParentNode;
+  startMathModelingApplication({
+    search: '?seed=17',
+    root,
+    replaceSearch: (search) => replacedSearches.push(search),
+  });
+  puzzleElement.dispatchEvent(
+    new CustomEvent<SessionSelectionRequest>(sessionSelectionRequestEvent, {
+      detail: {
+        seed: 918273,
+        themeId: 'creator.followers',
+        locale: 'nb',
+      },
+    }),
+  );
+  expect(puzzleElement.attributes.get('session')).toBe('918273');
+  expect(puzzleElement.attributes.get('theme')).toBe('creator.followers');
+  expect(puzzleElement.attributes.get('locale')).toBe('nb');
+  expect(puzzleElement.attributes.has('mode')).toBe(false);
+  expect(replacedSearches).toEqual([
+    '?session=918273&scenario=creator.followers&locale=nb',
   ]);
 });
 

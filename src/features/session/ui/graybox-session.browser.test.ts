@@ -129,6 +129,45 @@ async function answerCurrent(puzzle: MathModelingPuzzle): Promise<void> {
   await submitText(puzzle, `${total} = ${base} + ${count} * ${perItem}`);
 }
 
+test('starts a session from the default single-puzzle view via the menu', async () => {
+  document.body.innerHTML = `
+    <math-modeling-puzzle
+      seed="17"
+      theme="gaming.drone-power"
+      mode="story-to-quantities"
+      locale="en"
+      input-mode="text"
+    ></math-modeling-puzzle>
+  `;
+  startMathModelingApplication({
+    search: '?seed=17&scenario=gaming.drone-power&task=story-to-quantities&locale=en',
+    root: document,
+    replaceSearch: (next: string) => {
+      window.history.replaceState(null, '', next);
+    },
+  });
+  const element = document.querySelector('math-modeling-puzzle');
+  expect(element).toBeInstanceOf(MathModelingPuzzle);
+  const puzzle = element as MathModelingPuzzle;
+  puzzle.academicDisplayAdapter = katexAcademicDisplayAdapter;
+  await puzzle.updateComplete;
+  expect(shellText(puzzle)).toContain('Story to quantities');
+  expect(shellText(puzzle)).not.toContain('Puzzle 1 /');
+
+  const menu = puzzle.shadowRoot?.querySelector('puzzle-menu');
+  const form = menu?.shadowRoot?.querySelector('form');
+  const seedInput = form?.querySelector('input[name="seed"]') as HTMLInputElement;
+  seedInput.value = '918273';
+  const startSessionButton = Array.from(
+    form?.querySelectorAll<HTMLButtonElement>('button') ?? [],
+  ).find((button) => button.textContent?.trim() === 'Start session');
+  expect(startSessionButton).toBeDefined();
+  form?.requestSubmit(startSessionButton!);
+  await puzzle.updateComplete;
+  expect(window.location.search).toBe('?session=918273&scenario=gaming.drone-power&locale=en');
+  expect(shellText(puzzle)).toContain('Puzzle 1 / 8');
+});
+
 test('runs a full deterministic graybox session to the summary', async () => {
   const puzzle = await mountSession();
   expect(shellText(puzzle)).toContain('Puzzle 1 / 8');
