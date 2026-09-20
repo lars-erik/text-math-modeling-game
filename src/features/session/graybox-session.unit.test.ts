@@ -180,9 +180,45 @@ test('requests a hint without submitting', () => {
   const withHint = current.requestHint();
   expect(withHint.hint?.kind).toBe('structured');
   expect(withHint.hint?.modeId).toBe('quantities-to-named-equation');
+  expect(withHint.hint?.content).toBe(
+    'The total contains the base amount once, plus one unit value per item.',
+  );
   expect(withHint.currentIndex).toBe(current.currentIndex);
   expect(withHint.completedItems).toEqual(current.completedItems);
   expect(withHint.screen?.feedback).toBeUndefined();
+});
+
+test('the same semantic hint renders EN and NB wording and survives a theme switch', () => {
+  const english = seekToMode(
+    start({ seed: sessionSeed, themeId: 'gaming.drone-power', locale: 'en' }),
+    'quantities-to-named-equation',
+  ).requestHint();
+  const norwegian = seekToMode(
+    start({ seed: sessionSeed, themeId: 'creator.followers', locale: 'nb' }),
+    'quantities-to-named-equation',
+  ).requestHint();
+  const norwegianDrone = seekToMode(
+    start({ seed: sessionSeed, themeId: 'gaming.drone-power', locale: 'nb' }),
+    'quantities-to-named-equation',
+  ).requestHint();
+  expect(english.hint?.kind).toBe(norwegian.hint?.kind);
+  expect(english.hint?.modeId).toBe(norwegian.hint?.modeId);
+  expect(english.hint?.content).toBe(
+    'The total contains the base amount once, plus one unit value per item.',
+  );
+  expect(norwegian.hint?.content).toBe(
+    'Totalen inneholder grunnbeløpet én gang, pluss én enhetsverdi per enhet.',
+  );
+  expect(norwegianDrone.hint?.content).toBe(norwegian.hint?.content);
+});
+
+test('requesting a hint on an unsupported mode is a no-op', () => {
+  let current = start();
+  while (current.plan.items[current.currentIndex].modeId === 'quantities-to-named-equation') {
+    current = current.submit(correctAnswerFor(current)).next();
+  }
+  const withoutHint = current.requestHint();
+  expect(withoutHint.hint).toBeUndefined();
 });
 
 test('requesting a hint preserves learner input', () => {

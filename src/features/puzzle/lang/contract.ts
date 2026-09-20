@@ -74,4 +74,14 @@ export type PuzzleLocaleResources = {
   misconceptions: {
     baseAppliedPerItem: (baseLabel: string, countLabel: string) => string;
   };
+  session: {
+    positionLabel: (position: number, total: number) => string;
+    next: string;
+    hint: string;
+    hintText: string;
+    completionHeading: string;
+    completedTotal: (total: number) => string;
+    perEdgeHeading: string;
+    sessionReplayLabel: string;
+  };
 };

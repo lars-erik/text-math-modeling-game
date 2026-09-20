@@ -80,4 +80,15 @@ export const en = {
     baseAppliedPerItem: (baseLabel, countLabel) =>
       `${baseLabel} is added once overall. In your equation it is multiplied by the ${countLabel}, so it is applied once per item.`,
   },
+  session: {
+    positionLabel: (position, total) => `Puzzle ${position} / ${total}`,
+    next: 'Next puzzle',
+    hint: 'Hint',
+    hintText:
+      'The total contains the base amount once, plus one unit value per item.',
+    completionHeading: 'Session complete',
+    completedTotal: (total) => `${total} puzzles completed`,
+    perEdgeHeading: 'Completed representation edges',
+    sessionReplayLabel: 'Session replay',
+  },
 } satisfies PuzzleLocaleResources;

@@ -11,7 +11,7 @@ import {
 import type { LearnerAnswer } from '../puzzle/learner-answer';
 import type { QuantitySelection } from '../puzzle/modes';
 import { modeIds, type ModeId } from '../puzzle/modes';
-import type { PuzzleLocale } from '../puzzle/lang';
+import { puzzleResources, type PuzzleLocale } from '../puzzle/lang';
 import type { ThemeId } from '../themes';
 import {
   planSession,
@@ -285,7 +285,5 @@ function hintText(modeId: ModeId, locale: PuzzleLocale): string | undefined {
   if (modeId !== 'quantities-to-named-equation') {
     return undefined;
   }
-  return locale === 'nb'
-    ? 'Totalen inneholder grunnbeløpet én gang, pluss én enhetsverdi per enhet.'
-    : 'The total contains the base amount once, plus one unit value per item.';
+  return puzzleResources[locale].session.hintText;
 }

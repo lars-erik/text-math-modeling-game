@@ -80,4 +80,15 @@ export const nb = {
     baseAppliedPerItem: (baseLabel, countLabel) =>
       `${baseLabel} skal legges til én gang totalt. I likningen din blir det ganget med ${countLabel}, slik at det brukes én gang per enhet.`,
   },
+  session: {
+    positionLabel: (position, total) => `Oppgave ${position} / ${total}`,
+    next: 'Neste oppgave',
+    hint: 'Hint',
+    hintText:
+      'Totalen inneholder grunnbeløpet én gang, pluss én enhetsverdi per enhet.',
+    completionHeading: 'Økten er fullført',
+    completedTotal: (total) => `${total} oppgaver fullført`,
+    perEdgeHeading: 'Fullførte representasjonskanter',
+    sessionReplayLabel: 'Gjentakelse av økt',
+  },
 } satisfies PuzzleLocaleResources;
