@@ -8,7 +8,7 @@ import {
   englishLearnerNames,
   norwegianLearnerNames,
 } from './learner-name-maps.fixture';
-import { createCaseInsensitiveLearnerNameResolver, parseNamedRelation } from '.';
+import { parseNamedRelation } from '.';
 
 const canonicalNames = {
   a: 'a',
@@ -108,11 +108,11 @@ describe('identifier resolution', () => {
   test('case-insensitive learner names resolve to the same canonical AST', () => {
     const regular = parseNamedRelation(
       'totalPower = basePower + droneCount * dronePower',
-      createCaseInsensitiveLearnerNameResolver(englishLearnerNames),
+      englishLearnerNames,
     );
     const mixedCase = parseNamedRelation(
       'TOTALPOWER = basepower + DRONECOUNT * DronePower',
-      createCaseInsensitiveLearnerNameResolver(englishLearnerNames),
+      englishLearnerNames,
     );
 
     expect(mixedCase).toEqual(regular);
@@ -123,11 +123,11 @@ describe('identifier resolution', () => {
     expect(
       parseNamedRelation(
         'result = RATE',
-        createCaseInsensitiveLearnerNameResolver({
+        {
           rate: 'base',
           Rate: 'unitValue',
           result: 'total',
-        }),
+        },
       ),
     ).toMatchObject({
       kind: 'ambiguous-identifier',
