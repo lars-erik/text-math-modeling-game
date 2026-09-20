@@ -1,3 +1,5 @@
+export type SessionHintKind = 'base-once-plus-per-item';
+
 export type PuzzleLocaleResources = {
   language: {
     label: string;
@@ -75,11 +77,12 @@ export type PuzzleLocaleResources = {
   misconceptions: {
     baseAppliedPerItem: (baseLabel: string, countLabel: string) => string;
   };
+
   session: {
     positionLabel: (position: number, total: number) => string;
     next: string;
     hint: string;
-    hintText: string;
+    hintText: (kind: SessionHintKind) => string;
     completionHeading: string;
     completedTotal: (total: number) => string;
     perEdgeHeading: string;

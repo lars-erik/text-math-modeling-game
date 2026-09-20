@@ -85,8 +85,10 @@ export const nb = {
     positionLabel: (position, total) => `Oppgave ${position} / ${total}`,
     next: 'Neste oppgave',
     hint: 'Hint',
-    hintText:
-      'Totalen inneholder grunnbeløpet én gang, pluss én enhetsverdi per enhet.',
+    hintText: (kind) =>
+      kind === 'base-once-plus-per-item'
+        ? 'Totalen inneholder grunnbeløpet én gang, pluss én enhetsverdi per enhet.'
+        : '',
     completionHeading: 'Økten er fullført',
     completedTotal: (total) => `${total} oppgaver fullført`,
     perEdgeHeading: 'Fullførte representasjonskanter',

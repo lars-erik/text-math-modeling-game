@@ -64,8 +64,9 @@ function printStep(step: TranscriptStep): string[] {
       `log item ${entry.itemIndex} ${entry.accepted ? 'accepted' : 'rejected'} ${describeLoggedSubmission(entry.submission)}`,
     );
   }
-  if (submitted.hint !== undefined) {
-    lines.push(`hint ${submitted.hint.modeId}: ${submitted.hint.content}`);
+  const hint = session.hint ?? submitted.hint;
+  if (hint !== undefined) {
+    lines.push(`hint ${hint.modeId}: ${hint.kind}`);
   }
   return lines;
 }

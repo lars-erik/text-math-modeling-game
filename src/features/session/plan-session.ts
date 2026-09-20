@@ -7,8 +7,8 @@ import { modeIds, type ModeId } from '../puzzle/modes';
 
 export const sessionPlannerVersion = 'session-plan-v1';
 
-const minimumSessionLength = modeIds.length;
-const maximumSessionLength = 8;
+const minimumSessionLength = 5;
+const maximumSessionLength = 10;
 
 export type SessionPlanRequest = {
   seed: number;

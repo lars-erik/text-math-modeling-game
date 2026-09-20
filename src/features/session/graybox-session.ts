@@ -11,7 +11,7 @@ import {
 import type { LearnerAnswer } from '../puzzle/learner-answer';
 import type { ModeSubmission, QuantitySelection } from '../puzzle/modes';
 import { modeIds, type ModeId } from '../puzzle/modes';
-import { puzzleResources, type PuzzleLocale } from '../puzzle/lang';
+import type { PuzzleLocale } from '../puzzle/lang';
 import type { ThemeId } from '../themes';
 import {
   planSession,
@@ -39,9 +39,8 @@ export type SessionCompletionSummary = {
 };
 
 export type SessionHint = {
-  kind: 'structured';
+  kind: 'base-once-plus-per-item';
   modeId: ModeId;
-  content: string;
 };
 
 export type GrayboxSession = {
@@ -153,11 +152,8 @@ function createActiveSession(
       );
     },
     requestHint() {
-      const content = hintText(
-        plan.items[currentIndex].modeId,
-        options.locale,
-      );
-      if (content === undefined) {
+      const modeId = plan.items[currentIndex].modeId;
+      if (!supportedHintKinds.has(modeId)) {
         return this;
       }
       return createActiveSession(
@@ -166,7 +162,7 @@ function createActiveSession(
         currentIndex,
         answerLog,
         state.currentScreen,
-        { kind: 'structured', modeId: plan.items[currentIndex].modeId, content },
+        { kind: 'base-once-plus-per-item', modeId },
         currentCompleted,
       );
     },
@@ -238,6 +234,10 @@ function createCompletedSession(
 
 const acceptedKinds = new Set(['accepted', 'quantity-selection-accepted']);
 
+const supportedHintKinds = new Set<ModeId>([
+  'quantities-to-named-equation',
+]);
+
 function upsertAnswerLog(
   answerLog: readonly SessionItemLog[],
   entry: SessionItemLog,
@@ -302,11 +302,4 @@ function requireProblem(state: InternalSessionState): Problem {
     return generateItemProblem(state.plan, state.currentIndex);
   }
   return state.currentProblem;
-}
-
-function hintText(modeId: ModeId, locale: PuzzleLocale): string | undefined {
-  if (modeId !== 'quantities-to-named-equation') {
-    return undefined;
-  }
-  return puzzleResources[locale].session.hintText;
 }

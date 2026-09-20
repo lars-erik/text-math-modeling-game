@@ -645,11 +645,13 @@ export class MathModelingPuzzle extends LitElement {
       session.total,
     );
     const hint = session.hint;
+    const hintMessage =
+      hint === undefined ? '' : sessionResources.hintText(hint.kind);
     const feedbackMessage = screen.feedback?.message ?? '';
     const feedbackText =
-      hint !== undefined && feedbackMessage === ''
-        ? hint.content
-        : [feedbackMessage, hint?.content ?? '']
+      hintMessage !== '' && feedbackMessage === ''
+        ? hintMessage
+        : [feedbackMessage, hintMessage]
             .filter((part) => part !== '')
             .join(' ');
     return this.renderShell({

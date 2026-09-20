@@ -165,13 +165,13 @@ test('starts a session from the default single-puzzle view via the menu', async 
   form?.requestSubmit(startSessionButton!);
   await puzzle.updateComplete;
   expect(window.location.search).toBe('?session=918273&scenario=gaming.drone-power&locale=en');
-  expect(shellText(puzzle)).toContain('Puzzle 1 / 8');
+  expect(shellText(puzzle)).toContain('Puzzle 1 / 10');
 });
 
 test('runs a full deterministic graybox session to the summary', async () => {
   const puzzle = await mountSession();
-  expect(shellText(puzzle)).toContain('Puzzle 1 / 8');
-  const total = 8;
+  expect(shellText(puzzle)).toContain('Puzzle 1 / 10');
+  const total = 10;
   for (let index = 1; index <= total; index += 1) {
     if (index > 1) {
       const nextButton = page.getByRole('button', { name: 'Next puzzle' });
@@ -186,15 +186,15 @@ test('runs a full deterministic graybox session to the summary', async () => {
   await puzzle.updateComplete;
   const summaryText = (puzzle.shadowRoot?.textContent ?? '').replace(/\s+/g, ' ');
   expect(shellText(puzzle)).toContain('Session complete');
-  expect(summaryText).toContain('8 puzzles completed');
+  expect(summaryText).toContain('10 puzzles completed');
   expect(summaryText).toContain('Story to quantities: 2');
   expect(summaryText).toContain('Quantities to named equation: 2');
-  expect(summaryText).toContain('Named equation to academic notation: 2');
-  expect(summaryText).toContain('Academic notation to named equation: 2');
+  expect(summaryText).toContain('Named equation to academic notation: 3');
+  expect(summaryText).toContain('Academic notation to named equation: 3');
   const logItems = Array.from(
     puzzle.shadowRoot?.querySelectorAll('.answer-log-list li') ?? [],
   ).map((item) => (item.textContent ?? '').replace(/\s+/g, ' ').trim());
-  expect(logItems).toHaveLength(8);
+  expect(logItems).toHaveLength(10);
   for (const entry of logItems) {
     expect(entry).toContain('(correct)');
   }
@@ -221,7 +221,7 @@ test('the answer log marks a wrong answer as incorrect during the session', asyn
 
 test('the completed session offers a way back to the single puzzle', async () => {
   const puzzle = await mountSession();
-  const total = 8;
+  const total = 10;
   for (let index = 1; index <= total; index += 1) {
     if (index > 1) {
       const nextButton = page.getByRole('button', { name: 'Next puzzle' });
@@ -246,7 +246,7 @@ test('the completed session offers a way back to the single puzzle', async () =>
 test('multiple choice inside a session accepts the matching equation', async () => {
   const puzzle = await mountSession();
   let current = puzzle;
-  for (let index = 1; index <= 8; index += 1) {
+  for (let index = 1; index <= 10; index += 1) {
     if (shellText(current).includes('Quantities to named equation')) {
       const choiceButton = Array.from(
         current.shadowRoot?.querySelectorAll<HTMLButtonElement>('button') ?? [],
@@ -292,14 +292,14 @@ test('wrong answers keep input and feedback inside a session item', async () => 
     return;
   }
   await submitText(puzzle, 'wrong = wrong');
-  expect(shellText(puzzle)).toContain('Puzzle 1 / 8');
+  expect(shellText(puzzle)).toContain('Puzzle 1 / 10');
   expect(shellStatus(puzzle)).not.toBe('');
 });
 
 test('requests the supported hint without losing input', async () => {
   const puzzle = await mountSession();
   let current = puzzle;
-  for (let index = 1; index <= 8; index += 1) {
+  for (let index = 1; index <= 10; index += 1) {
     const hintButton = Array.from(
       current.shadowRoot?.querySelectorAll<HTMLButtonElement>('button') ?? [],
     ).find((button) => button.textContent?.trim() === 'Hint');
@@ -325,3 +325,43 @@ test('requests the supported hint without losing input', async () => {
   }
   throw new Error('The fixed session never exposed the hint action.');
 });
+import approvedCompletionFragment from './graybox-session-completion-fragment.approved.txt?raw';
+
+test('approves the semantic session completion fragment', async () => {
+  const puzzle = await mountSession();
+  const total = 10;
+  for (let index = 1; index <= total; index += 1) {
+    if (index > 1) {
+      const nextButton = page.getByRole('button', { name: 'Next puzzle' });
+      await nextButton.click();
+      await puzzle.updateComplete;
+    }
+    await answerCurrent(puzzle);
+  }
+  const finalNextButton = page.getByRole('button', { name: 'Next puzzle' });
+  await finalNextButton.click();
+  await puzzle.updateComplete;
+  const fragment = completionFragment(puzzle);
+  expect(fragment).toBe(approvedCompletionFragment);
+});
+
+function completionFragment(puzzle: MathModelingPuzzle): string {
+  const shell = puzzle.shadowRoot?.querySelector('puzzle-shell');
+  const heading = shell?.shadowRoot?.querySelector('h1')?.textContent?.trim() ?? '';
+  const summaryLine = Array.from(
+    puzzle.shadowRoot?.querySelectorAll('div[slot="source"] p') ?? [],
+  ).map((item) => (item.textContent ?? '').trim())[0];
+  const edgeCounts = Array.from(
+    puzzle.shadowRoot?.querySelectorAll('div[slot="source"] li') ?? [],
+  ).map((item) => (item.textContent ?? '').replace(/\s+/g, ' ').trim());
+  const answers = Array.from(
+    puzzle.shadowRoot?.querySelectorAll('.answer-log-list li') ?? [],
+  ).map((item) => (item.textContent ?? '').replace(/\s+/g, ' ').trim());
+  return [
+    `heading ${heading}`,
+    `summary ${summaryLine}`,
+    ...edgeCounts.map((line) => `edge ${line}`),
+    ...answers.map((line, index) => `answer ${index + 1} ${line}`),
+    '',
+  ].join('\n');
+}

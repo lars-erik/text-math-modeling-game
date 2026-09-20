@@ -21,11 +21,11 @@ test('reproduces the identical item plan for the same session seed', () => {
   expect(planOf(exampleSeed)).toEqual(planOf(exampleSeed));
 });
 
-test('plans a phase 1 session of at least four and at most eight items', () => {
-  for (const seed of [exampleSeed, 1, 42, 0xffff_ffff]) {
+test('plans a session of at least five and at most ten items', () => {
+  for (let seed = 0; seed < 1000; seed += 1) {
     const plan = planOf(seed);
-    expect(plan.items.length).toBeGreaterThanOrEqual(4);
-    expect(plan.items.length).toBeLessThanOrEqual(8);
+    expect(plan.items.length).toBeGreaterThanOrEqual(5);
+    expect(plan.items.length).toBeLessThanOrEqual(10);
     expect(plan.items.length).toBe(plan.length);
   }
 });

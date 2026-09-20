@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
 import {
   defaultTotalFromPartsGenerationConfig,
@@ -127,7 +128,7 @@ test('a rejected submit keeps a previously requested hint', () => {
   const current = seekToMode(start(), 'quantities-to-named-equation');
   const withHint = current.requestHint();
   const submitted = withHint.submit({ kind: 'text', input: 'wrong = wrong' });
-  expect(submitted.hint?.content).toBe(withHint.hint?.content);
+  expect(submitted.hint).toEqual(withHint.hint);
   expect(submitted.screen?.feedback?.kind).not.toBe('accepted');
 });
 
@@ -239,11 +240,8 @@ test('misconception feedback still works unchanged inside a session', () => {
 test('requests a hint without submitting', () => {
   const current = seekToMode(start(), 'quantities-to-named-equation');
   const withHint = current.requestHint();
-  expect(withHint.hint?.kind).toBe('structured');
+  expect(withHint.hint?.kind).toBe('base-once-plus-per-item');
   expect(withHint.hint?.modeId).toBe('quantities-to-named-equation');
-  expect(withHint.hint?.content).toBe(
-    'The total contains the base amount once, plus one unit value per item.',
-  );
   expect(withHint.currentIndex).toBe(current.currentIndex);
   expect(withHint.answerLog).toEqual(current.answerLog);
   expect(withHint.screen?.feedback).toBeUndefined();
@@ -262,15 +260,18 @@ test('the same semantic hint renders EN and NB wording and survives a theme swit
     start({ seed: sessionSeed, themeId: 'gaming.drone-power', locale: 'nb' }),
     'quantities-to-named-equation',
   ).requestHint();
-  expect(english.hint?.kind).toBe(norwegian.hint?.kind);
-  expect(english.hint?.modeId).toBe(norwegian.hint?.modeId);
-  expect(english.hint?.content).toBe(
-    'The total contains the base amount once, plus one unit value per item.',
+  expect(english.hint).toEqual(norwegian.hint);
+  expect(norwegian.hint).toEqual(norwegianDrone.hint);
+  expect(english.hint?.kind).toBe('base-once-plus-per-item');
+});
+
+test('the session core stays free of locale resources', () => {
+  const source = readFileSync(
+    new URL('./graybox-session.ts', import.meta.url),
+    'utf8',
   );
-  expect(norwegian.hint?.content).toBe(
-    'Totalen inneholder grunnbeløpet én gang, pluss én enhetsverdi per enhet.',
-  );
-  expect(norwegianDrone.hint?.content).toBe(norwegian.hint?.content);
+  expect(source).not.toContain('puzzleResources');
+  expect(source).not.toContain('hintText');
 });
 
 test('requesting a hint on an unsupported mode is a no-op', () => {
