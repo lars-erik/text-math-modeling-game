@@ -62,30 +62,29 @@ describe('normalized relation structure', () => {
     right: totalFromParts.left,
   };
 
-  test('keeps equation sides ordered for named modelling puzzles', () => {
-    expect(namedEquationStructurePolicy.equationSides).toBe('ordered');
+  test('accepts swapped equation sides for named modelling puzzles (#37)', () => {
+    expect(namedEquationStructurePolicy.equationSides).toBe('swappable');
     expect(
       relationsHaveNormalizedStructure(
         totalFromParts,
         swappedSides,
         namedEquationStructurePolicy,
       ),
-    ).toBe(false);
+    ).toBe(true);
   });
 
-  test('can explicitly allow swapped equation sides under a different policy', () => {
-    const swappableSidesPolicy: NormalizedStructurePolicy = {
+  test('can explicitly require ordered equation sides under a different policy', () => {
+    const orderedSidesPolicy: NormalizedStructurePolicy = {
       ...namedEquationStructurePolicy,
-      equationSides: 'swappable',
+      equationSides: 'ordered',
     };
-
     expect(
       relationsHaveNormalizedStructure(
         totalFromParts,
         swappedSides,
-        swappableSidesPolicy,
+        orderedSidesPolicy,
       ),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   test('accepts commutative reordering without accepting changed grouping', () => {

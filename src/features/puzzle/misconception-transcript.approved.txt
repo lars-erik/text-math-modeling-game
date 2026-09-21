@@ -27,6 +27,6 @@ submission named-equation
       add
         quantity base
         quantity unitValue
-check normalized-structure equation-sides=ordered
+check normalized-structure equation-sides=swappable
 misconception base-applied-per-item base=base count=count
 feedback misconception: Base power is added once overall. In your equation it is multiplied by the number of drones, so it is applied once per item.

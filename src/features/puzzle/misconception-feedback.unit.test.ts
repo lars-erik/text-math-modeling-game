@@ -43,7 +43,7 @@ test('named-equation submission returns structured misconception feedback with l
     kind: 'misconception',
     misconception: expectedMisconception,
     checkPolicy: 'normalized-structure',
-    equationSides: 'ordered',
+    equationSides: 'swappable',
   });
   expect(submission.feedback?.kind).toBe('misconception');
   if (submission.feedback?.kind === 'misconception') {

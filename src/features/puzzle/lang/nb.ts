@@ -53,7 +53,6 @@ export const nb = {
     choiceLegend: 'Velg den navngitte likningen',
     accepted: 'Likningen stemmer med modellen for størrelsene.',
     groupingMismatch: 'Grupperingen i likningen stemmer ikke med modellen for størrelsene.',
-    reversedSides: 'Sidene i likningen er byttet om; behold den etterspurte rekkefølgen.',
     unknownIdentifier: (identifier, available) =>
       `Ukjent navn ${JSON.stringify(identifier)}. Tilgjengelige navn: ${available}.`,
   },

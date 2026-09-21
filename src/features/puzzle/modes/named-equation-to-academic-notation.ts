@@ -43,13 +43,13 @@ export const namedEquationToAcademicNotationMode: Mode = {
             kind: 'accepted',
             message: resources.accepted,
             checkPolicy: 'normalized-structure',
-            equationSides: 'ordered',
+            equationSides: namedEquationStructurePolicy.equationSides,
           }
         : {
             kind: 'structural-mismatch',
             message: resources.groupingMismatch,
             checkPolicy: 'normalized-structure',
-            equationSides: 'ordered',
+            equationSides: namedEquationStructurePolicy.equationSides,
           },
       submission: {
         kind: 'academic-notation',

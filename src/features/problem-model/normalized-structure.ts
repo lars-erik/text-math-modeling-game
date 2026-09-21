@@ -12,7 +12,7 @@ export type NormalizedStructurePolicy = {
 export const namedEquationStructurePolicy = {
   addition: 'commutative',
   multiplication: 'commutative',
-  equationSides: 'ordered',
+  equationSides: 'swappable',
 } as const satisfies NormalizedStructurePolicy;
 
 export function normalizeExpression(

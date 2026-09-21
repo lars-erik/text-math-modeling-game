@@ -53,7 +53,6 @@ export const en = {
     choiceLegend: 'Choose the named equation',
     accepted: 'The equation matches the quantity model.',
     groupingMismatch: 'The equation grouping does not match the quantity model.',
-    reversedSides: 'The equation sides are reversed; keep them in the requested order.',
     unknownIdentifier: (identifier, available) =>
       `Unknown identifier ${JSON.stringify(identifier)}. Available identifiers: ${available}.`,
   },

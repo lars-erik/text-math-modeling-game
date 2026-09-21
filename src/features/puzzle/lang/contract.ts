@@ -53,7 +53,6 @@ export type PuzzleLocaleResources = {
     choiceLegend: string;
     accepted: string;
     groupingMismatch: string;
-    reversedSides: string;
     unknownIdentifier: (identifier: string, available: string) => string;
   };
   namedEquationToAcademicNotation: {
