@@ -3,9 +3,11 @@ import { startMathModelingApplication } from '../../../application';
 import { MathModelingPuzzle } from './math-modeling-puzzle';
 import { katexAcademicDisplayAdapter } from './katex-academic-display-adapter';
 import './math-modeling-puzzle';
+import '../../navigation/ui/home-screen';
 
-function mountPuzzle(search: string): MathModelingPuzzle {
+function mountPuzzle(hash: string): MathModelingPuzzle {
   document.body.innerHTML = `
+    <home-screen hidden></home-screen>
     <math-modeling-puzzle
       seed="17"
       theme="gaming.drone-power"
@@ -15,11 +17,8 @@ function mountPuzzle(search: string): MathModelingPuzzle {
     ></math-modeling-puzzle>
   `;
   startMathModelingApplication({
-    search,
+    hash,
     root: document,
-    replaceSearch: (next) => {
-      window.history.replaceState(null, '', next);
-    },
   });
   const element = document.querySelector('math-modeling-puzzle');
   expect(element).toBeInstanceOf(MathModelingPuzzle);
@@ -41,7 +40,7 @@ function storyOf(puzzle: MathModelingPuzzle): string {
 
 test('switches tasks and input modes while the story stays visible and the math is identical', async () => {
   const puzzle = mountPuzzle(
-    '?seed=17&scenario=gaming.drone-power&task=story-to-quantities',
+    '#puzzle?seed=17&scenario=gaming.drone-power&task=story-to-quantities&language=en',
   );
   await puzzle.updateComplete;
 
@@ -122,16 +121,15 @@ test('switches tasks and input modes while the story stays visible and the math 
 });
 
 test('replays the same problem from the URL state', async () => {
-  const search =
-    '?seed=321&scenario=creator.followers&task=quantities-to-named-equation&locale=en';
-  const first = mountPuzzle(search);
+  const hash = '#puzzle?seed=321&scenario=creator.followers&task=quantities-to-named-equation&language=en';
+  const first = mountPuzzle(hash);
   await first.updateComplete;
   const firstStory = storyOf(first);
   const firstQuantities = Array.from(
     first.shadowRoot?.querySelectorAll('div[slot="source"] li') ?? [],
   ).map((item) => item.textContent);
 
-  const second = mountPuzzle(search);
+  const second = mountPuzzle(hash);
   await second.updateComplete;
   expect(storyOf(second)).toBe(firstStory);
   expect(
@@ -144,7 +142,7 @@ test('replays the same problem from the URL state', async () => {
 
 test('completes named equation to academic notation and renders the accepted relation with KaTeX', async () => {
   const puzzle = mountPuzzle(
-    '?seed=321&scenario=creator.followers&task=named-equation-to-academic-notation&locale=nb',
+    '#puzzle?seed=321&scenario=creator.followers&task=named-equation-to-academic-notation&language=nb',
   );
   await puzzle.updateComplete;
 
@@ -183,9 +181,8 @@ test('completes named equation to academic notation and renders the accepted rel
 });
 
 test('replays academic notation to named equation and accepts Theme-localized names', async () => {
-  const search =
-    '?seed=321&scenario=creator.followers&task=academic-notation-to-named-equation&locale=nb';
-  const puzzle = mountPuzzle(search);
+  const hash = '#puzzle?seed=321&scenario=creator.followers&task=academic-notation-to-named-equation&language=nb';
+  const puzzle = mountPuzzle(hash);
   await puzzle.updateComplete;
 
   expect(shellText(puzzle)).toContain(
@@ -221,7 +218,7 @@ test('replays academic notation to named equation and accepts Theme-localized na
 
 test('explains the base-applied-per-item misconception and preserves the learner input', async () => {
   const puzzle = mountPuzzle(
-    '?seed=17&scenario=gaming.drone-power&task=quantities-to-named-equation&locale=en',
+    '#puzzle?seed=17&scenario=gaming.drone-power&task=quantities-to-named-equation&language=en',
   );
   await puzzle.updateComplete;
   const inputComponent = puzzle.shadowRoot?.querySelector(
@@ -262,7 +259,7 @@ test('explains the base-applied-per-item misconception and preserves the learner
 
 test('accepts mixed-case named equation identifiers', async () => {
   const puzzle = mountPuzzle(
-    '?seed=17&scenario=gaming.drone-power&task=quantities-to-named-equation&locale=en',
+    '#puzzle?seed=17&scenario=gaming.drone-power&task=quantities-to-named-equation&language=en',
   );
   await puzzle.updateComplete;
 

@@ -77,6 +77,9 @@ export class MathModelingPuzzle extends LitElement {
       min-width: 0;
       padding: clamp(0rem, 3vw, 2rem);
     }
+    :host([hidden]) {
+      display: none;
+    }
     * {
       box-sizing: border-box;
     }

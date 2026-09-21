@@ -27,6 +27,9 @@ export class HomeScreen extends LitElement {
       display: block;
       padding: clamp(0rem, 3vw, 2rem);
     }
+    :host([hidden]) {
+      display: none;
+    }
     section {
       display: grid;
       gap: 1rem;

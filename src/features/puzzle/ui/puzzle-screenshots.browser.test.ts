@@ -4,10 +4,12 @@ import { startMathModelingApplication } from '../../../application';
 import { MathModelingPuzzle } from './math-modeling-puzzle';
 import { katexAcademicDisplayAdapter } from './katex-academic-display-adapter';
 import './math-modeling-puzzle';
+import '../../navigation/ui/home-screen';
 
 test('approves the wide drone-power puzzle shell', async () => {
   await page.viewport(1280, 900);
   document.body.innerHTML = `
+    <home-screen hidden></home-screen>
     <math-modeling-puzzle
       seed="17"
       theme="gaming.drone-power"
@@ -17,7 +19,7 @@ test('approves the wide drone-power puzzle shell', async () => {
     ></math-modeling-puzzle>
   `;
   startMathModelingApplication({
-    search: '?seed=17&scenario=gaming.drone-power',
+    hash: '#puzzle?seed=17&scenario=gaming.drone-power&task=story-to-quantities&language=en',
     root: document,
   });
   window.scrollTo(0, 0);
@@ -32,6 +34,7 @@ test('approves the wide drone-power puzzle shell', async () => {
 test('approves the narrow Norwegian creator puzzle shell', async () => {
   await page.viewport(390, 844);
   document.body.innerHTML = `
+    <home-screen hidden></home-screen>
     <math-modeling-puzzle
       seed="321"
       theme="creator.followers"
@@ -41,8 +44,8 @@ test('approves the narrow Norwegian creator puzzle shell', async () => {
     ></math-modeling-puzzle>
   `;
   startMathModelingApplication({
-    search:
-      '?seed=321&scenario=creator.followers&task=quantities-to-named-equation&locale=nb',
+    hash:
+      '#puzzle?seed=321&scenario=creator.followers&task=quantities-to-named-equation&language=nb',
     root: document,
   });
   window.scrollTo(0, 0);
@@ -57,6 +60,7 @@ test('approves the narrow Norwegian creator puzzle shell', async () => {
 test('approves academic notation rendered with the pluggable KaTeX adapter', async () => {
   await page.viewport(1100, 900);
   document.body.innerHTML = `
+    <home-screen hidden></home-screen>
     <math-modeling-puzzle
       seed="321"
       theme="creator.followers"
@@ -66,8 +70,8 @@ test('approves academic notation rendered with the pluggable KaTeX adapter', asy
     ></math-modeling-puzzle>
   `;
   startMathModelingApplication({
-    search:
-      '?seed=321&scenario=creator.followers&task=academic-notation-to-named-equation&locale=nb',
+    hash:
+      '#puzzle?seed=321&scenario=creator.followers&task=academic-notation-to-named-equation&language=nb',
     root: document,
   });
   const element = document.querySelector('math-modeling-puzzle');
