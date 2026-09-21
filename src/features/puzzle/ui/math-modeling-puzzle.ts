@@ -15,9 +15,9 @@ import {
 } from '../compose-puzzle';
 import {
   guidanceEntryForHint,
-  startSession,
   type GrayboxSession,
 } from '../../session/graybox-session';
+import type { SessionRunStore } from '../../session/session-run-store';
 import { modeIds, selectGuidanceForMode } from '../modes';
 import type { ModeSubmission, QuantitySelection } from '../modes/mode';
 import type { LearnerAnswer } from '../learner-answer';
@@ -236,6 +236,7 @@ export class MathModelingPuzzle extends LitElement {
   private declare screen: PuzzleScreen | undefined;
   private declare generatedProblem: Problem;
   private declare activeSession: GrayboxSession | undefined;
+  declare sessionRunStore: SessionRunStore | undefined;
 
   constructor() {
     super();
@@ -263,7 +264,9 @@ export class MathModelingPuzzle extends LitElement {
         !changedProperties.has('themeId') &&
         this.activeSession !== undefined;
       this.activeSession = localeOnlyChange
-        ? this.activeSession?.withLocale(this.locale as PuzzleLocale)
+        ? this.recordSession(
+            this.activeSession?.withLocale(this.locale as PuzzleLocale),
+          )
         : this.composeCurrentSession();
     }
     if (changedProperties.has('seed')) {
@@ -291,11 +294,23 @@ export class MathModelingPuzzle extends LitElement {
     ) {
       return undefined;
     }
-    return startSession({
+    const session = this.sessionRunStore?.provide({
       seed: Number(this.session),
       themeId: this.themeId,
       locale: this.locale,
     });
+    return session === undefined
+      ? undefined
+      : this.recordSession(session);
+  }
+
+  private recordSession(
+    session: GrayboxSession | undefined,
+  ): GrayboxSession | undefined {
+    if (session !== undefined) {
+      this.sessionRunStore?.record(session);
+    }
+    return session;
   }
 
   private composeCurrentScreen(): PuzzleScreen | undefined {
@@ -541,8 +556,10 @@ export class MathModelingPuzzle extends LitElement {
 
   private submitAnswer(answer: LearnerAnswer | QuantitySelection): void {
     if (this.activeSession !== undefined) {
-      this.activeSession = this.activeSession.submit(answer);
-      this.screen = this.activeSession.screen;
+      this.activeSession = this.recordSession(
+        this.activeSession.submit(answer),
+      );
+      this.screen = this.activeSession?.screen;
       return;
     }
     if (
@@ -816,15 +833,17 @@ export class MathModelingPuzzle extends LitElement {
     if (this.activeSession === undefined) {
       return;
     }
-    this.activeSession = this.activeSession.next();
-    this.screen = this.activeSession.screen;
+    this.activeSession = this.recordSession(this.activeSession.next());
+    this.screen = this.activeSession?.screen;
   }
 
   private handleSessionHint(): void {
     if (this.activeSession === undefined) {
       return;
     }
-    this.activeSession = this.activeSession.requestHint();
+    this.activeSession = this.recordSession(
+      this.activeSession.requestHint(),
+    );
   }
 
   private renderShell({

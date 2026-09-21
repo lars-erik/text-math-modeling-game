@@ -24,11 +24,27 @@ class FakeElement {
   }
 }
 
+class FakeHomeElement extends FakeElement {
+  hiddenRuns:
+    | {
+        activeRun: { seed: number; position: number; total: number } | undefined;
+        completedRuns: readonly { runId: string; seed: number; total: number }[];
+      }
+    | undefined;
+
+  setHiddenRuns(view: {
+    activeRun: { seed: number; position: number; total: number } | undefined;
+    completedRuns: readonly { runId: string; seed: number; total: number }[];
+  }): void {
+    this.hiddenRuns = view;
+  }
+}
+
 type Harness = ReturnType<typeof harness>;
 
 function harness(initialHash: string) {
   const elements: Record<string, FakeElement> = {
-    'home-screen': new FakeElement(),
+    'home-screen': new FakeHomeElement(),
     'math-modeling-puzzle': new FakeElement(),
   };
   const writes: Array<{ hash: string; mode: 'push' | 'replace' }> = [];

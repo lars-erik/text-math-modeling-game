@@ -13,6 +13,7 @@ import {
 import {
   navigateHomeRequestEvent,
   navigatePuzzleRequestEvent,
+  navigateResumeSessionRequestEvent,
   navigateSessionRequestEvent,
   type NavigatePuzzleRequest,
   type NavigateSessionRequest,
@@ -26,6 +27,15 @@ import {
 import { isThemeId, type ThemeId } from './features/themes';
 import { isModeId, type ModeId } from './features/puzzle/modes';
 import type { PuzzleLocale } from './features/localization/locale';
+import {
+  createSessionRunStore,
+  type SessionRunStore,
+} from './features/session/session-run-store';
+import {
+  createInMemorySessionRepository,
+} from './features/session/persistence/session-repository';
+import type { SessionRepository } from './features/session/persistence/session-snapshot';
+import { createNewRunId } from './features/session/session-run-id';
 
 export const defaultPuzzleSeed = 17;
 export const defaultSessionSeed = 918273;
@@ -40,7 +50,20 @@ type PuzzleAttributes = {
 
 type HomeAttributes = {
   setAttribute: (name: string, value: string) => void;
+  setHiddenRuns: (view: {
+    activeRun: { seed: number; position: number; total: number } | undefined;
+    completedRuns: readonly {
+      runId: string;
+      seed: number;
+      total: number;
+    }[];
+  }) => void;
   hidden: boolean;
+};
+
+export type SessionRunStoreBindings = {
+  store: SessionRunStore;
+  repository: SessionRepository;
 };
 
 export type ApplicationOptions = {
@@ -55,6 +78,8 @@ export type ApplicationOptions = {
   getHash?: () => string;
   basePath?: string;
   history?: HistoryAdapter;
+  sessionRunStore?: SessionRunStore;
+  defaultRunId?: string;
 };
 
 export function puzzleDestination(element: PuzzleAttributes): Destination {
@@ -85,12 +110,19 @@ export function sessionDestination(element: PuzzleAttributes): Destination {
   };
 }
 
-export function homeDestination(element: HomeAttributes): Destination {
+export function homeDestination(
+  element: HomeAttributes,
+  sessionRuns: () => {
+    activeRun: { seed: number; position: number; total: number } | undefined;
+    completedRuns: readonly { runId: string; seed: number; total: number }[];
+  },
+): Destination {
   return {
     view: element,
     apply: (route: Route) => {
       const selection: HomeSelection = homeSelectionFromRoute(route);
       element.setAttribute('locale', selection.language);
+      element.setHiddenRuns(sessionRuns());
     },
   };
 }
@@ -116,17 +148,48 @@ export function startMathModelingApplication(
     );
   }
 
+  const sessionRunStore =
+    options.sessionRunStore ??
+    createSessionRunStore({
+      repository: createInMemorySessionRepository(),
+      runIdMemory: {
+        get: () => options.defaultRunId,
+        set: () => undefined,
+      },
+    });
+
+  const sessionRuns = () => {
+    const active = sessionRunStore.resumeActiveRun();
+    return {
+      activeRun:
+        active === undefined
+          ? undefined
+          : {
+              seed: active.replay.seed,
+              position: active.position,
+              total: active.total,
+            },
+      completedRuns: sessionRunStore.completedRuns().map((run) => ({
+        runId: run.runId,
+        seed: run.seed,
+        total: run.total,
+      })),
+    };
+  };
+
   const controller = startAppController({
     initialHash: options.hash,
     getHash: options.getHash ?? (() => globalThis.location.hash),
     basePath: options.basePath ?? globalThis.location.pathname,
     history,
     destinations: {
-      home: homeDestination(homeElement),
+      home: homeDestination(homeElement, sessionRuns),
       puzzle: puzzleDestination(puzzleElement),
       session: sessionDestination(puzzleElement),
     },
   });
+  (puzzleElement as { sessionRunStore?: SessionRunStore }).sessionRunStore =
+    sessionRunStore;
 
   const currentLanguage = (): PuzzleLocale => {
     const language = controller.currentRoute().routeParams.get('language');
@@ -177,6 +240,19 @@ export function startMathModelingApplication(
       routeFromSessionSelection({
         seed: detail?.seed ?? defaultSessionSeed,
         themeId: themeIdOrThrow(detail?.themeId ?? defaultThemeId),
+        locale: currentLanguage(),
+      }),
+    );
+  });
+  options.root.addEventListener(navigateResumeSessionRequestEvent, () => {
+    const resumed = sessionRunStore.resumeActiveRun();
+    if (resumed === undefined) {
+      return;
+    }
+    navigateSafely(() =>
+      routeFromSessionSelection({
+        seed: resumed.replay.seed,
+        themeId: resumed.replay.themeId,
         locale: currentLanguage(),
       }),
     );

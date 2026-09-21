@@ -18,3 +18,10 @@ export type NavigateSessionRequest = {
   seed?: number;
   themeId?: string;
 };
+
+export const navigateResumeSessionRequestEvent =
+  'navigate-resume-session-request';
+
+export type NavigateResumeSessionRequest = {
+  reason?: string;
+};
