@@ -343,6 +343,46 @@ test('approves the semantic session completion fragment', async () => {
   expect(fragment).toBe(approvedCompletionFragment);
 });
 
+test('the active session menu shows the session seed and the current task', async () => {
+  const puzzle = await mountSession(
+    '#session?seed=918273&scenario=gaming.drone-power&language=en',
+  );
+  await puzzle.updateComplete;
+  const menu = puzzle.shadowRoot?.querySelector('puzzle-menu');
+  expect(menu).not.toBeNull();
+  const seedInput = menu!.shadowRoot?.querySelector(
+    'input[name="seed"]',
+  ) as HTMLInputElement | null;
+  expect(seedInput).not.toBeNull();
+  expect(seedInput!.value).toBe('918273');
+  const taskSelect = menu!.shadowRoot?.querySelector(
+    'select[name="task"]',
+  ) as HTMLSelectElement | null;
+  expect(taskSelect).not.toBeNull();
+  expect(taskSelect!.selectedOptions[0]?.textContent?.trim()).toBe(
+    'Named equation to academic notation',
+  );
+  await answerCurrent(puzzle);
+  const nextButton = page.getByRole('button', { name: 'Next puzzle' });
+  await nextButton.click();
+  await puzzle.updateComplete;
+  expect(taskSelect!.selectedOptions[0]?.textContent?.trim()).toBe(
+    'Academic notation to named equation',
+  );
+  expect(seedInput!.value).toBe('918273');
+});
+
+test('the active session header offers a persistent way back to home', async () => {
+  const puzzle = await mountSession();
+  const homeButton = page.getByRole('button', { name: 'Home' });
+  await homeButton.click();
+  await puzzle.updateComplete;
+  expect(window.location.hash).toBe('#home?language=en');
+  const home = document.querySelector('home-screen');
+  expect(home?.hidden ?? true).toBe(false);
+  expect(puzzle.hidden).toBe(true);
+});
+
 test('switching locale during an active session stays in the same session', async () => {
   const puzzle = await mountSession(
     '#session?seed=918273&scenario=gaming.drone-power&language=en',

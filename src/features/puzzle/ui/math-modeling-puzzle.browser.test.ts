@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest';
+import { page } from 'vitest/browser';
 import { startMathModelingApplication } from '../../../application';
 import { MathModelingPuzzle } from './math-modeling-puzzle';
 import { katexAcademicDisplayAdapter } from './katex-academic-display-adapter';
@@ -118,6 +119,20 @@ test('switches tasks and input modes while the story stays visible and the math 
     puzzle.shadowRoot?.querySelector('named-equation-text-input'),
   ).not.toBeNull();
   expect(storyOf(puzzle)).toBe(story);
+});
+
+test('the puzzle header offers a persistent way back to home', async () => {
+  const puzzle = mountPuzzle(
+    '#puzzle?seed=17&scenario=gaming.drone-power&task=story-to-quantities&language=en',
+  );
+  await puzzle.updateComplete;
+  const homeButton = page.getByRole('button', { name: 'Home' });
+  await homeButton.click();
+  await puzzle.updateComplete;
+  expect(window.location.hash).toBe('#home?language=en');
+  const home = document.querySelector('home-screen');
+  expect(home?.hidden ?? true).toBe(false);
+  expect(puzzle.hidden).toBe(true);
 });
 
 test('replays the same problem from the URL state', async () => {

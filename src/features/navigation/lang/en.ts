@@ -6,4 +6,7 @@ export const en: NavigationLocaleResources = {
     puzzleLabel: 'Start puzzle',
     sessionLabel: 'Start session',
   },
+  menu: {
+    homeLabel: 'Home',
+  },
 };

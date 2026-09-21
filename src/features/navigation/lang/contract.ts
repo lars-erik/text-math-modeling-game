@@ -4,4 +4,7 @@ export type NavigationLocaleResources = {
     puzzleLabel: string;
     sessionLabel: string;
   };
+  menu: {
+    homeLabel: string;
+  };
 };

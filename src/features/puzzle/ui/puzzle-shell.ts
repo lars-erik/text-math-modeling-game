@@ -84,6 +84,24 @@ export class PuzzleShell extends LitElement {
       flex: 0 0 auto;
     }
 
+    .menu {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .menu button {
+      padding: 0.6rem 1rem;
+      border: 1px solid #17475d;
+      border-radius: 0.35rem;
+      background: #285f78;
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
     .representations {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -148,6 +166,10 @@ export class PuzzleShell extends LitElement {
         width: 100%;
       }
 
+      .menu {
+        width: 100%;
+      }
+
       .representations {
         grid-template-columns: minmax(0, 1fr);
       }
@@ -193,6 +215,7 @@ export class PuzzleShell extends LitElement {
       <main aria-labelledby="puzzle-heading">
         <header>
           <h1 id="puzzle-heading">${this.heading}</h1>
+          <div class="menu"><slot name="menu"></slot></div>
           <div class="language"><slot name="language"></slot></div>
         </header>
 

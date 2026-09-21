@@ -6,4 +6,7 @@ export const nb: NavigationLocaleResources = {
     puzzleLabel: 'Start oppgave',
     sessionLabel: 'Start økt',
   },
+  menu: {
+    homeLabel: 'Hjem',
+  },
 };
