@@ -20,11 +20,17 @@ function correctAnswerFor(session: GrayboxSession):
     throw new Error('The session has no active puzzle screen.');
   }
   switch (task.modeId) {
-    case 'story-to-quantities':
+    case 'story-to-quantities': {
+      const quantities = session.screen?.context.quantities ?? [];
       return {
-        knownIds: ['base', 'count', 'total'],
-        unknownId: 'unitValue',
+        knownIds: quantities
+          .filter((quantity) => quantity.given.kind === 'known')
+          .map((quantity) => quantity.id),
+        unknownId: quantities.find(
+          (quantity) => quantity.given.kind === 'hidden',
+        )?.id,
       };
+    }
     case 'quantities-to-named-equation':
     case 'academic-notation-to-named-equation':
       return { kind: 'text', input: canonicalNamedEquation(session) };
@@ -44,7 +50,8 @@ function canonicalNamedEquation(session: GrayboxSession): string {
   const names = Object.fromEntries(
     quantities.map((quantity) => [quantity.role, quantity.variableName]),
   );
-  return `${names.total} = ${names.base} + ${names.count} * ${names['per-item']}`;
+  const baseTerm = names.base === undefined ? '' : `${names.base} + `;
+  return `${names.total} = ${baseTerm}${names.count} * ${names['per-item']}`;
 }
 
 function seekToMode(

@@ -35,7 +35,7 @@ function printPlan(plan: SessionPlan): string[] {
     `plan length=${plan.length}`,
     ...plan.items.map(
       (item) =>
-        `  item ${item.index}/${plan.length} problem-seed=${item.problemSeed} mode=${item.modeId}`,
+        `  item ${item.index}/${plan.length} problem-seed=${item.problemSeed} mode=${item.modeId} hidden-role=${item.hiddenRole}`,
     ),
   ];
 }
