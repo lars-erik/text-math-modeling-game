@@ -14,6 +14,9 @@ export type PuzzleLocaleResources = {
   };
   puzzleMenu: {
     label: string;
+    family: string;
+    totalFromParts: string;
+    groupsTotal: string;
     scenario: string;
     dronePower: string;
     creatorFollowers: string;

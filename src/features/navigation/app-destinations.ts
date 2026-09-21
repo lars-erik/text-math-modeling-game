@@ -5,7 +5,12 @@ import type {
   PuzzleSelectionRequest,
   SessionSelectionRequest,
 } from '../puzzle/puzzle-request';
-import { maximumTotalFromPartsSeed } from '../problem-generation/generate-total-from-parts';
+import {
+  defaultProblemFamilyId,
+  isProblemFamilyId,
+  type ProblemFamilyId,
+} from '../problem-generation/problem-families';
+import { maximumGenerationSeed } from '../problem-generation/random-source';
 import type { Route } from './hash-route';
 
 export type HomeSelection = {
@@ -29,6 +34,7 @@ export function puzzleSelectionFromRoute(route: Route): PuzzleSelectionRequest {
   }
   return {
     seed: parseRequiredSeed(route.routeParams.get('seed')),
+    familyId: parseFamilyId(route.routeParams.get('family')),
     themeId: parseRequiredThemeId(route.routeParams.get('scenario')),
     modeId: parseRequiredModeId(route.routeParams.get('task')),
     locale: parseLanguage(route.routeParams.get('language')),
@@ -42,6 +48,7 @@ export function routeFromPuzzleSelection(
     name: 'puzzle',
     routeParams: new Map<string, string | number | boolean>([
       ['seed', selection.seed],
+      ['family', selection.familyId],
       ['scenario', selection.themeId],
       ['task', selection.modeId],
       ['language', selection.locale],
@@ -92,10 +99,20 @@ function parseRequiredSeed(value: unknown): number {
     throw new Error('URL seed must be an unsigned 32-bit decimal integer.');
   }
   const seed = Number(seedText);
-  if (!Number.isSafeInteger(seed) || seed > maximumTotalFromPartsSeed) {
+  if (!Number.isSafeInteger(seed) || seed > maximumGenerationSeed) {
     throw new Error('URL seed must be an unsigned 32-bit decimal integer.');
   }
   return seed;
+}
+
+function parseFamilyId(value: unknown): ProblemFamilyId {
+  if (value === undefined || value === null || value === '') {
+    return defaultProblemFamilyId;
+  }
+  if (typeof value !== 'string' || !isProblemFamilyId(value)) {
+    throw new Error(`Unknown problem family ${JSON.stringify(value)}.`);
+  }
+  return value;
 }
 
 function parseRequiredThemeId(value: unknown): ThemeId {

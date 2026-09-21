@@ -18,6 +18,7 @@ test('parses a puzzle hash route into a typed puzzle selection', () => {
     ),
   ).toEqual({
     seed: 17,
+    familyId: 'total-from-parts',
     themeId: 'gaming.drone-power',
     modeId: 'story-to-quantities',
     locale: 'nb',
@@ -62,6 +63,7 @@ test('rejects invalid or missing puzzle route arguments', () => {
 test('round-trips a puzzle selection through route and hash', () => {
   const selection = {
     seed: 321,
+    familyId: 'total-from-parts',
     themeId: 'creator.followers',
     modeId: 'quantities-to-named-equation',
     locale: 'nb',
@@ -79,6 +81,7 @@ test('round-trips a puzzle selection through route and hash', () => {
 test('routeFromPuzzleSelection formats the canonical hash', () => {
   const route = routeFromPuzzleSelection({
     seed: 42,
+    familyId: 'total-from-parts',
     themeId: 'gaming.drone-power',
     modeId: 'story-to-quantities',
     locale: 'nb',
@@ -87,6 +90,7 @@ test('routeFromPuzzleSelection formats the canonical hash', () => {
   expect(new Map(route.routeParams)).toEqual(
     new Map<string, string | number | boolean>([
       ['seed', 42],
+      ['family', 'total-from-parts'],
       ['scenario', 'gaming.drone-power'],
       ['task', 'story-to-quantities'],
       ['language', 'nb'],
@@ -147,3 +151,61 @@ test('a home route carries only a language', () => {
     homeSelectionFromRoute(parseHash('#home?language=fr')),
   ).toThrowError(/Unknown language/);
 });
+
+test('a missing family falls back to the default family', () => {
+  expect(
+    puzzleSelectionFromRoute(
+      parseHash('#puzzle?seed=17&scenario=gaming.drone-power&task=story-to-quantities'),
+    ).familyId,
+  ).toBe('total-from-parts');
+});
+
+test('parses a groups-total family from the puzzle hash route', () => {
+  expect(
+    puzzleSelectionFromRoute(
+      parseHash(
+        '#puzzle?seed=17&family=groups-total&scenario=gaming.drone-power&task=quantities-to-named-equation&language=nb',
+      ),
+    ),
+  ).toEqual({
+    seed: 17,
+    familyId: 'groups-total',
+    themeId: 'gaming.drone-power',
+    modeId: 'quantities-to-named-equation',
+    locale: 'nb',
+  });
+});
+
+test('round-trips an explicit family through the canonical puzzle hash', () => {
+  const selection = {
+    seed: 321,
+    familyId: 'groups-total',
+    themeId: 'creator.followers',
+    modeId: 'quantities-to-named-equation',
+    locale: 'nb',
+  } as const;
+  expect(
+    puzzleSelectionFromRoute(parseHash(formatHashOfPuzzleSelection(selection))),
+  ).toEqual(selection);
+});
+
+test('rejects unknown family route arguments', () => {
+  expect(() =>
+    puzzleSelectionFromRoute(
+      parseHash(
+        '#puzzle?seed=17&family=unknown-family&scenario=gaming.drone-power&task=story-to-quantities',
+      ),
+    ),
+  ).toThrowError(/Unknown problem family/);
+});
+
+function formatHashOfPuzzleSelection(
+  selection: ReturnType<typeof puzzleSelectionFromRoute>,
+): string {
+  const route = routeFromPuzzleSelection(selection);
+  const parameters = new URLSearchParams();
+  for (const [key, value] of route.routeParams) {
+    parameters.set(key, String(value));
+  }
+  return `#${route.name}?${parameters.toString()}`;
+}

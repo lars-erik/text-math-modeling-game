@@ -14,6 +14,9 @@ export const en = {
   },
   puzzleMenu: {
     label: 'Puzzle menu',
+    family: 'Problem family',
+    totalFromParts: 'Total from base and parts',
+    groupsTotal: 'Equal groups',
     scenario: 'Scenario',
     dronePower: 'Spaceship and drones',
     creatorFollowers: 'Creator and followers',

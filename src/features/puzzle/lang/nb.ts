@@ -14,6 +14,9 @@ export const nb = {
   },
   puzzleMenu: {
     label: 'Oppgavemeny',
+    family: 'Problemfamilie',
+    totalFromParts: 'Total fra grunnbeløp og deler',
+    groupsTotal: 'Like grupper',
     scenario: 'Scenario',
     dronePower: 'Romskip og droner',
     creatorFollowers: 'Innholdsskaper og følgere',

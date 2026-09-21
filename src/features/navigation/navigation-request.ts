@@ -8,6 +8,7 @@ export const navigatePuzzleRequestEvent = 'navigate-puzzle-request';
 
 export type NavigatePuzzleRequest = {
   seed?: number;
+  familyId?: string;
   themeId?: string;
   modeId?: string;
 };
