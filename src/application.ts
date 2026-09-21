@@ -13,6 +13,7 @@ import {
 import {
   navigateHomeRequestEvent,
   navigatePuzzleRequestEvent,
+  navigateResumeSessionRequestEvent,
   navigateSessionRequestEvent,
   type NavigatePuzzleRequest,
   type NavigateSessionRequest,
@@ -26,6 +27,12 @@ import {
 import { isThemeId, type ThemeId } from './features/themes';
 import { isModeId, type ModeId } from './features/puzzle/modes';
 import type { PuzzleLocale } from './features/localization/locale';
+import {
+  createSessionRunStore,
+  type SessionRunStore,
+} from './features/session/session-run-store';
+import { createInMemorySessionPersistence } from './features/session/persistence/in-memory-session-repository';
+import type { HomeSessionRunsView } from './features/navigation/session-runs-view';
 
 export const defaultPuzzleSeed = 17;
 export const defaultSessionSeed = 918273;
@@ -35,11 +42,13 @@ export const defaultModeId: ModeId = 'story-to-quantities';
 type PuzzleAttributes = {
   setAttribute: (name: string, value: string) => void;
   removeAttribute: (name: string) => void;
+  startSessionFromStore?: () => void;
   hidden: boolean;
 };
 
 type HomeAttributes = {
   setAttribute: (name: string, value: string) => void;
+  setHiddenRuns: (view: HomeSessionRunsView) => void;
   hidden: boolean;
 };
 
@@ -55,6 +64,8 @@ export type ApplicationOptions = {
   getHash?: () => string;
   basePath?: string;
   history?: HistoryAdapter;
+  sessionRunStore?: SessionRunStore;
+  defaultRunId?: string;
 };
 
 export function puzzleDestination(element: PuzzleAttributes): Destination {
@@ -85,12 +96,16 @@ export function sessionDestination(element: PuzzleAttributes): Destination {
   };
 }
 
-export function homeDestination(element: HomeAttributes): Destination {
+export function homeDestination(
+  element: HomeAttributes,
+  sessionRuns: () => HomeSessionRunsView,
+): Destination {
   return {
     view: element,
     apply: (route: Route) => {
       const selection: HomeSelection = homeSelectionFromRoute(route);
       element.setAttribute('locale', selection.language);
+      element.setHiddenRuns(sessionRuns());
     },
   };
 }
@@ -116,17 +131,48 @@ export function startMathModelingApplication(
     );
   }
 
+  const sessionRunStore =
+    options.sessionRunStore ??
+    createSessionRunStore({
+      ...createInMemorySessionPersistence(),
+      runIdMemory: {
+        get: () => options.defaultRunId,
+        set: () => undefined,
+      },
+    });
+
+  const sessionRuns = () => {
+    const active = sessionRunStore.resumeActiveRun();
+    return {
+      activeRun:
+        active === undefined
+          ? undefined
+          : {
+              seed: active.replay.seed,
+              position: active.position,
+              total: active.total,
+            },
+      completedRuns: sessionRunStore.completedRuns().map((run) => ({
+        runId: run.runId,
+        seed: run.seed,
+        total: run.total,
+      })),
+    };
+  };
+
   const controller = startAppController({
     initialHash: options.hash,
     getHash: options.getHash ?? (() => globalThis.location.hash),
     basePath: options.basePath ?? globalThis.location.pathname,
     history,
     destinations: {
-      home: homeDestination(homeElement),
+      home: homeDestination(homeElement, sessionRuns),
       puzzle: puzzleDestination(puzzleElement),
       session: sessionDestination(puzzleElement),
     },
   });
+  (puzzleElement as { sessionRunStore?: SessionRunStore }).sessionRunStore =
+    sessionRunStore;
 
   const currentLanguage = (): PuzzleLocale => {
     const language = controller.currentRoute().routeParams.get('language');
@@ -173,10 +219,28 @@ export function startMathModelingApplication(
   });
   options.root.addEventListener(navigateSessionRequestEvent, (event) => {
     const detail = (event as CustomEvent<NavigateSessionRequest>).detail;
-    navigateSafely(() =>
-      routeFromSessionSelection({
+    try {
+      const selection = {
         seed: detail?.seed ?? defaultSessionSeed,
         themeId: themeIdOrThrow(detail?.themeId ?? defaultThemeId),
+        locale: currentLanguage(),
+      };
+      sessionRunStore.start(selection);
+      navigateSafely(() => routeFromSessionSelection(selection));
+      puzzleElement.startSessionFromStore?.();
+    } catch {
+      return;
+    }
+  });
+  options.root.addEventListener(navigateResumeSessionRequestEvent, () => {
+    const resumed = sessionRunStore.resumeActiveRun();
+    if (resumed === undefined) {
+      return;
+    }
+    navigateSafely(() =>
+      routeFromSessionSelection({
+        seed: resumed.replay.seed,
+        themeId: resumed.replay.themeId,
         locale: currentLanguage(),
       }),
     );

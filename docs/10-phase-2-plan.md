@@ -56,6 +56,12 @@ flowchart LR
 
 # Bridge milestone
 
+## Milestone 10.6 — Persist and resume sessions
+
+Tracked in GitHub issue #35. Adds minimal, versioned browser-local persistence so learners can resume an in-progress session after refresh and see completed sessions on Home.
+
+The persistence boundary, snapshot contract, replay-versus-resume semantics and invalidation policy are documented in [Session persistence](11-session-persistence.md). LocalStorage is the first adapter behind the `UserProfileRepository` and `SessionHistoryRepository` ports; the IndexedDB upgrade remains the M19 boundary.
+
 ## Milestone 10.5 — Application controller, routing and navigation shell
 
 Tracked in GitHub issue #31.
