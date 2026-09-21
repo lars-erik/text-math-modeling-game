@@ -10,6 +10,7 @@ import {
   type AnswerKey,
   type Dimension,
   type Problem,
+  type QuantityRole,
 } from './problem';
 
 export type ProblemReferenceIssue = {
@@ -47,6 +48,11 @@ export type ProblemDimensionIssue =
 export type ProblemInvariantIssue =
   | { kind: 'duplicate-quantity-id'; id: QuantityId }
   | { kind: 'invalid-hidden-quantity-count'; count: number }
+  | {
+      kind: 'replay-hidden-role-mismatch';
+      replayHiddenRole: QuantityRole;
+      hiddenRole: QuantityRole;
+    }
   | { kind: 'missing-known-answer-binding'; id: QuantityId }
   | {
       kind: 'known-answer-mismatch';
@@ -64,7 +70,12 @@ export type ProblemAstIssue =
     >
   | Extract<
       ProblemInvariantIssue,
-      { kind: 'duplicate-quantity-id' | 'invalid-hidden-quantity-count' }
+      {
+        kind:
+          | 'duplicate-quantity-id'
+          | 'invalid-hidden-quantity-count'
+          | 'replay-hidden-role-mismatch';
+      }
     >;
 
 export type ProblemConstraintIssue =
@@ -87,7 +98,8 @@ type ProblemAstValidatorCode =
   | 'safe-literals'
   | 'valid-dimensions'
   | 'unique-quantity-ids'
-  | 'single-hidden-quantity';
+  | 'single-hidden-quantity'
+  | 'replay-hidden-role-consistency';
 
 type ProblemAstValidationContext = {
   problem: Problem;
@@ -261,6 +273,31 @@ function validateHiddenQuantityCount({
   return hiddenCount === 1
     ? []
     : [{ kind: 'invalid-hidden-quantity-count', count: hiddenCount }];
+}
+
+function validateReplayHiddenRoleConsistency({
+  problem,
+}: ProblemAstValidationContext): readonly Extract<
+  ProblemInvariantIssue,
+  { kind: 'replay-hidden-role-mismatch' }
+>[] {
+  const replayHiddenRole = problem.replay?.hiddenRole;
+  if (replayHiddenRole === undefined) {
+    return [];
+  }
+  const hiddenRole = problem.quantities
+    .filter((quantity) => quantity.given.kind === 'hidden')
+    .map((quantity) => quantity.role)
+    .find((role): role is QuantityRole => role !== undefined);
+  return hiddenRole === undefined || hiddenRole === replayHiddenRole
+    ? []
+    : [
+        {
+          kind: 'replay-hidden-role-mismatch',
+          replayHiddenRole,
+          hiddenRole,
+        },
+      ];
 }
 
 function validateDimensions({
@@ -486,6 +523,10 @@ const problemAstValidators: readonly ProblemValidator<
   { code: 'valid-dimensions', validate: validateDimensions },
   { code: 'unique-quantity-ids', validate: validateUniqueQuantityIds },
   { code: 'single-hidden-quantity', validate: validateHiddenQuantityCount },
+  {
+    code: 'replay-hidden-role-consistency',
+    validate: validateReplayHiddenRoleConsistency,
+  },
 ];
 
 const problemConstraintValidators: readonly ProblemValidator<
