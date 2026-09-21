@@ -1,7 +1,5 @@
 import type { PuzzleLocale } from '../../puzzle/lang';
 import type { ThemeId } from '../../themes';
-import type { ModeSubmission } from '../../puzzle/modes';
-import type { SessionItemLog } from '../graybox-session';
 
 export const sessionSnapshotSchemaVersion = 1;
 
@@ -14,9 +12,8 @@ export type SnapshotSubmission =
       answerKind: 'text' | 'relation-choice';
       input: string;
       choiceId?: string;
-      problemDsl: string;
     }
-  | { kind: 'academic-notation'; input: string; problemDsl: string };
+  | { kind: 'academic-notation'; input: string };
 
 export type SnapshotItemLog = {
   itemIndex: number;
@@ -61,53 +58,3 @@ export type SessionRepository = {
   saveCompletedRun: (snapshot: SessionSnapshot) => SessionRunId;
   discardRun: (runId: SessionRunId) => void;
 };
-
-export function createNewRunId(): SessionRunId {
-  const random =
-    typeof globalThis.crypto?.randomUUID === 'function'
-      ? globalThis.crypto.randomUUID()
-      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-  return `run-${random}`;
-}
-
-export function snapshotFromItemLog(
-  entry: SessionItemLog,
-): SnapshotItemLog {
-  return {
-    itemIndex: entry.itemIndex,
-    modeId: entry.modeId,
-    submission: snapshotSubmissionFromSubmission(entry.submission),
-    accepted: entry.accepted,
-  };
-}
-
-export function snapshotSubmissionFromSubmission(
-  submission: ModeSubmission,
-): SnapshotSubmission {
-  switch (submission.kind) {
-    case 'quantity-selection':
-      return {
-        kind: 'quantity-selection',
-        knownIds: [...submission.knownIds],
-        ...(submission.unknownId === undefined
-          ? {}
-          : { unknownId: submission.unknownId }),
-      };
-    case 'named-equation':
-      return {
-        kind: 'named-equation',
-        answerKind: submission.answerKind,
-        input: submission.input,
-        ...(submission.choiceId === undefined
-          ? {}
-          : { choiceId: submission.choiceId }),
-        problemDsl: '',
-      };
-    case 'academic-notation':
-      return {
-        kind: 'academic-notation',
-        input: submission.input,
-        problemDsl: '',
-      };
-  }
-}

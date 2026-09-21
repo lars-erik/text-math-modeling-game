@@ -218,7 +218,6 @@ test('invalid snapshots are rejected instead of restoring a broken run', () => {
             kind: 'named-equation',
             answerKind: 'text',
             input: 'wrong = wrong',
-            problemDsl: 'not a problem',
           },
         },
       ],
