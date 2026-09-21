@@ -60,7 +60,7 @@ flowchart LR
 
 Tracked in GitHub issue #31.
 
-**First red test:** parse and format explicit `home | puzzle | session` application routes while preserving existing puzzle/session replay URLs.
+**First red test:** parse and format explicit `home | puzzle | session` application routes from the hash and its internal query string; only the canonical hash format is supported.
 
 Extract the role that is beginning to accumulate in `application.ts`:
 
@@ -71,7 +71,7 @@ Extract the role that is beginning to accumulate in `application.ts`:
 - semantic navigation requests from UI;
 - real Home/Menu destination;
 - Back/Forward restoration;
-- existing deep-link compatibility.
+- explicit rejection of invalid route arguments.
 
 Home must be a real route, not an alias for "load seed 17".
 
