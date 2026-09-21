@@ -467,7 +467,7 @@ export class MathModelingPuzzle extends LitElement {
   private nameMapOf(screen: PuzzleScreen): QuantityNameMap {
     return Object.fromEntries(
       screen.context.quantities.map((quantity) => [
-        quantity.role,
+        quantity.id,
         quantity.variableName,
       ]),
     );

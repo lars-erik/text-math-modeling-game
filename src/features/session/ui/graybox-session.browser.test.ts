@@ -47,6 +47,24 @@ function quantityLines(puzzle: MathModelingPuzzle): string[] {
   ).map((item) => (item.textContent ?? '').trim());
 }
 
+async function submitWrongStoryChoice(puzzle: MathModelingPuzzle) {
+  const storyChoiceInput = puzzle.shadowRoot?.querySelector(
+    'story-choice-input',
+  ) as (HTMLElement & { updateComplete: Promise<unknown> }) | null;
+  if (storyChoiceInput === null) {
+    throw new Error('The session item exposes no story choice input.');
+  }
+  const distractorRadio = Array.from(
+    storyChoiceInput.shadowRoot?.querySelectorAll<HTMLInputElement>(
+      'input[name="story-choice"]',
+    ) ?? [],
+  ).find((radio) => radio.value !== 'matching');
+  expect(distractorRadio).toBeDefined();
+  distractorRadio!.checked = true;
+  storyChoiceInput.shadowRoot?.querySelector('form')?.requestSubmit();
+  await puzzle.updateComplete;
+}
+
 async function submitText(puzzle: MathModelingPuzzle, value: string) {
   const inputComponent = puzzle.shadowRoot?.querySelector(
     'named-equation-text-input',
@@ -123,6 +141,21 @@ async function answerCurrent(puzzle: MathModelingPuzzle): Promise<void> {
   const names = roleNames(puzzle);
   const hiddenId = hiddenIdOf(puzzle);
 
+  const storyChoiceInput = puzzle.shadowRoot?.querySelector(
+    'story-choice-input',
+  ) as (HTMLElement & { updateComplete: Promise<unknown> }) | null;
+  if (storyChoiceInput !== null) {
+    const matchingRadio = Array.from(
+      storyChoiceInput.shadowRoot?.querySelectorAll<HTMLInputElement>(
+        'input[name="story-choice"]',
+      ) ?? [],
+    ).find((radio) => radio.value === 'matching');
+    expect(matchingRadio).toBeDefined();
+    matchingRadio!.checked = true;
+    storyChoiceInput.shadowRoot?.querySelector('form')?.requestSubmit();
+    await puzzle.updateComplete;
+    return;
+  }
   const task = puzzle.shadowRoot?.querySelector(
     'story-quantities-input, named-equation-text-input',
   );
@@ -240,8 +273,9 @@ test('runs a full deterministic graybox session to the summary', async () => {
   expect(summaryText).toContain('10 puzzles completed');
   expect(summaryText).toContain('Story to quantities: 2');
   expect(summaryText).toContain('Quantities to named equation: 2');
-  expect(summaryText).toContain('Named equation to academic notation: 3');
-  expect(summaryText).toContain('Academic notation to named equation: 3');
+  expect(summaryText).toContain('Named equation to academic notation: 2');
+  expect(summaryText).toContain('Academic notation to named equation: 2');
+  expect(summaryText).toContain('Named model to matching story: 2');
   const logItems = Array.from(
     puzzle.shadowRoot?.querySelectorAll('.answer-log-list li') ?? [],
   ).map((item) => (item.textContent ?? '').replace(/\s+/g, ' ').trim());
@@ -253,13 +287,21 @@ test('runs a full deterministic graybox session to the summary', async () => {
 
 test('the answer log marks a wrong answer as incorrect during the session', async () => {
   const puzzle = await mountSession();
-  await submitText(puzzle, 'wrong = wrong');
+  const isStoryChoiceItem =
+    puzzle.shadowRoot?.querySelector('story-choice-input') !== null;
+  if (isStoryChoiceItem) {
+    await submitWrongStoryChoice(puzzle);
+  } else {
+    await submitText(puzzle, 'wrong = wrong');
+  }
   await puzzle.updateComplete;
   const logItems = Array.from(
     puzzle.shadowRoot?.querySelectorAll('.answer-log-list li') ?? [],
   ).map((item) => (item.textContent ?? '').replace(/\s+/g, ' ').trim());
   expect(logItems).toHaveLength(1);
-  expect(logItems[0]).toContain('wrong = wrong');
+  if (!isStoryChoiceItem) {
+    expect(logItems[0]).toContain('wrong = wrong');
+  }
   expect(logItems[0]).toContain('(incorrect)');
   await answerCurrent(puzzle);
   await puzzle.updateComplete;
@@ -412,7 +454,7 @@ test('the active session menu shows the session seed and the current task', asyn
   ) as HTMLSelectElement | null;
   expect(taskSelect).not.toBeNull();
   expect(taskSelect!.selectedOptions[0]?.textContent?.trim()).toBe(
-    'Named equation to academic notation',
+    'Named model to matching story',
   );
   await answerCurrent(puzzle);
   const nextButton = page.getByRole('button', { name: 'Next puzzle' });
@@ -440,7 +482,13 @@ test('switching locale during an active session stays in the same session', asyn
     '#session?seed=918273&scenario=gaming.drone-power&language=en',
   );
   expect(shellText(puzzle)).toContain('Puzzle 1 / 10');
-  await submitText(puzzle, 'wrong = wrong');
+  const hasTextInput =
+    puzzle.shadowRoot?.querySelector('named-equation-text-input') !== null;
+  if (hasTextInput) {
+    await submitText(puzzle, 'wrong = wrong');
+  } else {
+    await submitWrongStoryChoice(puzzle);
+  }
   await puzzle.updateComplete;
 
   const localeSelect = puzzle.shadowRoot?.querySelector(
@@ -460,7 +508,9 @@ test('switching locale during an active session stays in the same session', asyn
     puzzle.shadowRoot?.querySelectorAll('.answer-log-list li') ?? [],
   ).map((item) => (item.textContent ?? '').replace(/\s+/g, ' ').trim());
   expect(logItems).toHaveLength(1);
-  expect(logItems[0]).toContain('wrong = wrong');
+  expect(logItems[0]).toContain(
+    hasTextInput ? 'wrong = wrong' : 'choice=factor-into-group',
+  );
   expect(logItems[0]).toContain('(feil)');
 });
 

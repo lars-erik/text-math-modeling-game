@@ -367,6 +367,21 @@ async function answerCurrentCorrect(puzzle: MathModelingPuzzle) {
   const names = roleNames(puzzle);
   const hiddenId = hiddenIdOf(puzzle);
 
+  const storyChoiceInput = puzzle.shadowRoot?.querySelector(
+    'story-choice-input',
+  ) as (HTMLElement & { updateComplete: Promise<unknown> }) | null;
+  if (storyChoiceInput !== null) {
+    const matchingRadio = Array.from(
+      storyChoiceInput.shadowRoot?.querySelectorAll<HTMLInputElement>(
+        'input[name="story-choice"]',
+      ) ?? [],
+    ).find((radio) => radio.value === 'matching');
+    expect(matchingRadio).toBeDefined();
+    matchingRadio!.checked = true;
+    storyChoiceInput.shadowRoot?.querySelector('form')?.requestSubmit();
+    await puzzle.updateComplete;
+    return;
+  }
   const task = puzzle.shadowRoot?.querySelector(
     'story-quantities-input, named-equation-text-input',
   );
