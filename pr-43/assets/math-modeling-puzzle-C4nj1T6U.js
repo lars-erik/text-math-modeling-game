@@ -1,4 +1,4 @@
-import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T as u,_ as d,a as f,d as p,f as m,g as h,h as g,i as _,j as v,k as y,m as b,n as x,o as S,p as C,r as w,t as T,v as E,w as D}from"./academic-relation-BgJ3puTh.js";var O=class extends w{static properties={choices:{attribute:!1},selectedChoiceId:{attribute:!1},legend:{attribute:!1},checkLabel:{attribute:!1}};static styles=f`
+import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T as u,_ as d,a as f,d as p,f as m,g as h,h as g,i as _,j as v,k as y,m as b,n as x,o as S,p as C,r as w,t as T,v as E,w as D}from"./academic-relation-CWpL86H9.js";var O=class extends w{static properties={choices:{attribute:!1},selectedChoiceId:{attribute:!1},legend:{attribute:!1},checkLabel:{attribute:!1}};static styles=f`
     :host {
       display: block;
       min-width: 0;
@@ -543,11 +543,15 @@ import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T a
         width: 100%;
       }
     }
-  `;constructor(){super(),this.seed=17,this.familyId=`total-from-parts`,this.hiddenRole=`per-item`,this.themeId=`gaming.drone-power`,this.modeId=`story-to-quantities`,this.locale=`en`,this.menuLabel=`Puzzle menu`,this.familyLabel=`Problem family`,this.hiddenRoleLabel=`Unknown quantity`,this.perItemUnknownLabel=`Value per item`,this.baseUnknownLabel=`Base value`,this.countUnknownLabel=`Number of items`,this.totalUnknownLabel=`Total`,this.totalFromPartsLabel=`Total from base and parts`,this.groupsTotalLabel=`Equal groups`,this.scenarioLabel=`Scenario`,this.dronePowerLabel=`Spaceship and drones`,this.creatorFollowersLabel=`Creator and followers`,this.taskLabel=`Task`,this.storyToQuantitiesLabel=`Story to quantities`,this.quantitiesToNamedEquationLabel=`Quantities to named equation`,this.namedEquationToAcademicNotationLabel=`Named equation to academic notation`,this.academicNotationToNamedEquationLabel=`Academic notation to named equation`,this.seedLabel=`Seed`,this.showLabel=`Show puzzle`,this.startSessionLabel=`Start session`}render(){return _`
+  `;constructor(){super(),this.seed=17,this.familyId=`total-from-parts`,this.hiddenRole=`per-item`,this.themeId=`gaming.drone-power`,this.modeId=`story-to-quantities`,this.locale=`en`,this.menuLabel=`Puzzle menu`,this.familyLabel=`Problem family`,this.hiddenRoleLabel=`Unknown quantity`,this.perItemUnknownLabel=`Value per item`,this.baseUnknownLabel=`Base value`,this.countUnknownLabel=`Number of items`,this.totalUnknownLabel=`Total`,this.totalFromPartsLabel=`Total from base and parts`,this.groupsTotalLabel=`Equal groups`,this.scenarioLabel=`Scenario`,this.dronePowerLabel=`Spaceship and drones`,this.creatorFollowersLabel=`Creator and followers`,this.taskLabel=`Task`,this.storyToQuantitiesLabel=`Story to quantities`,this.quantitiesToNamedEquationLabel=`Quantities to named equation`,this.namedEquationToAcademicNotationLabel=`Named equation to academic notation`,this.academicNotationToNamedEquationLabel=`Academic notation to named equation`,this.seedLabel=`Seed`,this.showLabel=`Show puzzle`,this.startSessionLabel=`Start session`}willUpdate(e){if(e.has(`familyId`)){let e=u[this.familyId].hiddenRoles;e.includes(this.hiddenRole)||(this.hiddenRole=e.includes(`per-item`)?n:e[0])}}render(){return _`
       <form aria-label=${this.menuLabel} @submit=${this.handleSubmit}>
         <label>
           ${this.familyLabel}
-          <select name="family" .value=${this.familyId}>
+          <select
+            name="family"
+            .value=${this.familyId}
+            @change=${this.handleFamilyChange}
+          >
             <option value="total-from-parts">
               ${this.totalFromPartsLabel}
             </option>
@@ -611,7 +615,7 @@ import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T a
           ${this.startSessionLabel}
         </button>
       </form>
-    `}labelForHiddenRole(e){switch(e){case`per-item`:return this.perItemUnknownLabel;case`base`:return this.baseUnknownLabel;case`count`:return this.countUnknownLabel;case`total`:return this.totalUnknownLabel}}handleSubmit(e){if(e.preventDefault(),!(e.currentTarget instanceof HTMLFormElement))return;let t=new FormData(e.currentTarget),n=t.get(`family`),i=t.get(`hidden-role`),o=t.get(`scenario`),l=t.get(`task`),f=Number(t.get(`seed`)),p=e.submitter instanceof HTMLButtonElement?e.submitter.value:void 0;if(typeof n==`string`&&r.includes(n)&&typeof i==`string`&&s(i)&&u[n].hiddenRoles.includes(i)&&typeof o==`string`&&c(o)&&typeof l==`string`&&a(l)&&Number.isInteger(f)){if(p===`session`){this.dispatchEvent(new CustomEvent(d,{bubbles:!0,composed:!0,detail:{seed:f,themeId:o,locale:this.locale}}));return}this.dispatchEvent(new CustomEvent(h,{bubbles:!0,composed:!0,detail:{seed:f,familyId:n,hiddenRole:i,themeId:o,modeId:l,locale:this.locale}}))}}};customElements.get(`puzzle-menu`)===void 0&&customElements.define(`puzzle-menu`,F);var I=class extends w{static properties={relation:{attribute:!1},symbols:{attribute:!1},adapter:{attribute:!1}};static styles=f`
+    `}handleFamilyChange(e){e.currentTarget instanceof HTMLSelectElement&&D(e.currentTarget.value)&&(this.familyId=e.currentTarget.value)}labelForHiddenRole(e){switch(e){case`per-item`:return this.perItemUnknownLabel;case`base`:return this.baseUnknownLabel;case`count`:return this.countUnknownLabel;case`total`:return this.totalUnknownLabel}}handleSubmit(e){if(e.preventDefault(),!(e.currentTarget instanceof HTMLFormElement))return;let t=new FormData(e.currentTarget),n=t.get(`family`),i=t.get(`hidden-role`),o=t.get(`scenario`),l=t.get(`task`),f=Number(t.get(`seed`)),p=e.submitter instanceof HTMLButtonElement?e.submitter.value:void 0;if(typeof n==`string`&&r.includes(n)&&typeof i==`string`&&s(i)&&u[n].hiddenRoles.includes(i)&&typeof o==`string`&&c(o)&&typeof l==`string`&&a(l)&&Number.isInteger(f)){if(p===`session`){this.dispatchEvent(new CustomEvent(d,{bubbles:!0,composed:!0,detail:{seed:f,themeId:o,locale:this.locale}}));return}this.dispatchEvent(new CustomEvent(h,{bubbles:!0,composed:!0,detail:{seed:f,familyId:n,hiddenRole:i,themeId:o,modeId:l,locale:this.locale}}))}}};customElements.get(`puzzle-menu`)===void 0&&customElements.define(`puzzle-menu`,F);var I=class extends w{static properties={relation:{attribute:!1},symbols:{attribute:!1},adapter:{attribute:!1}};static styles=f`
     :host {
       display: block;
       min-width: 0;
