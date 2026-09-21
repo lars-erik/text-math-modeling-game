@@ -1,4 +1,4 @@
-import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T as u,_ as d,a as f,d as p,f as m,g as h,h as g,i as _,j as v,k as y,m as b,n as x,o as S,p as C,r as w,t as T,v as E,w as D}from"./academic-relation-CWpL86H9.js";var O=class extends w{static properties={choices:{attribute:!1},selectedChoiceId:{attribute:!1},legend:{attribute:!1},checkLabel:{attribute:!1}};static styles=f`
+import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T as u,_ as d,a as f,d as p,f as m,g as h,h as g,i as _,j as v,k as y,m as b,n as x,o as S,p as C,r as w,t as T,v as E,w as D}from"./academic-relation-C3gtROyi.js";var O=class extends w{static properties={choices:{attribute:!1},selectedChoiceId:{attribute:!1},legend:{attribute:!1},checkLabel:{attribute:!1}};static styles=f`
     :host {
       display: block;
       min-width: 0;
