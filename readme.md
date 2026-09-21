@@ -13,7 +13,7 @@ Open pull requests that change the application are published as temporary previe
 1. [Product and learning loop](docs/01-product-and-learning-loop.md) — intent, representation graph, initial use cases.
 2. [Problem × Theme × Mode architecture contract](docs/architecture-contract.md) — authoritative ownership, dependency and composition rules.
 3. [Architecture and semantic domain](docs/02-architecture-and-domain.md) — AST, quantities, operations, validation, checking.
-4. [DSL and representations](docs/03-dsl-and-representations.md) — canonical syntax, parsing, serialization, notation adapters.
+4. [DSL and representations](docs/03-dsl-and-representations.md) — canonical syntax, parsing, serialization, notation adapters. To author or inspect serialized Problems, start with the [Problem DSL guide](docs/problem-dsl/index.md) and [language reference](docs/problem-dsl/reference.md).
 5. [Procedural generation and themes](docs/04-generation-and-scenarios.md) — composable math generation, seeds, Theme/story templates.
 6. [Graybox puzzles and UI](docs/05-graybox-core-loop.md) — initial Modes, two-way traversal, screen contract.
 7. [TDD and approval testing](docs/06-testing-and-approvals.md) — golden masters, architecture invariants, use-case printers, properties, DOM testing.
