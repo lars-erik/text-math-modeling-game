@@ -45,7 +45,7 @@ The real application exposes four implemented learner transformations:
 - Named Equation → Academic Notation
 - Academic Notation → Named Equation
 
-Named and academic equations are parsed back into the canonical domain AST and checked structurally rather than by raw string comparison. Academic display uses a replaceable KaTeX adapter while the AST remains authoritative. The browser UI has a shared responsive shell, scenario/task/seed/locale controls, accessible interaction tests, and selected visual screenshot approvals. Its URL reproduces all four selections, for example `?seed=321&scenario=creator.followers&task=named-equation-to-academic-notation&locale=nb`.
+Named and academic equations are parsed back into the canonical domain AST and checked structurally rather than by raw string comparison. Academic display uses a replaceable KaTeX adapter while the AST remains authoritative. The browser UI has a shared responsive shell, scenario/task/seed/locale controls, accessible interaction tests, and selected visual screenshot approvals. The application uses hash routing with a route name and its arguments in the hash query string, for example `#puzzle?seed=321&scenario=creator.followers&task=named-equation-to-academic-notation&language=nb`; an empty hash resolves to the Home destination and the public language parameter is `language`.
 
 One canonical mathematical Problem composes independently with a Theme and a Mode; switching Theme, Mode, locale or input provider does not regenerate or rewrite the Problem. See the [Milestone 8 architecture note](docs/milestone-8-architecture.md) for the new representation and display boundaries.
 

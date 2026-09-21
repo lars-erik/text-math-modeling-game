@@ -39,6 +39,7 @@ import {
   navigateHomeRequestEvent,
   type NavigateHomeRequest,
 } from '../../navigation/navigation-request';
+import { navigationResources } from '../../navigation/lang';
 import {
   generateTotalFromPartsCase,
   defaultTotalFromPartsGenerationConfig,
@@ -76,6 +77,9 @@ export class MathModelingPuzzle extends LitElement {
       display: block;
       min-width: 0;
       padding: clamp(0rem, 3vw, 2rem);
+    }
+    :host([hidden]) {
+      display: none;
     }
     * {
       box-sizing: border-box;
@@ -338,6 +342,8 @@ export class MathModelingPuzzle extends LitElement {
       prompt: screen.screen.target.prompt,
       feedback: screen.feedback?.message ?? '',
       replay: screen.context.replay,
+      menuSeed: Number(this.seed),
+      menuModeId: isModeId(this.modeId) ? this.modeId : 'story-to-quantities',
       source: this.renderSource(screen, resources),
       input: this.renderInput(screen, resources),
     });
@@ -696,6 +702,8 @@ export class MathModelingPuzzle extends LitElement {
       prompt: screen.screen.target.prompt,
       feedback: feedbackText,
       replay: screen.context.replay,
+      menuSeed: session.replay.seed,
+      menuModeId: screen.screen.modeId,
       source: this.renderSource(screen, resources),
       input: html`
         ${this.renderInput(screen, resources)}
@@ -766,7 +774,7 @@ export class MathModelingPuzzle extends LitElement {
       new CustomEvent<NavigateHomeRequest>(navigateHomeRequestEvent, {
         bubbles: true,
         composed: true,
-        detail: { reason: 'session-complete' },
+        detail: {},
       }),
     );
   }
@@ -828,6 +836,8 @@ export class MathModelingPuzzle extends LitElement {
     input,
     feedback,
     replay,
+    menuSeed,
+    menuModeId,
   }: {
     locale: PuzzleLocale;
     heading: string;
@@ -837,8 +847,12 @@ export class MathModelingPuzzle extends LitElement {
     input: TemplateResult;
     feedback: string;
     replay?: { seed: number; generatorVersion: string; themeId: string; storySeed: number };
+    menuSeed: number;
+    menuModeId: ModeId;
   }) {
     const resources = puzzleResources[locale];
+    const menuResources =
+      navigationResources[locale] ?? navigationResources.en;
     return html`
       <puzzle-shell
         .heading=${positionLabel === undefined ? heading : `${heading} — ${positionLabel}`}
@@ -850,6 +864,11 @@ export class MathModelingPuzzle extends LitElement {
         .replayLabel=${resources.common.replay}
         .hasReplay=${replay !== undefined}
       >
+        <div slot="menu" class="shell-menu">
+          <button type="button" @click=${this.handleNavigateHome}>
+            ${menuResources.menu.homeLabel}
+          </button>
+        </div>
         <label slot="language" class="language-control">
           ${resources.language.label}
           <select .value=${locale} @change=${this.handleLocaleChange}>
@@ -859,9 +878,9 @@ export class MathModelingPuzzle extends LitElement {
         </label>
         <puzzle-menu
           slot="settings"
-          .seed=${Number(this.seed)}
+          .seed=${menuSeed}
           .themeId=${this.themeId}
-          .modeId=${this.modeId}
+          .modeId=${menuModeId}
           .locale=${locale}
           .menuLabel=${resources.puzzleMenu.label}
           .scenarioLabel=${resources.puzzleMenu.scenario}

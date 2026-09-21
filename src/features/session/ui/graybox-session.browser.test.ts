@@ -6,11 +6,13 @@ import {
 } from '../../puzzle/ui/math-modeling-puzzle';
 import { katexAcademicDisplayAdapter } from '../../puzzle/ui/katex-academic-display-adapter';
 import '../../puzzle/ui/math-modeling-puzzle';
+import '../../navigation/ui/home-screen';
 
 async function mountSession(
-  search = '?session=918273&scenario=gaming.drone-power&locale=en',
+  hash = '#session?seed=918273&scenario=gaming.drone-power&language=en',
 ): Promise<MathModelingPuzzle> {
   document.body.innerHTML = `
+    <home-screen hidden></home-screen>
     <math-modeling-puzzle
       theme="gaming.drone-power"
       locale="en"
@@ -18,11 +20,8 @@ async function mountSession(
     ></math-modeling-puzzle>
   `;
   startMathModelingApplication({
-    search,
+    hash,
     root: document,
-    replaceSearch: (next: string) => {
-      window.history.replaceState(null, '', next);
-    },
   });
   const element = document.querySelector('math-modeling-puzzle');
   expect(element).toBeInstanceOf(MathModelingPuzzle);
@@ -131,6 +130,7 @@ async function answerCurrent(puzzle: MathModelingPuzzle): Promise<void> {
 
 test('starts a session from the default single-puzzle view via the menu', async () => {
   document.body.innerHTML = `
+    <home-screen hidden></home-screen>
     <math-modeling-puzzle
       seed="17"
       theme="gaming.drone-power"
@@ -140,11 +140,8 @@ test('starts a session from the default single-puzzle view via the menu', async 
     ></math-modeling-puzzle>
   `;
   startMathModelingApplication({
-    search: '?seed=17&scenario=gaming.drone-power&task=story-to-quantities&locale=en',
+    hash: '#puzzle?seed=17&scenario=gaming.drone-power&task=story-to-quantities&language=en',
     root: document,
-    replaceSearch: (next: string) => {
-      window.history.replaceState(null, '', next);
-    },
   });
   const element = document.querySelector('math-modeling-puzzle');
   expect(element).toBeInstanceOf(MathModelingPuzzle);
@@ -164,7 +161,9 @@ test('starts a session from the default single-puzzle view via the menu', async 
   expect(startSessionButton).toBeDefined();
   form?.requestSubmit(startSessionButton!);
   await puzzle.updateComplete;
-  expect(window.location.search).toBe('?session=918273&scenario=gaming.drone-power&locale=en');
+  expect(window.location.hash).toBe(
+    '#session?seed=918273&scenario=gaming.drone-power&language=en',
+  );
   expect(shellText(puzzle)).toContain('Puzzle 1 / 10');
 });
 
@@ -236,11 +235,10 @@ test('the completed session offers a way back to the single puzzle', async () =>
   const backButton = page.getByRole('button', { name: 'Back to start' });
   await backButton.click();
   await puzzle.updateComplete;
-  expect(window.location.search).toBe(
-    '?seed=17&scenario=gaming.drone-power&task=story-to-quantities&locale=en',
-  );
-  expect(shellText(puzzle)).toContain('Story to quantities');
-  expect(shellText(puzzle)).not.toContain('Session complete');
+  expect(window.location.hash).toBe('#home?language=en');
+  const home = document.querySelector('home-screen');
+  expect(home?.hidden ?? true).toBe(false);
+  expect(puzzle.hidden).toBe(true);
 });
 
 test('multiple choice inside a session accepts the matching equation', async () => {
@@ -345,9 +343,49 @@ test('approves the semantic session completion fragment', async () => {
   expect(fragment).toBe(approvedCompletionFragment);
 });
 
+test('the active session menu shows the session seed and the current task', async () => {
+  const puzzle = await mountSession(
+    '#session?seed=918273&scenario=gaming.drone-power&language=en',
+  );
+  await puzzle.updateComplete;
+  const menu = puzzle.shadowRoot?.querySelector('puzzle-menu');
+  expect(menu).not.toBeNull();
+  const seedInput = menu!.shadowRoot?.querySelector(
+    'input[name="seed"]',
+  ) as HTMLInputElement | null;
+  expect(seedInput).not.toBeNull();
+  expect(seedInput!.value).toBe('918273');
+  const taskSelect = menu!.shadowRoot?.querySelector(
+    'select[name="task"]',
+  ) as HTMLSelectElement | null;
+  expect(taskSelect).not.toBeNull();
+  expect(taskSelect!.selectedOptions[0]?.textContent?.trim()).toBe(
+    'Named equation to academic notation',
+  );
+  await answerCurrent(puzzle);
+  const nextButton = page.getByRole('button', { name: 'Next puzzle' });
+  await nextButton.click();
+  await puzzle.updateComplete;
+  expect(taskSelect!.selectedOptions[0]?.textContent?.trim()).toBe(
+    'Academic notation to named equation',
+  );
+  expect(seedInput!.value).toBe('918273');
+});
+
+test('the active session header offers a persistent way back to home', async () => {
+  const puzzle = await mountSession();
+  const homeButton = page.getByRole('button', { name: 'Home' });
+  await homeButton.click();
+  await puzzle.updateComplete;
+  expect(window.location.hash).toBe('#home?language=en');
+  const home = document.querySelector('home-screen');
+  expect(home?.hidden ?? true).toBe(false);
+  expect(puzzle.hidden).toBe(true);
+});
+
 test('switching locale during an active session stays in the same session', async () => {
   const puzzle = await mountSession(
-    '?session=918273&scenario=gaming.drone-power&locale=en',
+    '#session?seed=918273&scenario=gaming.drone-power&language=en',
   );
   expect(shellText(puzzle)).toContain('Puzzle 1 / 10');
   await submitText(puzzle, 'wrong = wrong');
@@ -361,8 +399,8 @@ test('switching locale during an active session stays in the same session', asyn
   localeSelect.dispatchEvent(new Event('change'));
   await puzzle.updateComplete;
 
-  expect(window.location.search).toBe(
-    '?session=918273&scenario=gaming.drone-power&locale=nb',
+  expect(window.location.hash).toBe(
+    '#session?seed=918273&scenario=gaming.drone-power&language=nb',
   );
   expect(shellText(puzzle)).toContain('Oppgave 1 / 10');
   expect(shellText(puzzle)).not.toContain('Story to quantities');
