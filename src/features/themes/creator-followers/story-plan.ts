@@ -13,7 +13,10 @@ export type CreatorFollowersStoryPlan = {
         nounKey: 'creator' | 'post';
       }
     | {
-        fragmentKey: 'totalFact.finalAudience' | 'totalFact.postGains';
+        fragmentKey:
+          | 'perItemFact.followersPerPost'
+          | 'totalFact.finalAudience'
+          | 'totalFact.postGains';
         factId: ThemeFact['themeQuantityId'];
       }
   )[];
@@ -22,7 +25,8 @@ export type CreatorFollowersStoryPlan = {
       | 'question.followersPerPost'
       | 'question.startingFollowers'
       | 'question.promotedPostCount'
-      | 'question.finalFollowers';
+      | 'question.finalFollowers'
+      | 'question.totalPostGains';
     factId: ThemeFact['themeQuantityId'];
     nounKey: 'creator' | 'post';
   };
@@ -31,20 +35,31 @@ export type CreatorFollowersStoryPlan = {
 const statementFragmentsByRole = {
   base: 'baseFact.startingAudience',
   count: 'countFact.promotedPosts',
+  'per-item': 'perItemFact.followersPerPost',
   total: 'totalFact.finalAudience',
 } as const satisfies Record<
   string,
-  'baseFact.startingAudience' | 'countFact.promotedPosts' | 'totalFact.finalAudience'
+  | 'baseFact.startingAudience'
+  | 'countFact.promotedPosts'
+  | 'perItemFact.followersPerPost'
+  | 'totalFact.finalAudience'
 >;
 
 const questionFragmentsByRole = {
   'per-item': 'question.followersPerPost',
   base: 'question.startingFollowers',
   count: 'question.promotedPostCount',
-  total: 'question.finalFollowers',
+  total: {
+    'base-and-parts': 'question.finalFollowers',
+    'groups-only': 'question.totalPostGains',
+  },
 } as const satisfies Record<
   string,
-  CreatorFollowersStoryPlan['question']['fragmentKey']
+  | CreatorFollowersStoryPlan['question']['fragmentKey']
+  | {
+      'base-and-parts': CreatorFollowersStoryPlan['question']['fragmentKey'];
+      'groups-only': CreatorFollowersStoryPlan['question']['fragmentKey'];
+    }
 >;
 
 const nounsByRole = {
@@ -53,6 +68,11 @@ const nounsByRole = {
   'per-item': 'post',
   total: 'creator',
 } as const satisfies Record<string, 'creator' | 'post'>;
+
+const totalQuestionNoun = {
+  'base-and-parts': 'creator',
+  'groups-only': 'post',
+} as const satisfies Record<CreatorFollowersStoryPlan['structure'], 'creator' | 'post'>;
 
 export function planCreatorFollowersStory(
   facts: readonly ThemeFact[],
@@ -64,6 +84,10 @@ export function planCreatorFollowersStory(
   if (hiddenFact === undefined || hiddenFact.role === undefined) {
     throw new Error('Creator-followers story needs exactly one hidden fact.');
   }
+  const structure = hasBase ? 'base-and-parts' : 'groups-only';
+  const totalQuestionFragment =
+    questionFragmentsByRole.total[structure];
+  const totalQuestionNounKey = totalQuestionNoun[structure];
   return {
     scenarioId: 'creator.followers',
     seed,
@@ -72,11 +96,12 @@ export function planCreatorFollowersStory(
       .filter(
         (fact): fact is ThemeFact & {
           visibility: 'known';
-          role: 'base' | 'count' | 'total';
+          role: 'base' | 'count' | 'per-item' | 'total';
         } =>
           fact.visibility === 'known' &&
           (fact.role === 'base' ||
             fact.role === 'count' ||
+            fact.role === 'per-item' ||
             fact.role === 'total'),
       )
       .map((fact) => ({
@@ -86,16 +111,26 @@ export function planCreatorFollowersStory(
                 ? ('totalFact.finalAudience' as const)
                 : ('totalFact.postGains' as const),
             }
-          : {
-              fragmentKey: statementFragmentsByRole[fact.role],
-              nounKey: nounsByRole[fact.role],
-            }),
+          : fact.role === 'per-item'
+            ? {
+                fragmentKey: statementFragmentsByRole[fact.role],
+              }
+            : {
+                fragmentKey: statementFragmentsByRole[fact.role],
+                nounKey: nounsByRole[fact.role],
+              }),
         factId: fact.themeQuantityId,
       })),
     question: {
-      fragmentKey: questionFragmentsByRole[hiddenFact.role],
+      fragmentKey:
+        hiddenFact.role === 'total'
+          ? totalQuestionFragment
+          : questionFragmentsByRole[hiddenFact.role],
       factId: hiddenFact.themeQuantityId,
-      nounKey: nounsByRole[hiddenFact.role],
+      nounKey:
+        hiddenFact.role === 'total'
+          ? totalQuestionNounKey
+          : nounsByRole[hiddenFact.role],
     },
   };
 }

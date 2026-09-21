@@ -54,6 +54,10 @@ export const nb = {
       promotedPosts: ({ count, noun }) =>
         `${count.charAt(0).toUpperCase()}${count.slice(1)} promoterte ${noun} gir like mange nye følgere hver.`,
     },
+    perItemFact: {
+      followersPerPost: ({ value, unit }) =>
+        `Hvert av dem gir ${value} ${unit}.`,
+    },
     totalFact: {
       finalAudience: ({ value, unit }) =>
         `Innholdsskaperen ender med ${value} ${unit}.`,
@@ -69,6 +73,8 @@ export const nb = {
         `Hvor mange promoterte ${noun} er det?`,
       finalFollowers: ({ noun }) =>
         `Hvor mange følgere har ${noun}en til slutt?`,
+      totalPostGains: ({ noun }) =>
+        `Hvor mange følgere gir de promoterte innleggene til sammen?`,
     },
   },
 } satisfies CreatorFollowersLocaleResources;

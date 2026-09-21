@@ -45,6 +45,10 @@ export const en = {
       activeDrones: ({ count, noun }) =>
         `It also powers ${count} identical active ${noun}.`,
     },
+    perItemFact: {
+      droneDraw: ({ value, unit }) =>
+        `Each active drone draws ${value} ${unit}.`,
+    },
     totalFact: {
       combinedDraw: ({ value, unit }) =>
         `The ship and its drones draw ${value} ${unit} in total.`,
@@ -60,6 +64,8 @@ export const en = {
         `How many ${noun} does it power?`,
       totalPower: ({ noun }) =>
         `How much power do the ship and its ${noun} draw in total?`,
+      totalDronePower: ({ noun }) =>
+        `How much power do the ${noun} draw in total?`,
     },
   },
 } satisfies ScenarioLocaleResources;

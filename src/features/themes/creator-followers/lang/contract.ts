@@ -36,6 +36,9 @@ export type CreatorFollowersLocaleResources = {
     countFact: {
       promotedPosts: (values: { count: string; noun: string }) => string;
     };
+    perItemFact: {
+      followersPerPost: (values: { value: string; unit: string }) => string;
+    };
     totalFact: {
       finalAudience: (values: { value: string; unit: string }) => string;
       postGains: (values: { value: string; unit: string }) => string;
@@ -45,6 +48,7 @@ export type CreatorFollowersLocaleResources = {
       startingFollowers: (values: { noun: string }) => string;
       promotedPostCount: (values: { noun: string }) => string;
       finalFollowers: (values: { noun: string }) => string;
+      totalPostGains: (values: { noun: string }) => string;
     };
   };
 };

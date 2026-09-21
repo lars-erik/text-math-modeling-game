@@ -41,6 +41,11 @@ export function renderCreatorFollowersStory(
               ? resources.nouns[sentence.nounKey].singular
               : resources.nouns[sentence.nounKey].plural,
         });
+      case 'perItemFact.followersPerPost':
+        return resources.fragments.perItemFact.followersPerPost({
+          value: String(fact.value),
+          unit: resources.units.followers,
+        });
       case 'totalFact.finalAudience':
         return resources.fragments.totalFact.finalAudience({
           value: String(fact.value),
@@ -90,6 +95,10 @@ function questionFragment(
       case 'question.finalFollowers':
         return resources.fragments.question.finalFollowers({
           noun: resources.nouns[plan.question.nounKey].singular,
+        });
+      case 'question.totalPostGains':
+        return resources.fragments.question.totalPostGains({
+          noun: resources.nouns[plan.question.nounKey].plural,
         });
     }
   };
