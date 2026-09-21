@@ -189,7 +189,7 @@ test('semantic home menu requests start default puzzle and session destinations'
   );
   expect(h.writes).toEqual([
     {
-      hash: '#puzzle?seed=17&family=total-from-parts&scenario=gaming.drone-power&task=story-to-quantities&language=nb',
+      hash: '#puzzle?seed=17&family=total-from-parts&hidden-role=per-item&scenario=gaming.drone-power&task=story-to-quantities&language=nb',
       mode: 'push',
     },
   ]);

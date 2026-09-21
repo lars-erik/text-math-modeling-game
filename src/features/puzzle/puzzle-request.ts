@@ -5,14 +5,21 @@ import type { ModeId } from './modes';
 import { isModeId } from './modes';
 import {
   isProblemFamilyId,
+  problemFamilies,
   type ProblemFamilyId,
 } from '../problem-generation/problem-families';
+import {
+  defaultHiddenRole,
+  isHiddenRole,
+  type HiddenRole,
+} from '../problem-generation/hidden-role';
 
 export const puzzleSelectionRequestEvent = 'puzzle-selection-request';
 
 export type PuzzleSelectionRequest = {
   seed: number;
   familyId: ProblemFamilyId;
+  hiddenRole?: HiddenRole;
   themeId: ThemeId;
   modeId: ModeId;
   locale: PuzzleLocale;
@@ -52,6 +59,13 @@ export function isPuzzleSelectionRequest(
     typeof request.seed === 'number' &&
     typeof request.familyId === 'string' &&
     isProblemFamilyId(request.familyId) &&
+    (request.hiddenRole === undefined
+      ? true
+      : typeof request.hiddenRole === 'string' &&
+        isHiddenRole(request.hiddenRole) &&
+        problemFamilies[request.familyId].hiddenRoles.includes(
+          request.hiddenRole,
+        )) &&
     typeof request.themeId === 'string' &&
     isThemeId(request.themeId) &&
     typeof request.modeId === 'string' &&

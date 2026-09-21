@@ -8,8 +8,14 @@ import type {
 import {
   defaultProblemFamilyId,
   isProblemFamilyId,
+  problemFamilies,
   type ProblemFamilyId,
 } from '../problem-generation/problem-families';
+import {
+  defaultHiddenRole,
+  isHiddenRole,
+  type HiddenRole,
+} from '../problem-generation/hidden-role';
 import { maximumGenerationSeed } from '../problem-generation/random-source';
 import type { Route } from './hash-route';
 
@@ -32,9 +38,14 @@ export function puzzleSelectionFromRoute(route: Route): PuzzleSelectionRequest {
   if (route.name !== 'puzzle') {
     throw new Error(`Expected puzzle route, received ${JSON.stringify(route.name)}.`);
   }
+  const familyId = parseFamilyId(route.routeParams.get('family'));
   return {
     seed: parseRequiredSeed(route.routeParams.get('seed')),
-    familyId: parseFamilyId(route.routeParams.get('family')),
+    familyId,
+    hiddenRole: parseHiddenRole(
+      route.routeParams.get('hidden-role'),
+      familyId,
+    ),
     themeId: parseRequiredThemeId(route.routeParams.get('scenario')),
     modeId: parseRequiredModeId(route.routeParams.get('task')),
     locale: parseLanguage(route.routeParams.get('language')),
@@ -49,6 +60,9 @@ export function routeFromPuzzleSelection(
     routeParams: new Map<string, string | number | boolean>([
       ['seed', selection.seed],
       ['family', selection.familyId],
+      ...(selection.hiddenRole !== undefined
+        ? ([['hidden-role', selection.hiddenRole]] as const)
+        : []),
       ['scenario', selection.themeId],
       ['task', selection.modeId],
       ['language', selection.locale],
@@ -113,6 +127,26 @@ function parseFamilyId(value: unknown): ProblemFamilyId {
     throw new Error(`Unknown problem family ${JSON.stringify(value)}.`);
   }
   return value;
+}
+
+function parseHiddenRole(
+  value: unknown,
+  familyId: ProblemFamilyId,
+): HiddenRole {
+  const hiddenRole =
+    value === undefined || value === null || value === ''
+      ? defaultHiddenRole
+      : value;
+  if (typeof value === 'string' && !isHiddenRole(value)) {
+    throw new Error(`Unknown hidden role ${JSON.stringify(value)}.`);
+  }
+  const resolved = hiddenRole as HiddenRole;
+  if (!problemFamilies[familyId].hiddenRoles.includes(resolved)) {
+    throw new Error(
+      `Problem family ${JSON.stringify(familyId)} does not support hidden role ${JSON.stringify(resolved)}.`,
+    );
+  }
+  return resolved;
 }
 
 function parseRequiredThemeId(value: unknown): ThemeId {

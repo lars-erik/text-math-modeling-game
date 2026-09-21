@@ -29,8 +29,14 @@ import { isModeId, type ModeId } from './features/puzzle/modes';
 import {
   defaultProblemFamilyId,
   isProblemFamilyId,
+  problemFamilies,
   type ProblemFamilyId,
 } from './features/problem-generation/problem-families';
+import {
+  defaultHiddenRole,
+  isHiddenRole,
+  type HiddenRole,
+} from './features/problem-generation/hidden-role';
 import type { PuzzleLocale } from './features/localization/locale';
 import {
   createSessionRunStore,
@@ -81,6 +87,10 @@ export function puzzleDestination(element: PuzzleAttributes): Destination {
       const selection = puzzleSelectionFromRoute(route);
       element.setAttribute('seed', String(selection.seed));
       element.setAttribute('family', selection.familyId);
+      element.setAttribute(
+        'hidden-role',
+        selection.hiddenRole ?? defaultHiddenRole,
+      );
       element.setAttribute('theme', selection.themeId);
       element.setAttribute('mode', selection.modeId);
       element.setAttribute('locale', selection.locale);
@@ -100,6 +110,7 @@ export function sessionDestination(element: PuzzleAttributes): Destination {
       element.removeAttribute('seed');
       element.removeAttribute('mode');
       element.removeAttribute('family');
+      element.removeAttribute('hidden-role');
     },
   };
 }
@@ -220,6 +231,10 @@ export function startMathModelingApplication(
       routeFromPuzzleSelection({
         seed: detail?.seed ?? defaultPuzzleSeed,
         familyId: familyIdOrThrow(detail?.familyId ?? defaultProblemFamily),
+        hiddenRole: hiddenRoleOrThrow(
+          detail?.familyId ?? defaultProblemFamily,
+          detail?.hiddenRole ?? defaultHiddenRole,
+        ) as HiddenRole,
         themeId: themeIdOrThrow(detail?.themeId ?? defaultThemeId),
         modeId: modeIdOrThrow(detail?.modeId ?? defaultModeId),
         locale: currentLanguage(),
@@ -268,6 +283,24 @@ function themeIdOrThrow(value: string): ThemeId {
 function familyIdOrThrow(value: string): ProblemFamilyId {
   if (!isProblemFamilyId(value)) {
     throw new Error(`Unknown problem family ${JSON.stringify(value)}.`);
+  }
+  return value;
+}
+
+function hiddenRoleOrThrow(
+  familyId: string,
+  value: string,
+): HiddenRole {
+  if (!isProblemFamilyId(familyId)) {
+    throw new Error(`Unknown problem family ${JSON.stringify(familyId)}.`);
+  }
+  if (!isHiddenRole(value)) {
+    throw new Error(`Unknown hidden role ${JSON.stringify(value)}.`);
+  }
+  if (!problemFamilies[familyId].hiddenRoles.includes(value)) {
+    throw new Error(
+      `Problem family ${JSON.stringify(familyId)} does not support hidden role ${JSON.stringify(value)}.`,
+    );
   }
   return value;
 }

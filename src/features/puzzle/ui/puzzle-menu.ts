@@ -1,8 +1,13 @@
 import { css, html, LitElement } from 'lit';
 import {
   problemFamilyIds,
+  problemFamilies,
   type ProblemFamilyId,
 } from '../../problem-generation/problem-families';
+import {
+  isHiddenRole,
+  type HiddenRole,
+} from '../../problem-generation/hidden-role';
 import { maximumGenerationSeed } from '../../problem-generation/random-source';
 import {
   puzzleSelectionRequestEvent,
@@ -18,11 +23,17 @@ export class PuzzleMenu extends LitElement {
   static properties = {
     seed: { type: Number },
     familyId: { attribute: 'family-id', type: String },
+    hiddenRole: { attribute: 'hidden-role', type: String },
     themeId: { attribute: 'theme-id', type: String },
     modeId: { attribute: 'mode-id', type: String },
     locale: { type: String },
     menuLabel: { attribute: false },
     familyLabel: { attribute: false },
+    hiddenRoleLabel: { attribute: false },
+    perItemUnknownLabel: { attribute: false },
+    baseUnknownLabel: { attribute: false },
+    countUnknownLabel: { attribute: false },
+    totalUnknownLabel: { attribute: false },
     totalFromPartsLabel: { attribute: false },
     groupsTotalLabel: { attribute: false },
     scenarioLabel: { attribute: false },
@@ -99,11 +110,17 @@ export class PuzzleMenu extends LitElement {
 
   declare seed: number;
   declare familyId: ProblemFamilyId;
+  declare hiddenRole: HiddenRole;
   declare themeId: ThemeId;
   declare modeId: ModeId;
   declare locale: PuzzleLocale;
   declare menuLabel: string;
   declare familyLabel: string;
+  declare hiddenRoleLabel: string;
+  declare perItemUnknownLabel: string;
+  declare baseUnknownLabel: string;
+  declare countUnknownLabel: string;
+  declare totalUnknownLabel: string;
   declare totalFromPartsLabel: string;
   declare groupsTotalLabel: string;
   declare scenarioLabel: string;
@@ -122,11 +139,17 @@ export class PuzzleMenu extends LitElement {
     super();
     this.seed = 17;
     this.familyId = 'total-from-parts';
+    this.hiddenRole = 'per-item';
     this.themeId = 'gaming.drone-power';
     this.modeId = 'story-to-quantities';
     this.locale = 'en';
     this.menuLabel = 'Puzzle menu';
     this.familyLabel = 'Problem family';
+    this.hiddenRoleLabel = 'Unknown quantity';
+    this.perItemUnknownLabel = 'Value per item';
+    this.baseUnknownLabel = 'Base value';
+    this.countUnknownLabel = 'Number of items';
+    this.totalUnknownLabel = 'Total';
     this.totalFromPartsLabel = 'Total from base and parts';
     this.groupsTotalLabel = 'Equal groups';
     this.scenarioLabel = 'Scenario';
@@ -156,6 +179,17 @@ export class PuzzleMenu extends LitElement {
             <option value="groups-total">
               ${this.groupsTotalLabel}
             </option>
+          </select>
+        </label>
+        <label>
+          ${this.hiddenRoleLabel}
+          <select name="hidden-role" .value=${this.hiddenRole}>
+            ${problemFamilies[this.familyId].hiddenRoles.map(
+              (hiddenRole) =>
+                html`<option value=${hiddenRole} ?selected=${hiddenRole === this.hiddenRole}>
+                  ${this.labelForHiddenRole(hiddenRole)}
+                </option>`,
+            )}
           </select>
         </label>
         <label>
@@ -208,6 +242,19 @@ export class PuzzleMenu extends LitElement {
     `;
   }
 
+  private labelForHiddenRole(hiddenRole: HiddenRole): string {
+    switch (hiddenRole) {
+      case 'per-item':
+        return this.perItemUnknownLabel;
+      case 'base':
+        return this.baseUnknownLabel;
+      case 'count':
+        return this.countUnknownLabel;
+      case 'total':
+        return this.totalUnknownLabel;
+    }
+  }
+
   private handleSubmit(event: SubmitEvent): void {
     event.preventDefault();
     if (!(event.currentTarget instanceof HTMLFormElement)) {
@@ -215,6 +262,7 @@ export class PuzzleMenu extends LitElement {
     }
     const data = new FormData(event.currentTarget);
     const familyId = data.get('family');
+    const hiddenRole = data.get('hidden-role');
     const themeId = data.get('scenario');
     const modeId = data.get('task');
     const seed = Number(data.get('seed'));
@@ -225,6 +273,11 @@ export class PuzzleMenu extends LitElement {
     if (
       typeof familyId !== 'string' ||
       !(problemFamilyIds as readonly string[]).includes(familyId) ||
+      typeof hiddenRole !== 'string' ||
+      !isHiddenRole(hiddenRole) ||
+      !problemFamilies[familyId as ProblemFamilyId].hiddenRoles.includes(
+        hiddenRole,
+      ) ||
       typeof themeId !== 'string' ||
       !isThemeId(themeId) ||
       typeof modeId !== 'string' ||
@@ -250,6 +303,7 @@ export class PuzzleMenu extends LitElement {
         detail: {
           seed,
           familyId: familyId as ProblemFamilyId,
+          hiddenRole,
           themeId,
           modeId,
           locale: this.locale,
