@@ -57,6 +57,9 @@ jobs:
       - name: Install Chromium and Linux dependencies
         run: npm run browser:install:ci
 
+      - name: Verify headless Chromium launch
+        run: npm run browser:doctor
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -155,6 +158,7 @@ jobs:
             git switch -c gh-pages --track origin/gh-pages
           else
             # Bootstrap gh-pages without changing the public root to PR code.
+            # The root is built from main; the current PR build goes under pr-N/.
             git worktree add --detach ../pages HEAD
             cd ../pages
             git switch --orphan gh-pages
@@ -256,7 +260,7 @@ jobs:
           fi
 
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github-actions[bot]"
           git fetch origin gh-pages:refs/remotes/origin/gh-pages
           git worktree add --detach ../pages origin/gh-pages
           cd ../pages
