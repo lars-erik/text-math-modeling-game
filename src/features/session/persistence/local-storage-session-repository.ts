@@ -1,17 +1,18 @@
-import {
-  sessionPlannerVersion,
-} from '../plan-session';
+import { sessionPlannerVersion } from '../plan-session';
 import {
   sessionSnapshotSchemaVersion,
-  type CompletedSessionSummaryView,
-  type SessionRepository,
-  type SessionRunId,
   type SessionSnapshot,
-  type StoredSessionSnapshot,
 } from './session-snapshot';
+import type {
+  CompletedSessionSummary,
+  SessionHistoryRepository,
+} from './session-history';
+import type { UserProfile, UserProfileRepository } from './user-profile';
+
+const userProfileSchemaVersion = 1;
 
 export const sessionStorageKeys = {
-  activeRun: 'math-modeling-game:session:active-run',
+  profile: 'math-modeling-game:session:profile',
   completedRuns: 'math-modeling-game:session:completed-runs',
 } as const;
 
@@ -21,16 +22,21 @@ export type BrowserStorageLike = {
   removeItem: (key: string) => void;
 };
 
-export type LocalStorageSessionRepositoryOptions = {
+export type LocalStorageSessionPersistenceOptions = {
   storage?: BrowserStorageLike;
   schemaVersion?: number;
   plannerVersion?: string;
   now?: () => number;
 };
 
-export function createLocalStorageSessionRepository(
-  options: LocalStorageSessionRepositoryOptions = {},
-): SessionRepository {
+export type LocalStorageSessionPersistence = {
+  profileRepository: UserProfileRepository;
+  historyRepository: SessionHistoryRepository;
+};
+
+export function createLocalStorageSessionPersistence(
+  options: LocalStorageSessionPersistenceOptions = {},
+): LocalStorageSessionPersistence {
   const storage = options.storage;
   const schemaVersion = options.schemaVersion ?? sessionSnapshotSchemaVersion;
   const plannerVersion = options.plannerVersion ?? sessionPlannerVersion;
@@ -59,39 +65,9 @@ export function createLocalStorageSessionRepository(
     }
   };
 
-  const readCompleted = (): readonly SessionSnapshot[] =>
-    parseSnapshotList(readRaw(sessionStorageKeys.completedRuns));
-
   const isCompatible = (snapshot: SessionSnapshot): boolean =>
     snapshot.schemaVersion === schemaVersion &&
     snapshot.plannerVersion === plannerVersion;
-
-  const writeActive = (snapshot: SessionSnapshot): boolean =>
-    writeRaw(
-      sessionStorageKeys.activeRun,
-      JSON.stringify({ ...snapshot, updatedAt: now() }),
-    );
-
-  const writeCompleted = (snapshots: readonly SessionSnapshot[]): boolean =>
-    writeRaw(
-      sessionStorageKeys.completedRuns,
-      JSON.stringify(
-        snapshots.map((snapshot) => ({ ...snapshot, updatedAt: now() })),
-      ),
-    );
-
-  const readValidActive = (): SessionSnapshot | undefined => {
-    const raw = readRaw(sessionStorageKeys.activeRun);
-    if (raw === null || raw === '') {
-      return undefined;
-    }
-    const snapshot = parseSnapshot(raw);
-    if (snapshot === undefined || !isCompatible(snapshot)) {
-      removeRaw(sessionStorageKeys.activeRun);
-      return undefined;
-    }
-    return snapshot;
-  };
 
   const readValidCompleted = (): readonly SessionSnapshot[] => {
     const raw = readRaw(sessionStorageKeys.completedRuns);
@@ -101,57 +77,87 @@ export function createLocalStorageSessionRepository(
     const parsed = parseSnapshotList(raw);
     const valid = parsed.filter(isCompatible);
     if (valid.length !== parsed.length) {
-      writeCompleted(valid);
+      writeCompletedSnapshots(valid);
     }
     return valid;
   };
 
+  const writeCompletedSnapshots = (
+    snapshots: readonly SessionSnapshot[],
+  ): boolean =>
+    writeRaw(sessionStorageKeys.completedRuns, JSON.stringify(snapshots));
+
   return {
-    loadActiveRun: (): StoredSessionSnapshot | undefined => {
-      const snapshot = readValidActive();
-      return snapshot === undefined
-        ? undefined
-        : { runId: snapshot.runId, snapshot };
+    profileRepository: {
+      loadProfile: (): UserProfile => {
+        const raw = readRaw(sessionStorageKeys.profile);
+        if (raw === null || raw === '') {
+          return {};
+        }
+        const profile = parseProfile(raw);
+        if (
+          profile === undefined ||
+          profile.activeSession === undefined ||
+          !isCompatible(profile.activeSession)
+        ) {
+          removeRaw(sessionStorageKeys.profile);
+          return {};
+        }
+        return { activeSession: profile.activeSession };
+      },
+      saveProfile(profile: UserProfile): void {
+        if (profile.activeSession === undefined) {
+          removeRaw(sessionStorageKeys.profile);
+          return;
+        }
+        writeRaw(
+          sessionStorageKeys.profile,
+          JSON.stringify({
+            schemaVersion: userProfileSchemaVersion,
+            activeSession: { ...profile.activeSession, updatedAt: now() },
+          }),
+        );
+      },
     },
-    saveActiveRun: (snapshot: SessionSnapshot): SessionRunId => {
-      writeActive(snapshot);
-      if (readRaw(sessionStorageKeys.completedRuns) === null) {
-        writeCompleted([]);
-      }
-      return snapshot.runId;
-    },
-    saveCompletedRun: (snapshot: SessionSnapshot): SessionRunId => {
-      const stored = { ...snapshot, status: 'complete' as const };
-      const active = readValidActive();
-      if (active !== undefined && active.runId !== stored.runId) {
-        writeActive(active);
-      } else if (active?.runId === stored.runId) {
-        removeRaw(sessionStorageKeys.activeRun);
-      }
-      const existing = readValidCompleted().filter(
-        (candidate) => candidate.runId !== stored.runId,
-      );
-      writeCompleted([...existing, { ...stored, updatedAt: now() }]);
-      return stored.runId;
-    },
-    listCompletedRuns: (): readonly CompletedSessionSummaryView[] =>
-      readValidCompleted()
-        .map((snapshot) => toSummary(snapshot))
-        .sort((left, right) => right.completedAt - left.completedAt),
-    discardRun: (runId: SessionRunId): void => {
-      const active = readValidActive();
-      if (active?.runId === runId) {
-        removeRaw(sessionStorageKeys.activeRun);
-      }
-      const remaining = readValidCompleted().filter(
-        (candidate) => candidate.runId !== runId,
-      );
-      writeCompleted(remaining);
+    historyRepository: {
+      saveCompleted(snapshot: SessionSnapshot): void {
+        const stored: SessionSnapshot = {
+          ...snapshot,
+          status: 'complete',
+          updatedAt: now(),
+        };
+        const profile = parseProfile(
+          readRaw(sessionStorageKeys.profile) ?? '',
+        );
+        if (profile?.activeSession?.runId === stored.runId) {
+          removeRaw(sessionStorageKeys.profile);
+        }
+        const existing = readValidCompleted().filter(
+          (candidate) => candidate.runId !== stored.runId,
+        );
+        writeCompletedSnapshots([...existing, stored]);
+      },
+      listCompleted: (): readonly CompletedSessionSummary[] =>
+        readValidCompleted()
+          .map(toSummary)
+          .sort((left, right) => right.completedAt - left.completedAt),
+      removeCompleted(runId: string): void {
+        const profile = parseProfile(
+          readRaw(sessionStorageKeys.profile) ?? '',
+        );
+        if (profile?.activeSession?.runId === runId) {
+          removeRaw(sessionStorageKeys.profile);
+        }
+        const remaining = readValidCompleted().filter(
+          (candidate) => candidate.runId !== runId,
+        );
+        writeCompletedSnapshots(remaining);
+      },
     },
   };
 }
 
-function toSummary(snapshot: SessionSnapshot): CompletedSessionSummaryView {
+function toSummary(snapshot: SessionSnapshot): CompletedSessionSummary {
   return {
     runId: snapshot.runId,
     seed: snapshot.seed,
@@ -162,13 +168,18 @@ function toSummary(snapshot: SessionSnapshot): CompletedSessionSummaryView {
   };
 }
 
-function parseSnapshot(raw: string | null): SessionSnapshot | undefined {
+type StoredProfile = {
+  schemaVersion: number;
+  activeSession?: SessionSnapshot;
+};
+
+function parseProfile(raw: string): StoredProfile | undefined {
   if (raw === null || raw === '') {
     return undefined;
   }
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (!isSnapshotShape(parsed)) {
+    if (!isProfileShape(parsed)) {
       return undefined;
     }
     return parsed;
@@ -190,6 +201,18 @@ function parseSnapshotList(raw: string | null): readonly SessionSnapshot[] {
   } catch {
     return [];
   }
+}
+
+function isProfileShape(value: unknown): value is StoredProfile {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const candidate = value as Partial<StoredProfile>;
+  return (
+    typeof candidate.schemaVersion === 'number' &&
+    (candidate.activeSession === undefined ||
+      isSnapshotShape(candidate.activeSession))
+  );
 }
 
 function isSnapshotShape(value: unknown): value is SessionSnapshot {

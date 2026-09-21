@@ -6,7 +6,7 @@ import { HomeScreen } from '../../navigation/ui/home-screen';
 import { katexAcademicDisplayAdapter } from '../../puzzle/ui/katex-academic-display-adapter';
 import { createSessionRunStore } from '../session-run-store';
 import {
-  createLocalStorageSessionRepository,
+  createLocalStorageSessionPersistence,
   sessionStorageKeys,
 } from '../persistence/local-storage-session-repository';
 import { createStorageRunIdMemory } from '../persistence/browser-run-id-memory';
@@ -40,7 +40,7 @@ function mountApp(initialHash: string): {
       hash,
       root: document,
       sessionRunStore: createSessionRunStore({
-        repository: createLocalStorageSessionRepository({
+        ...createLocalStorageSessionPersistence({
           storage: window.localStorage,
         }),
         runIdMemory: createStorageRunIdMemory(window.sessionStorage),
@@ -119,7 +119,7 @@ test('a session survives an application reload and Home continue restores the sa
   expect(shellText(app.puzzle)).toContain('Puzzle 2 / 10');
   expect(
     JSON.parse(
-      window.localStorage.getItem(sessionStorageKeys.activeRun) ?? '{}',
+      window.localStorage.getItem(sessionStorageKeys.profile) ?? '{}',
     ).answerLog.length,
   ).toBeGreaterThan(0);
 

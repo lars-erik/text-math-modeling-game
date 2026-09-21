@@ -1,7 +1,7 @@
 import { css, html, LitElement } from 'lit';
 import { navigationResources } from '../lang';
 import type { PuzzleLocale } from '../../puzzle/lang';
-import type { CompletedSessionSummaryView } from '../../session/persistence/session-snapshot';
+import type { HomeSessionRunsView } from '../session-runs-view';
 import {
   navigatePuzzleRequestEvent,
   navigateResumeSessionRequestEvent,
@@ -19,8 +19,8 @@ export class HomeScreen extends LitElement {
   };
 
   declare locale: string;
-  declare activeRun: { seed: number; position: number; total: number } | undefined;
-  declare completedRuns: readonly CompletedSessionSummaryView[];
+  declare activeRun: HomeSessionRunsView['activeRun'];
+  declare completedRuns: HomeSessionRunsView['completedRuns'];
 
   constructor() {
     super();
@@ -29,10 +29,7 @@ export class HomeScreen extends LitElement {
     this.completedRuns = [];
   }
 
-  setHiddenRuns(view: {
-    activeRun: { seed: number; position: number; total: number } | undefined;
-    completedRuns: readonly CompletedSessionSummaryView[];
-  }): void {
+  setHiddenRuns(view: HomeSessionRunsView): void {
     this.activeRun = view.activeRun;
     this.completedRuns = view.completedRuns;
   }

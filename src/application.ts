@@ -31,11 +31,8 @@ import {
   createSessionRunStore,
   type SessionRunStore,
 } from './features/session/session-run-store';
-import {
-  createInMemorySessionRepository,
-} from './features/session/persistence/session-repository';
-import type { SessionRepository } from './features/session/persistence/session-snapshot';
-import { createNewRunId } from './features/session/session-run-id';
+import { createInMemorySessionPersistence } from './features/session/persistence/in-memory-session-repository';
+import type { HomeSessionRunsView } from './features/navigation/session-runs-view';
 
 export const defaultPuzzleSeed = 17;
 export const defaultSessionSeed = 918273;
@@ -50,20 +47,8 @@ type PuzzleAttributes = {
 
 type HomeAttributes = {
   setAttribute: (name: string, value: string) => void;
-  setHiddenRuns: (view: {
-    activeRun: { seed: number; position: number; total: number } | undefined;
-    completedRuns: readonly {
-      runId: string;
-      seed: number;
-      total: number;
-    }[];
-  }) => void;
+  setHiddenRuns: (view: HomeSessionRunsView) => void;
   hidden: boolean;
-};
-
-export type SessionRunStoreBindings = {
-  store: SessionRunStore;
-  repository: SessionRepository;
 };
 
 export type ApplicationOptions = {
@@ -112,10 +97,7 @@ export function sessionDestination(element: PuzzleAttributes): Destination {
 
 export function homeDestination(
   element: HomeAttributes,
-  sessionRuns: () => {
-    activeRun: { seed: number; position: number; total: number } | undefined;
-    completedRuns: readonly { runId: string; seed: number; total: number }[];
-  },
+  sessionRuns: () => HomeSessionRunsView,
 ): Destination {
   return {
     view: element,
@@ -151,7 +133,7 @@ export function startMathModelingApplication(
   const sessionRunStore =
     options.sessionRunStore ??
     createSessionRunStore({
-      repository: createInMemorySessionRepository(),
+      ...createInMemorySessionPersistence(),
       runIdMemory: {
         get: () => options.defaultRunId,
         set: () => undefined,

@@ -37,24 +37,4 @@ export type SessionSnapshot = {
   updatedAt: number;
 };
 
-export type StoredSessionSnapshot = {
-  runId: SessionRunId;
-  snapshot: SessionSnapshot;
-};
 
-export type CompletedSessionSummaryView = {
-  runId: SessionRunId;
-  seed: number;
-  themeId: ThemeId;
-  locale: PuzzleLocale;
-  total: number;
-  completedAt: number;
-};
-
-export type SessionRepository = {
-  loadActiveRun: () => StoredSessionSnapshot | undefined;
-  saveActiveRun: (snapshot: SessionSnapshot) => SessionRunId;
-  listCompletedRuns: () => readonly CompletedSessionSummaryView[];
-  saveCompletedRun: (snapshot: SessionSnapshot) => SessionRunId;
-  discardRun: (runId: SessionRunId) => void;
-};

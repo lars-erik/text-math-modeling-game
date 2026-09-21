@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import {
-  createLocalStorageSessionRepository,
+  createLocalStorageSessionPersistence,
   sessionStorageKeys,
   type BrowserStorageLike,
 } from './local-storage-session-repository';
@@ -43,13 +43,14 @@ function memoryStorage(initial: Record<string, string> = {}): MemoryStorage {
 
 test('an active run persists under the namespaced application keys', () => {
   const storage = memoryStorage();
-  const repository = createLocalStorageSessionRepository({ storage });
+  const persistence = createLocalStorageSessionPersistence({ storage });
   const session = startRun();
-  repository.saveActiveRun(snapshotSessionRun(session));
+  persistence.profileRepository.saveProfile({
+    activeSession: snapshotSessionRun(session),
+  });
 
-  expect(storage.backing.has(sessionStorageKeys.activeRun)).toBe(true);
-  expect(storage.backing.has(sessionStorageKeys.completedRuns)).toBe(true);
-  const raw = storage.backing.get(sessionStorageKeys.activeRun) ?? '';
+  expect(storage.backing.has(sessionStorageKeys.profile)).toBe(true);
+  const raw = storage.backing.get(sessionStorageKeys.profile) ?? '';
   expect(raw).not.toContain('answerKey');
   expect(Object.keys(initialStorageScan(storage)).every((key) =>
     key.startsWith('math-modeling-game:'),
@@ -64,48 +65,119 @@ function initialStorageScan(
 
 test('round-trips a run through storage and restores it', () => {
   const storage = memoryStorage();
-  const repository = createLocalStorageSessionRepository({ storage });
+  const persistence = createLocalStorageSessionPersistence({ storage });
   const session = startRun();
-  repository.saveActiveRun(snapshotSessionRun(session));
+  persistence.profileRepository.saveProfile({
+    activeSession: snapshotSessionRun(session),
+  });
 
-  const repository2 = createLocalStorageSessionRepository({ storage });
-  const stored = repository2.loadActiveRun();
+  const persistence2 = createLocalStorageSessionPersistence({ storage });
+  const stored = persistence2.profileRepository.loadProfile().activeSession;
   expect(stored?.runId).toBe('run-one');
-  expect(stored && restoreSessionRun(stored.snapshot).kind).toBe('restored');
+  expect(stored && restoreSessionRun(stored).kind).toBe('restored');
 });
 
 test('a completed run moves to history and is no longer offered as active', () => {
   const storage = memoryStorage();
-  const repository = createLocalStorageSessionRepository({ storage });
+  const persistence = createLocalStorageSessionPersistence({ storage });
   const session = startRun();
-  repository.saveActiveRun(snapshotSessionRun(session));
+  persistence.profileRepository.saveProfile({
+    activeSession: snapshotSessionRun(session),
+  });
   const completed = snapshotSessionRun({
     ...session,
     status: 'complete',
   });
-  repository.saveCompletedRun(completed);
-  expect(repository.loadActiveRun()).toBeUndefined();
-  const history = repository.listCompletedRuns();
+  persistence.historyRepository.saveCompleted(completed);
+  expect(
+    persistence.profileRepository.loadProfile().activeSession,
+  ).toBeUndefined();
+  const history = persistence.historyRepository.listCompleted();
   expect(history).toHaveLength(1);
   expect(history[0]?.runId).toBe('run-one');
   expect(history[0]?.seed).toBe(918273);
 });
 
+test('saving a completed run preserves earlier completion timestamps', () => {
+  let clock = 1_000;
+  const storage = memoryStorage();
+  const persistence = createLocalStorageSessionPersistence({
+    storage,
+    now: () => clock,
+  });
+  persistence.historyRepository.saveCompleted(
+    snapshotSessionRun(startRun('run-first')),
+  );
+  clock = 2_000;
+  persistence.historyRepository.saveCompleted(
+    snapshotSessionRun(startRun('run-second')),
+  );
+  clock = 3_000;
+  persistence.historyRepository.saveCompleted(
+    snapshotSessionRun(startRun('run-third')),
+  );
+
+  const persistence2 = createLocalStorageSessionPersistence({
+    storage,
+    now: () => clock,
+  });
+  const history = persistence2.historyRepository.listCompleted();
+  expect(history.map((run) => run.completedAt)).toEqual([
+    3_000,
+    2_000,
+    1_000,
+  ]);
+
+  clock = 4_000;
+  persistence2.historyRepository.saveCompleted(
+    snapshotSessionRun(startRun('run-fourth')),
+  );
+  const persistence3 = createLocalStorageSessionPersistence({ storage });
+  expect(
+    persistence3.historyRepository
+      .listCompleted()
+      .map((run) => [run.runId, run.completedAt]),
+  ).toEqual([
+    ['run-fourth', 4_000],
+    ['run-third', 3_000],
+    ['run-second', 2_000],
+    ['run-first', 1_000],
+  ]);
+});
+
+test('removing a completed run keeps the other history entries intact', () => {
+  const storage = memoryStorage();
+  const persistence = createLocalStorageSessionPersistence({ storage });
+  persistence.historyRepository.saveCompleted(
+    snapshotSessionRun(startRun('run-first')),
+  );
+  persistence.historyRepository.saveCompleted(
+    snapshotSessionRun(startRun('run-second')),
+  );
+  persistence.historyRepository.removeCompleted('run-first');
+  const history = persistence.historyRepository.listCompleted();
+  expect(history).toHaveLength(1);
+  expect(history[0]?.runId).toBe('run-second');
+});
+
 test('schema version mismatch discards only application-owned records', () => {
   const storage = memoryStorage({
-    'math-modeling-game:session:active-run': JSON.stringify({
-      schemaVersion: 0,
-      plannerVersion: sessionPlannerVersion,
-      runId: 'run-old',
-      seed: 1,
-      themeId: 'gaming.drone-power',
-      locale: 'en',
-      status: 'active',
-      currentIndex: 0,
-      currentCompleted: false,
-      hintGuidanceId: undefined,
-      answerLog: [],
-      updatedAt: 1,
+    'math-modeling-game:session:profile': JSON.stringify({
+      schemaVersion: 1,
+      activeSession: {
+        schemaVersion: 0,
+        plannerVersion: sessionPlannerVersion,
+        runId: 'run-old',
+        seed: 1,
+        themeId: 'gaming.drone-power',
+        locale: 'en',
+        status: 'active',
+        currentIndex: 0,
+        currentCompleted: false,
+        hintGuidanceId: undefined,
+        answerLog: [],
+        updatedAt: 1,
+      },
     }),
     'math-modeling-game:session:completed-runs': JSON.stringify([
       {
@@ -125,27 +197,37 @@ test('schema version mismatch discards only application-owned records', () => {
     ]),
     'other-app:data': 'keep me',
   });
-  const repository = createLocalStorageSessionRepository({ storage });
-  expect(repository.loadActiveRun()).toBeUndefined();
-  expect(repository.listCompletedRuns()).toEqual([]);
+  const persistence = createLocalStorageSessionPersistence({ storage });
+  expect(persistence.profileRepository.loadProfile().activeSession)
+    .toBeUndefined();
+  expect(persistence.historyRepository.listCompleted()).toEqual([]);
   expect(storage.backing.get('other-app:data')).toBe('keep me');
-  expect(storage.backing.has(sessionStorageKeys.activeRun)).toBe(false);
+  expect(storage.backing.has(sessionStorageKeys.profile)).toBe(false);
 });
 
 test('planner version mismatch discards incompatible records only', () => {
   const storage = memoryStorage();
-  const repository = createLocalStorageSessionRepository({ storage });
-  repository.saveActiveRun(snapshotSessionRun(startRun()));
+  const persistence = createLocalStorageSessionPersistence({ storage });
+  persistence.profileRepository.saveProfile({
+    activeSession: snapshotSessionRun(startRun()),
+  });
+  const rawProfile = JSON.parse(
+    storage.backing.get(sessionStorageKeys.profile) ?? '{}',
+  ) as { activeSession: Record<string, unknown> };
   storage.backing.set(
-    sessionStorageKeys.activeRun,
+    sessionStorageKeys.profile,
     JSON.stringify({
-      ...JSON.parse(storage.backing.get(sessionStorageKeys.activeRun) ?? '{}'),
-      plannerVersion: 'old-planner',
+      ...rawProfile,
+      activeSession: {
+        ...rawProfile.activeSession,
+        plannerVersion: 'old-planner',
+      },
     }),
   );
-  const repository2 = createLocalStorageSessionRepository({ storage });
-  expect(repository2.loadActiveRun()).toBeUndefined();
-  expect(storage.backing.has(sessionStorageKeys.activeRun)).toBe(false);
+  const persistence2 = createLocalStorageSessionPersistence({ storage });
+  expect(persistence2.profileRepository.loadProfile().activeSession)
+    .toBeUndefined();
+  expect(storage.backing.has(sessionStorageKeys.profile)).toBe(false);
   expect(
     storage.backing.get('other-app:data') === undefined ||
       storage.backing.get('other-app:data') === 'keep me',
@@ -154,15 +236,17 @@ test('planner version mismatch discards incompatible records only', () => {
 
 test('malformed JSON in one record is ignored without touching valid records', () => {
   const storage = memoryStorage();
-  const repository = createLocalStorageSessionRepository({ storage });
+  const persistence = createLocalStorageSessionPersistence({ storage });
   const session = startRun();
-  repository.saveActiveRun(snapshotSessionRun(session));
-  storage.backing.set(sessionStorageKeys.activeRun, '{not json');
-  const repository2 = createLocalStorageSessionRepository({ storage });
-  expect(repository2.loadActiveRun()).toBeUndefined();
-  expect(storage.backing.has(sessionStorageKeys.activeRun)).toBe(false);
+  persistence.profileRepository.saveProfile({
+    activeSession: snapshotSessionRun(session),
+  });
+  storage.backing.set(sessionStorageKeys.profile, '{not json');
+  const persistence2 = createLocalStorageSessionPersistence({ storage });
+  expect(persistence2.profileRepository.loadProfile().activeSession)
+    .toBeUndefined();
+  expect(storage.backing.has(sessionStorageKeys.profile)).toBe(false);
 });
-
 
 test('quota or write failures never throw and keep the game playable', () => {
   const failing: BrowserStorageLike = {
@@ -176,19 +260,22 @@ test('quota or write failures never throw and keep the game playable', () => {
       throw new Error('storage disabled');
     },
   };
-  const repository = createLocalStorageSessionRepository({
+  const persistence = createLocalStorageSessionPersistence({
     storage: failing,
   });
-  expect(repository.loadActiveRun()).toBeUndefined();
+  expect(persistence.profileRepository.loadProfile().activeSession)
+    .toBeUndefined();
   expect(() =>
-    repository.saveActiveRun(snapshotSessionRun(startRun())),
+    persistence.profileRepository.saveProfile({
+      activeSession: snapshotSessionRun(startRun()),
+    }),
   ).not.toThrow();
-  expect(repository.listCompletedRuns()).toEqual([]);
+  expect(persistence.historyRepository.listCompleted()).toEqual([]);
 });
 
 test('unavailable storage keeps unrelated keys untouched and returns no runs', () => {
   const storage = memoryStorage({ 'other-app:data': 'keep me' });
-  const repository = createLocalStorageSessionRepository({
+  const persistence = createLocalStorageSessionPersistence({
     storage: {
       getItem: () => {
         throw new Error('blocked');
@@ -201,11 +288,12 @@ test('unavailable storage keeps unrelated keys untouched and returns no runs', (
       },
     },
   });
-  expect(repository.loadActiveRun()).toBeUndefined();
-  expect(repository.saveActiveRun(snapshotSessionRun(startRun()))).toBe(
-    'run-one',
-  );
+  expect(persistence.profileRepository.loadProfile().activeSession)
+    .toBeUndefined();
+  persistence.profileRepository.saveProfile({
+    activeSession: snapshotSessionRun(startRun()),
+  });
   expect(storage.backing.get('other-app:data')).toBe('keep me');
-  expect(sessionStorageKeys.activeRun).toContain('math-modeling-game:');
+  expect(sessionStorageKeys.profile).toContain('math-modeling-game:');
   expect(sessionSnapshotSchemaVersion).toBeGreaterThan(0);
 });

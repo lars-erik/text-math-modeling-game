@@ -1,6 +1,12 @@
 import { expect, test } from 'vitest';
-import { createInMemorySessionRepository } from './persistence/session-repository';
-import type { SessionRepository } from './persistence/session-snapshot';
+import {
+  createInMemorySessionPersistence,
+  type InMemorySessionPersistence,
+} from './persistence/in-memory-session-repository';
+import type {
+  SessionHistoryRepository,
+} from './persistence/session-history';
+import type { UserProfileRepository } from './persistence/user-profile';
 import {
   createSessionRunStore,
   type RunIdMemory,
@@ -66,25 +72,33 @@ function inMemoryRunIdMemory(): RunIdMemory & { value: string | undefined } {
 
 type StoreHarness = {
   store: SessionRunStore;
-  repository: SessionRepository;
+  persistence: InMemorySessionPersistence;
   runIdMemory: RunIdMemory;
 };
 
 function harness(): StoreHarness {
-  const repository = createInMemorySessionRepository();
+  const persistence = createInMemorySessionPersistence();
   const runIdMemory = inMemoryRunIdMemory();
   return {
-    store: createSessionRunStore({ repository, runIdMemory }),
-    repository,
+    store: createSessionRunStore({
+      profileRepository: persistence.profileRepository,
+      historyRepository: persistence.historyRepository,
+      runIdMemory,
+    }),
+    persistence,
     runIdMemory,
   };
 }
 
 function reloadedStore(
-  repository: SessionRepository,
+  persistence: InMemorySessionPersistence,
   runIdMemory: RunIdMemory,
 ): SessionRunStore {
-  return createSessionRunStore({ repository, runIdMemory });
+  return createSessionRunStore({
+    profileRepository: persistence.profileRepository,
+    historyRepository: persistence.historyRepository,
+    runIdMemory,
+  });
 }
 
 test('start records a new active run with a fresh run identity', () => {
@@ -92,7 +106,8 @@ test('start records a new active run with a fresh run identity', () => {
   const session = h.store.start(sessionOptions);
   expect(session.runId).not.toBe('');
   expect(session.status).toBe('active');
-  expect(h.repository.loadActiveRun()?.runId).toBe(session.runId);
+  expect(h.persistence.profileRepository.loadProfile().activeSession?.runId)
+    .toBe(session.runId);
   expect(h.runIdMemory.get()).toBe(session.runId);
 });
 
@@ -113,7 +128,7 @@ test('provide resumes the remembered run after a reload', () => {
     .next();
   h.store.record(advanced);
 
-  const reloaded = reloadedStore(h.repository, h.runIdMemory);
+  const reloaded = reloadedStore(h.persistence, h.runIdMemory);
   const provided = reloaded.provide(sessionOptions);
   expect(provided.runId).toBe(advanced.runId);
   expect(provided.status).toBe('active');
@@ -129,13 +144,14 @@ test('provide starts a new run when no run is remembered, even if an active run 
   h.store.record(advanced);
 
   const freshTab = inMemoryRunIdMemory();
-  const replayStore = reloadedStore(h.repository, freshTab);
+  const replayStore = reloadedStore(h.persistence, freshTab);
   const replayed = replayStore.provide(sessionOptions);
   expect(replayed.runId).not.toBe(started.runId);
   expect(replayed.currentIndex).toBe(0);
   expect(replayed.answerLog).toEqual([]);
   expect(freshTab.get()).toBe(replayed.runId);
-  expect(h.repository.loadActiveRun()?.runId).toBe(replayed.runId);
+  expect(h.persistence.profileRepository.loadProfile().activeSession?.runId)
+    .toBe(replayed.runId);
 });
 
 test('starting a second run with the same seed replaces the active run without resuming the first', () => {
@@ -147,7 +163,8 @@ test('starting a second run with the same seed replaces the active run without r
   const second = h.store.start(sessionOptions);
   expect(second.runId).not.toBe(first.runId);
   expect(second.currentIndex).toBe(0);
-  expect(h.repository.loadActiveRun()?.runId).toBe(second.runId);
+  expect(h.persistence.profileRepository.loadProfile().activeSession?.runId)
+    .toBe(second.runId);
   expect(h.runIdMemory.get()).toBe(second.runId);
 
   const provided = h.store.provide(sessionOptions);
@@ -163,7 +180,8 @@ test('recording a completed run moves it to history and clears the active run', 
   }
   expect(session.status).toBe('complete');
   h.store.record(session);
-  expect(h.repository.loadActiveRun()).toBeUndefined();
+  expect(h.persistence.profileRepository.loadProfile().activeSession)
+    .toBeUndefined();
   const history = h.store.completedRuns();
   expect(history).toHaveLength(1);
   expect(history[0]?.runId).toBe(session.runId);
@@ -178,7 +196,7 @@ test('resumeActiveRun restores the active run and reports none after completion'
   const advanced = started.submit(correctAnswerFor(started)).next();
   h.store.record(advanced);
 
-  const reloaded = reloadedStore(h.repository, h.runIdMemory);
+  const reloaded = reloadedStore(h.persistence, h.runIdMemory);
   const resumed = reloaded.resumeActiveRun();
   expect(resumed?.runId).toBe(advanced.runId);
   expect(resumed?.currentIndex).toBe(advanced.currentIndex);
@@ -190,7 +208,7 @@ test('resumeActiveRun restores the active run and reports none after completion'
     completed = completed.submit(correctAnswerFor(completed)).next();
   }
   h.store.record(completed!);
-  const afterCompletion = reloadedStore(h.repository, h.runIdMemory);
+  const afterCompletion = reloadedStore(h.persistence, h.runIdMemory);
   expect(afterCompletion.resumeActiveRun()).toBeUndefined();
 });
 
@@ -200,7 +218,7 @@ test('provide keeps the selected language when resuming with a different locale'
   const advanced = started.submit(correctAnswerFor(started)).next();
   h.store.record(advanced);
 
-  const reloaded = reloadedStore(h.repository, h.runIdMemory);
+  const reloaded = reloadedStore(h.persistence, h.runIdMemory);
   const resumed = reloaded.provide({ ...sessionOptions, locale: 'nb' });
   expect(resumed.runId).toBe(advanced.runId);
   expect(resumed.replay.locale).toBe('nb');
@@ -216,29 +234,62 @@ test('provide starts a new run when the route selects a different seed', () => {
   const other = h.store.provide({ ...sessionOptions, seed: 4242 });
   expect(other.runId).not.toBe(started.runId);
   expect(other.replay.seed).toBe(4242);
-  expect(h.repository.loadActiveRun()?.snapshot.seed).toBe(4242);
+  expect(h.persistence.profileRepository.loadProfile().activeSession?.seed)
+    .toBe(4242);
 });
 
-test('the store never throws when the repository rejects writes', () => {
-  const repository: SessionRepository = {
-    loadActiveRun: () => {
+test('provide starts a new run when the route selects the same seed with a different scenario', () => {
+  const h = harness();
+  const started = h.store.start(sessionOptions);
+  const advanced = started.submit(correctAnswerFor(started)).next();
+  h.store.record(advanced);
+
+  const otherTheme = h.store.provide({
+    ...sessionOptions,
+    themeId: 'creator.followers',
+  });
+  expect(otherTheme.runId).not.toBe(started.runId);
+  expect(otherTheme.replay.themeId).toBe('creator.followers');
+  expect(otherTheme.currentIndex).toBe(0);
+  expect(otherTheme.answerLog).toEqual([]);
+  expect(h.persistence.profileRepository.loadProfile().activeSession?.themeId)
+    .toBe('creator.followers');
+
+  const reloaded = reloadedStore(h.persistence, h.runIdMemory);
+  const resumedWithOldTheme = reloaded.provide({
+    ...sessionOptions,
+    themeId: 'creator.followers',
+  });
+  expect(resumedWithOldTheme.runId).toBe(otherTheme.runId);
+  expect(reloaded.provide({
+    ...sessionOptions,
+    themeId: 'gaming.drone-power',
+  }).runId).not.toBe(advanced.runId);
+});
+
+test('the store never throws when the repositories reject writes', () => {
+  const throwingProfile: UserProfileRepository = {
+    loadProfile: () => {
       throw new Error('storage disabled');
     },
-    saveActiveRun: () => {
+    saveProfile: () => {
       throw new Error('quota exceeded');
     },
-    saveCompletedRun: () => {
-      throw new Error('quota exceeded');
-    },
-    listCompletedRuns: () => {
+  };
+  const throwingHistory: SessionHistoryRepository = {
+    listCompleted: () => {
       throw new Error('storage disabled');
     },
-    discardRun: () => {
+    saveCompleted: () => {
+      throw new Error('quota exceeded');
+    },
+    removeCompleted: () => {
       throw new Error('storage disabled');
     },
   };
   const store = createSessionRunStore({
-    repository,
+    profileRepository: throwingProfile,
+    historyRepository: throwingHistory,
     runIdMemory: inMemoryRunIdMemory(),
   });
   const session = store.provide(sessionOptions);

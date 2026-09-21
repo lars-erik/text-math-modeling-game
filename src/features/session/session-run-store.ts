@@ -1,5 +1,6 @@
-import type { CompletedSessionSummaryView } from './persistence/session-snapshot';
-import type { SessionRepository } from './persistence/session-snapshot';
+import type { CompletedSessionSummary } from './persistence/session-history';
+import type { SessionHistoryRepository } from './persistence/session-history';
+import type { UserProfileRepository } from './persistence/user-profile';
 import {
   restoreSessionRun,
   snapshotSessionRun,
@@ -19,75 +20,82 @@ export type SessionRunStore = {
   provide: (options: StartSessionOptions) => GrayboxSession;
   resumeActiveRun: () => GrayboxSession | undefined;
   record: (session: GrayboxSession) => void;
-  completedRuns: () => readonly CompletedSessionSummaryView[];
+  completedRuns: () => readonly CompletedSessionSummary[];
   currentRunId: () => SessionRunId | undefined;
 };
 
 export type SessionRunStoreOptions = {
-  repository: SessionRepository;
+  profileRepository: UserProfileRepository;
+  historyRepository: SessionHistoryRepository;
   runIdMemory: RunIdMemory;
 };
 
 export function createSessionRunStore(
   options: SessionRunStoreOptions,
 ): SessionRunStore {
-  const { repository, runIdMemory } = options;
+  const { profileRepository, historyRepository, runIdMemory } = options;
   let current: GrayboxSession | undefined;
+
+  const sameRunInputs = (
+    session: GrayboxSession,
+    wanted: StartSessionOptions,
+  ): boolean =>
+    session.replay.seed === wanted.seed &&
+    session.replay.themeId === wanted.themeId;
 
   const safeSave = (session: GrayboxSession): void => {
     try {
       const snapshot = snapshotSessionRun(session);
       if (snapshot.status === 'complete') {
-        repository.saveCompletedRun(snapshot);
+        historyRepository.saveCompleted(snapshot);
       } else {
-        repository.saveActiveRun(snapshot);
+        profileRepository.saveProfile({ activeSession: snapshot });
       }
     } catch {
       return;
     }
   };
 
-  const restoreFromRepository = ():
-    | GrayboxSession
-    | undefined => {
+  const restoreFromProfile = (): GrayboxSession | undefined => {
     try {
-      const stored = repository.loadActiveRun();
-      if (stored === undefined) {
+      const profile = profileRepository.loadProfile();
+      if (profile.activeSession === undefined) {
         return undefined;
       }
-      const restored = restoreSessionRun(stored.snapshot);
+      const restored = restoreSessionRun(profile.activeSession);
       return restored.kind === 'restored' ? restored.session : undefined;
     } catch {
       return undefined;
     }
   };
 
+  const startNewRun = (startOptions: StartSessionOptions): GrayboxSession => {
+    current = startSessionRun(startOptions, createNewRunId());
+    runIdMemory.set(current.runId);
+    safeSave(current);
+    return current;
+  };
+
   return {
     start(startOptions) {
-      current = startSessionRun(startOptions, createNewRunId());
-      runIdMemory.set(current.runId);
-      safeSave(current);
-      return current;
+      return startNewRun(startOptions);
     },
     provide(provideOptions) {
       if (current !== undefined) {
-        if (current.replay.seed === provideOptions.seed) {
+        if (sameRunInputs(current, provideOptions)) {
           return current.replay.locale === provideOptions.locale
             ? current
             : withLocale(current, provideOptions.locale);
         }
-        current = startSessionRun(provideOptions, createNewRunId());
-        runIdMemory.set(current.runId);
-        safeSave(current);
-        return current;
+        return startNewRun(provideOptions);
       }
       const rememberedRunId = runIdMemory.get();
-      const active = restoreFromRepository();
+      const active = restoreFromProfile();
       if (
         rememberedRunId !== undefined &&
         active !== undefined &&
         active.runId === rememberedRunId &&
-        active.replay.seed === provideOptions.seed
+        sameRunInputs(active, provideOptions)
       ) {
         current = active;
         if (current.replay.locale !== provideOptions.locale) {
@@ -96,17 +104,14 @@ export function createSessionRunStore(
         }
         return current;
       }
-      current = startSessionRun(provideOptions, createNewRunId());
-      runIdMemory.set(current.runId);
-      safeSave(current);
-      return current;
+      return startNewRun(provideOptions);
     },
     resumeActiveRun() {
       if (current !== undefined && current.status === 'active') {
         return current;
       }
       const rememberedRunId = runIdMemory.get();
-      const active = restoreFromRepository();
+      const active = restoreFromProfile();
       if (active === undefined || active.status !== 'active') {
         return undefined;
       }
@@ -124,7 +129,7 @@ export function createSessionRunStore(
     },
     completedRuns() {
       try {
-        return repository.listCompletedRuns();
+        return historyRepository.listCompleted();
       } catch {
         return [];
       }

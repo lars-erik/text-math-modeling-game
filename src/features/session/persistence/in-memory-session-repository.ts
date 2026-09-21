@@ -1,55 +1,73 @@
-import {
-  type CompletedSessionSummaryView,
-  type SessionRepository,
-  type SessionRunId,
-  type SessionSnapshot,
-  type StoredSessionSnapshot,
-} from './session-snapshot';
+import type { SessionSnapshot } from './session-snapshot';
+import type {
+  CompletedSessionSummary,
+  SessionHistoryRepository,
+} from './session-history';
+import type { UserProfile, UserProfileRepository } from './user-profile';
 
-export type InMemorySessionRepositoryOptions = {
+export type InMemoryPersistenceOptions = {
   now?: () => number;
 };
 
-export function createInMemorySessionRepository(
-  options: InMemorySessionRepositoryOptions = {},
-): SessionRepository {
+export type InMemorySessionPersistence = {
+  profileRepository: UserProfileRepository;
+  historyRepository: SessionHistoryRepository;
+};
+
+export function createInMemorySessionPersistence(
+  options: InMemoryPersistenceOptions = {},
+): InMemorySessionPersistence {
   const now = options.now ?? (() => Date.now());
-  let active: SessionSnapshot | undefined;
-  const completed = new Map<SessionRunId, SessionSnapshot>();
+  let profile: UserProfile = {};
+  const completed = new Map<string, SessionSnapshot>();
   return {
-    loadActiveRun: (): StoredSessionSnapshot | undefined =>
-      active === undefined
-        ? undefined
-        : { runId: active.runId, snapshot: clone(active) },
-    saveActiveRun: (snapshot: SessionSnapshot): SessionRunId => {
-      active = clone({ ...snapshot, updatedAt: now() });
-      return active.runId;
+    profileRepository: {
+      loadProfile: (): UserProfile =>
+        profile.activeSession === undefined
+          ? {}
+          : { activeSession: clone(profile.activeSession) },
+      saveProfile(next: UserProfile): void {
+        profile =
+          next.activeSession === undefined
+            ? {}
+            : {
+                activeSession: clone({
+                  ...next.activeSession,
+                  updatedAt: now(),
+                }),
+              };
+      },
     },
-    saveCompletedRun: (snapshot: SessionSnapshot): SessionRunId => {
-      const stored = clone({ ...snapshot, status: 'complete', updatedAt: now() });
-      completed.set(stored.runId, stored);
-      if (active?.runId === stored.runId) {
-        active = undefined;
-      }
-      return stored.runId;
+    historyRepository: {
+      saveCompleted(snapshot: SessionSnapshot): void {
+        completed.set(snapshot.runId, clone({
+          ...snapshot,
+          status: 'complete',
+          updatedAt: now(),
+        }));
+        if (profile.activeSession?.runId === snapshot.runId) {
+          profile = {};
+        }
+      },
+      listCompleted: (): readonly CompletedSessionSummary[] =>
+        [...completed.values()]
+          .sort((left, right) => right.updatedAt - left.updatedAt)
+          .map(toSummary),
+      removeCompleted(runId: string): void {
+        completed.delete(runId);
+      },
     },
-    listCompletedRuns: (): readonly CompletedSessionSummaryView[] =>
-      [...completed.values()]
-        .sort((left, right) => right.updatedAt - left.updatedAt)
-        .map((snapshot) => ({
-          runId: snapshot.runId,
-          seed: snapshot.seed,
-          themeId: snapshot.themeId,
-          locale: snapshot.locale,
-          total: snapshot.answerLog.filter((entry) => entry.accepted).length,
-          completedAt: snapshot.updatedAt,
-        })),
-    discardRun: (runId: SessionRunId): void => {
-      if (active?.runId === runId) {
-        active = undefined;
-      }
-      completed.delete(runId);
-    },
+  };
+}
+
+function toSummary(snapshot: SessionSnapshot): CompletedSessionSummary {
+  return {
+    runId: snapshot.runId,
+    seed: snapshot.seed,
+    themeId: snapshot.themeId,
+    locale: snapshot.locale,
+    total: snapshot.answerLog.filter((entry) => entry.accepted).length,
+    completedAt: snapshot.updatedAt,
   };
 }
 

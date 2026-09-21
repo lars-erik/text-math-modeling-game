@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { createInMemorySessionRepository } from './persistence/session-repository';
+import { createInMemorySessionPersistence } from './persistence/in-memory-session-repository';
 import {
   startSessionRun,
   snapshotSessionRun,
@@ -76,15 +76,17 @@ function seekToMode(
 }
 
 test('an active session snapshot round-trips through an in-memory repository', () => {
-  const repository = createInMemorySessionRepository();
+  const persistence = createInMemorySessionPersistence();
   const session = startRun();
   const submitted = session.submit({ kind: 'text', input: 'wrong = wrong' });
   const advanced = submitted.submit(correctAnswerFor(submitted)).next();
-  repository.saveActiveRun(snapshotSessionRun(advanced));
+  persistence.profileRepository.saveProfile({
+    activeSession: snapshotSessionRun(advanced),
+  });
 
-  const stored = repository.loadActiveRun();
+  const stored = persistence.profileRepository.loadProfile().activeSession;
   expect(stored?.runId).toBe('run-one');
-  const restored = restoreSessionRun(stored!.snapshot);
+  const restored = restoreSessionRun(stored!);
   expect(restored.kind).toBe('restored');
   const session2 = restored.kind === 'restored' ? restored.session : undefined!;
   expect(session2.runId).toBe('run-one');
@@ -233,7 +235,10 @@ test('two runs with the same seed keep distinct run identities', () => {
   expect(firstAdvanced.runId).not.toBe(secondAdvanced.runId);
   expect(snapshotSessionRun(firstAdvanced).runId).toBe('run-alpha');
   expect(snapshotSessionRun(secondAdvanced).runId).toBe('run-beta');
-  const repository = createInMemorySessionRepository();
-  repository.saveActiveRun(snapshotSessionRun(secondAdvanced));
-  expect(repository.loadActiveRun()?.runId).toBe('run-beta');
+  const repository = createInMemorySessionPersistence();
+  repository.profileRepository.saveProfile({
+    activeSession: snapshotSessionRun(secondAdvanced),
+  });
+  expect(repository.profileRepository.loadProfile().activeSession?.runId)
+    .toBe('run-beta');
 });
