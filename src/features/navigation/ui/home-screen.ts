@@ -7,9 +7,6 @@ import {
   type NavigateSessionRequest,
 } from '../navigation-request';
 
-export const defaultHomePuzzleSeed = 17;
-export const defaultHomeSessionSeed = 918273;
-
 export class HomeScreen extends LitElement {
   static properties = {
     locale: { reflect: true, type: String },
@@ -74,11 +71,7 @@ export class HomeScreen extends LitElement {
                 {
                   bubbles: true,
                   composed: true,
-                  detail: {
-                    seed: defaultHomePuzzleSeed,
-                    themeId: 'gaming.drone-power',
-                    modeId: 'story-to-quantities',
-                  },
+                  detail: {},
                 },
               ),
             )}
@@ -94,10 +87,7 @@ export class HomeScreen extends LitElement {
                 {
                   bubbles: true,
                   composed: true,
-                  detail: {
-                    seed: defaultHomeSessionSeed,
-                    themeId: 'gaming.drone-power',
-                  },
+                  detail: {},
                 },
               ),
             )}

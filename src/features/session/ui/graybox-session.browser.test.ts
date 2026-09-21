@@ -236,7 +236,9 @@ test('the completed session offers a way back to the single puzzle', async () =>
   await backButton.click();
   await puzzle.updateComplete;
   expect(window.location.hash).toBe('#home?language=en');
-  expect(shellText(puzzle)).not.toContain('Session complete');
+  const home = document.querySelector('home-screen');
+  expect(home?.hidden ?? true).toBe(false);
+  expect(puzzle.hidden).toBe(true);
 });
 
 test('multiple choice inside a session accepts the matching equation', async () => {

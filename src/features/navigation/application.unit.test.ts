@@ -106,7 +106,7 @@ test('an invalid deep link is rejected explicitly', () => {
   ).toThrowError(/Unknown scenario/);
   expect(() => harness('#home?language=fr')).toThrowError(/Unknown language/);
   expect(() => harness('#unknown-destination')).toThrowError(
-    /No view is bound/,
+    /No destination is bound/,
   );
 });
 
@@ -158,11 +158,9 @@ test('home navigation keeps the current language and resets selection attributes
     new CustomEvent(navigateHomeRequestEvent, { detail: {} }),
   );
   expect(h.writes).toEqual([{ hash: '#home?language=nb', mode: 'push' }]);
-  const puzzle = h.elements['math-modeling-puzzle'];
-  expect(puzzle.attributes.has('session')).toBe(false);
-  expect(puzzle.attributes.has('theme')).toBe(false);
   expect(h.elements['home-screen'].attributes.get('locale')).toBe('nb');
   expect(h.elements['home-screen'].hidden).toBe(false);
+  expect(h.elements['math-modeling-puzzle'].hidden).toBe(true);
 });
 
 test('semantic home menu requests start default puzzle and session destinations', () => {
@@ -204,9 +202,20 @@ test('browser Back/Forward notifications restore routes without new writes', () 
   expect(h.writes.length).toBe(writesBefore);
   expect(h.elements['home-screen'].hidden).toBe(false);
   expect(h.elements['math-modeling-puzzle'].hidden).toBe(true);
-  expect(h.elements['math-modeling-puzzle'].attributes.has('session')).toBe(
-    false,
+});
+
+test('an external hash edit restores the route without new writes', () => {
+  const h = harness('#home');
+  h.setHash(
+    '#puzzle?seed=7&scenario=gaming.drone-power&task=story-to-quantities&language=en',
   );
+  for (const pop of h.pops) {
+    pop();
+  }
+  expect(h.controller.currentRoute().name).toBe('puzzle');
+  expect(h.elements['math-modeling-puzzle'].attributes.get('seed')).toBe('7');
+  expect(h.elements['home-screen'].hidden).toBe(true);
+  expect(h.writes).toEqual([]);
 });
 
 test('unknown selection values in semantic requests are rejected without navigation', () => {

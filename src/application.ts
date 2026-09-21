@@ -1,4 +1,4 @@
-import { startAppController, type AppController } from './features/navigation/app-controller';
+import { startAppController, type AppController, type Destination } from './features/navigation/app-controller';
 import { browserHistoryAdapter, type HistoryAdapter } from './features/navigation/history-adapter';
 import type { Route } from './features/navigation/hash-route';
 import {
@@ -8,6 +8,7 @@ import {
   routeFromPuzzleSelection,
   routeFromSessionSelection,
   sessionSelectionFromRoute,
+  type HomeSelection,
 } from './features/navigation/app-destinations';
 import {
   navigateHomeRequestEvent,
@@ -31,37 +32,68 @@ export const defaultSessionSeed = 918273;
 export const defaultThemeId: ThemeId = 'gaming.drone-power';
 export const defaultModeId: ModeId = 'story-to-quantities';
 
-export const appViews = {
-  home: {
-    tagName: 'home-screen',
-    attributeByParam: { language: 'locale' },
-  },
-  puzzle: {
-    tagName: 'math-modeling-puzzle',
-    attributeByParam: {
-      seed: 'seed',
-      scenario: 'theme',
-      task: 'mode',
-      language: 'locale',
-    },
-  },
-  session: {
-    tagName: 'math-modeling-puzzle',
-    attributeByParam: {
-      seed: 'session',
-      scenario: 'theme',
-      language: 'locale',
-    },
-  },
-} as const;
+type PuzzleAttributes = {
+  setAttribute: (name: string, value: string) => void;
+  removeAttribute: (name: string) => void;
+  hidden: boolean;
+};
+
+type HomeAttributes = {
+  setAttribute: (name: string, value: string) => void;
+  hidden: boolean;
+};
 
 export type ApplicationOptions = {
   hash: string;
-  root: ParentNode;
+  root: {
+    querySelector: (selector: string) => unknown;
+    addEventListener: (
+      type: string,
+      listener: (event: unknown) => void,
+    ) => void;
+  };
   getHash?: () => string;
   basePath?: string;
   history?: HistoryAdapter;
 };
+
+export function puzzleDestination(element: PuzzleAttributes): Destination {
+  return {
+    view: element,
+    apply: (route: Route) => {
+      const selection = puzzleSelectionFromRoute(route);
+      element.setAttribute('seed', String(selection.seed));
+      element.setAttribute('theme', selection.themeId);
+      element.setAttribute('mode', selection.modeId);
+      element.setAttribute('locale', selection.locale);
+      element.removeAttribute('session');
+    },
+  };
+}
+
+export function sessionDestination(element: PuzzleAttributes): Destination {
+  return {
+    view: element,
+    apply: (route: Route) => {
+      const selection = sessionSelectionFromRoute(route);
+      element.setAttribute('session', String(selection.seed));
+      element.setAttribute('theme', selection.themeId);
+      element.setAttribute('locale', selection.locale);
+      element.removeAttribute('seed');
+      element.removeAttribute('mode');
+    },
+  };
+}
+
+export function homeDestination(element: HomeAttributes): Destination {
+  return {
+    view: element,
+    apply: (route: Route) => {
+      const selection: HomeSelection = homeSelectionFromRoute(route);
+      element.setAttribute('locale', selection.language);
+    },
+  };
+}
 
 export function validateAppRoute(route: Route): void {
   if (route.name === 'home') {
@@ -82,13 +114,28 @@ export function startMathModelingApplication(
       history: globalThis.history,
       window: globalThis,
     });
+  const homeElement = options.root.querySelector(
+    'home-screen',
+  ) as HomeAttributes | null;
+  const puzzleElement = options.root.querySelector(
+    'math-modeling-puzzle',
+  ) as PuzzleAttributes | null;
+  if (homeElement === null || puzzleElement === null) {
+    throw new Error(
+      'The application root must contain home-screen and math-modeling-puzzle elements.',
+    );
+  }
+
   const controller = startAppController({
     initialHash: options.hash,
     getHash: options.getHash ?? (() => globalThis.location.hash),
     basePath: options.basePath ?? globalThis.location.pathname,
-    root: options.root,
     history,
-    views: appViews,
+    destinations: {
+      home: homeDestination(homeElement),
+      puzzle: puzzleDestination(puzzleElement),
+      session: sessionDestination(puzzleElement),
+    },
     validateRoute: validateAppRoute,
   });
 
@@ -96,8 +143,6 @@ export function startMathModelingApplication(
     const language = controller.currentRoute().routeParams.get('language');
     return language === 'nb' ? 'nb' : 'en';
   };
-
-  const { root } = options;
 
   const navigateSafely = (build: () => Route): void => {
     try {
@@ -107,26 +152,26 @@ export function startMathModelingApplication(
     }
   };
 
-  root.addEventListener(puzzleSelectionRequestEvent, (event) => {
+  options.root.addEventListener(puzzleSelectionRequestEvent, (event) => {
     navigateSafely(() =>
       routeFromPuzzleSelection(
         (event as CustomEvent<PuzzleSelectionRequest>).detail,
       ),
     );
   });
-  root.addEventListener(sessionSelectionRequestEvent, (event) => {
+  options.root.addEventListener(sessionSelectionRequestEvent, (event) => {
     navigateSafely(() =>
       routeFromSessionSelection(
         (event as CustomEvent<SessionSelectionRequest>).detail,
       ),
     );
   });
-  root.addEventListener(navigateHomeRequestEvent, () => {
+  options.root.addEventListener(navigateHomeRequestEvent, () => {
     navigateSafely(() =>
       routeFromHomeSelection({ language: currentLanguage() }),
     );
   });
-  root.addEventListener(navigatePuzzleRequestEvent, (event) => {
+  options.root.addEventListener(navigatePuzzleRequestEvent, (event) => {
     const detail = (event as CustomEvent<NavigatePuzzleRequest>).detail;
     navigateSafely(() =>
       routeFromPuzzleSelection({
@@ -137,7 +182,7 @@ export function startMathModelingApplication(
       }),
     );
   });
-  root.addEventListener(navigateSessionRequestEvent, (event) => {
+  options.root.addEventListener(navigateSessionRequestEvent, (event) => {
     const detail = (event as CustomEvent<NavigateSessionRequest>).detail;
     navigateSafely(() =>
       routeFromSessionSelection({

@@ -7,17 +7,22 @@ export type HistoryAdapter = {
 
 export type BrowserHistoryAdapterOptions = {
   history?: Pick<History, 'pushState' | 'replaceState'>;
-  window?: Pick<Window, 'addEventListener' | 'removeEventListener'>;
+  window?: Pick<
+    Window,
+    'addEventListener' | 'removeEventListener'
+  > & Record<string, unknown>;
 };
+
+const routeChangeEvents = ['popstate', 'hashchange'] as const;
 
 export function browserHistoryAdapter(
   options: BrowserHistoryAdapterOptions = {},
 ): HistoryAdapter {
   const history = options.history ?? globalThis.history;
   const browserWindow = options.window ?? globalThis;
-  const popListeners: Array<() => void> = [];
-  const popstateListener = () => {
-    for (const listener of popListeners) {
+  const routeChangeListeners: Array<() => void> = [];
+  const routeChangeListener = () => {
+    for (const listener of routeChangeListeners) {
       listener();
     }
   };
@@ -25,7 +30,9 @@ export function browserHistoryAdapter(
     typeof browserWindow.addEventListener === 'function' &&
     typeof browserWindow.removeEventListener === 'function';
   if (canListen) {
-    browserWindow.addEventListener('popstate', popstateListener);
+    for (const event of routeChangeEvents) {
+      browserWindow.addEventListener(event, routeChangeListener);
+    }
   }
   return {
     push: (hash: string, basePath: string) => {
@@ -35,11 +42,13 @@ export function browserHistoryAdapter(
       history.replaceState(null, '', `${basePath}${hash}`);
     },
     onRoutePopped: (listener: () => void) => {
-      popListeners.push(listener);
+      routeChangeListeners.push(listener);
     },
     dispose: () => {
       if (canListen) {
-        browserWindow.removeEventListener('popstate', popstateListener);
+        for (const event of routeChangeEvents) {
+          browserWindow.removeEventListener(event, routeChangeListener);
+        }
       }
     },
   };

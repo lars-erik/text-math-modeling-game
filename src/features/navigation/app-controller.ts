@@ -2,23 +2,20 @@ import { formatHash, parseHash, type Route } from './hash-route';
 import type { HistoryAdapter } from './history-adapter';
 
 export type ViewElement = {
-  setAttribute: (name: string, value: string) => void;
-  removeAttribute: (name: string) => void;
   hidden: boolean;
 };
 
-export type ViewBinding = {
-  tagName: string;
-  attributeByParam: Readonly<Record<string, string>>;
+export type Destination = {
+  view: ViewElement;
+  apply: (route: Route) => void;
 };
 
 export type AppControllerOptions = {
   initialHash: string;
   getHash: () => string;
   basePath: string;
-  root: { querySelector: (tagName: string) => ViewElement | null };
   history: HistoryAdapter;
-  views: Readonly<Record<string, ViewBinding>>;
+  destinations: Readonly<Record<string, Destination>>;
   validateRoute?: (route: Route) => void;
 };
 
@@ -30,73 +27,27 @@ export type AppController = {
 export function startAppController(
   options: AppControllerOptions,
 ): AppController {
-  const { views } = options;
-  const attributeNamesByTag = new Map<string, Set<string>>();
-  for (const binding of Object.values(views)) {
-    const names =
-      attributeNamesByTag.get(binding.tagName) ?? new Set<string>();
-    for (const attribute of Object.values(binding.attributeByParam)) {
-      names.add(attribute);
-    }
-    attributeNamesByTag.set(binding.tagName, names);
-  }
+  const { destinations } = options;
 
-  const bindingFor = (routeName: string): ViewBinding => {
-    const binding = views[routeName];
-    if (binding === undefined) {
+  const destinationFor = (routeName: string): Destination => {
+    const destination = destinations[routeName];
+    if (destination === undefined) {
       throw new Error(
-        `No view is bound for route ${JSON.stringify(routeName)}.`,
+        `No destination is bound for route ${JSON.stringify(routeName)}.`,
       );
     }
-    return binding;
-  };
-
-  const elementFor = (binding: ViewBinding): ViewElement => {
-    const element = options.root.querySelector(binding.tagName);
-    if (element === null) {
-      throw new Error(
-        `No element matches ${JSON.stringify(binding.tagName)}.`,
-      );
-    }
-    return element;
+    return destination;
   };
 
   let current: Route = parseHash(options.initialHash);
 
   const applyRoute = (route: Route): void => {
-    const binding = bindingFor(route.name);
-    const element = elementFor(binding);
-    for (const other of Object.values(views)) {
-      if (other.tagName === binding.tagName) {
-        continue;
-      }
-      const otherElement = options.root.querySelector(other.tagName);
-      if (otherElement !== null) {
-        const otherAttributes = attributeNamesByTag.get(other.tagName) ?? [];
-        for (const attribute of otherAttributes) {
-          otherElement.removeAttribute(attribute);
-        }
-        otherElement.hidden = true;
-      }
+    const destination = destinationFor(route.name);
+    for (const other of Object.values(destinations)) {
+      other.view.hidden = true;
     }
-    const appliedAttributes = new Set<string>();
-    for (const [param, attribute] of Object.entries(
-      binding.attributeByParam,
-    )) {
-      const value = route.routeParams.get(param);
-      if (value !== undefined) {
-        element.setAttribute(attribute, String(value));
-        appliedAttributes.add(attribute);
-      }
-    }
-    const elementAttributes =
-      attributeNamesByTag.get(binding.tagName) ?? new Set<string>();
-    for (const attribute of elementAttributes) {
-      if (!appliedAttributes.has(attribute)) {
-        element.removeAttribute(attribute);
-      }
-    }
-    element.hidden = false;
+    destination.apply(route);
+    destination.view.hidden = false;
     current = { name: route.name, routeParams: new Map(route.routeParams) };
   };
 
@@ -109,14 +60,14 @@ export function startAppController(
   }
 
   options.history.onRoutePopped(() => {
-    const popped = parseHash(options.getHash());
-    if (formatHash(popped) === formatHash(current)) {
+    const changed = parseHash(options.getHash());
+    if (formatHash(changed) === formatHash(current)) {
       return;
     }
     if (options.validateRoute !== undefined) {
-      options.validateRoute(popped);
+      options.validateRoute(changed);
     }
-    applyRoute(popped);
+    applyRoute(changed);
   });
 
   return {
@@ -125,8 +76,7 @@ export function startAppController(
       routeParams: new Map(current.routeParams),
     }),
     navigate: (route: Route) => {
-      const binding = bindingFor(route.name);
-      elementFor(binding);
+      destinationFor(route.name);
       if (options.validateRoute !== undefined) {
         options.validateRoute(route);
       }

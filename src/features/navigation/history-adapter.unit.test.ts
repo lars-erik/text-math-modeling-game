@@ -61,8 +61,10 @@ test('the browser adapter delegates to pushState, replaceState and popstate', ()
     '',
     '/base/#home?language=nb',
   );
-  expect(addEventListener).toHaveBeenCalledTimes(1);
-  expect(addEventListener.mock.calls[0][0]).toBe('popstate');
+  expect(addEventListener).toHaveBeenCalledTimes(2);
+  expect(addEventListener.mock.calls.map((call) => call[0])).toEqual(
+    expect.arrayContaining(['popstate', 'hashchange']),
+  );
   const popped: string[] = [];
   adapter.onRoutePopped(() => popped.push('popped'));
   adapter.dispose?.();
@@ -70,9 +72,13 @@ test('the browser adapter delegates to pushState, replaceState and popstate', ()
     'popstate',
     expect.any(Function),
   );
+  expect(removeEventListener).toHaveBeenCalledWith(
+    'hashchange',
+    expect.any(Function),
+  );
 });
 
-test('popstate notifications reach registered listeners', () => {
+test('route change notifications reach registered listeners from both browser events', () => {
   const listeners: Array<() => void> = [];
   const adapter = browserHistoryAdapter({
     window: {
@@ -83,7 +89,21 @@ test('popstate notifications reach registered listeners', () => {
   });
   const popped: string[] = [];
   adapter.onRoutePopped(() => popped.push('one'));
-  expect(listeners).toHaveLength(1);
-  listeners[0]();
-  expect(popped).toEqual(['one']);
+  expect(listeners).toHaveLength(2);
+  for (const listener of [...listeners]) {
+    listener();
+  }
+  expect(popped).toEqual(['one', 'one']);
+});
+
+test('an external hash edit emits hashchange and restores the route without new writes', () => {
+  const listeners: Array<() => void> = [];
+  const adapter = browserHistoryAdapter({
+    window: {
+      addEventListener: (_: string, listener: () => void) =>
+        listeners.push(listener),
+      removeEventListener: () => {},
+    } as unknown as Pick<Window, 'addEventListener' | 'removeEventListener'>,
+  });
+  expect(listeners).toHaveLength(2);
 });

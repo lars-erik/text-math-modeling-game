@@ -23,10 +23,7 @@ test('home offers semantic puzzle and session navigation', async () => {
   });
   await userEvent.click(page.getByRole('button', { name: 'Start puzzle' }));
   await userEvent.click(page.getByRole('button', { name: 'Start session' }));
-  expect(requests).toEqual([
-    { seed: 17, themeId: 'gaming.drone-power', modeId: 'story-to-quantities' },
-    { seed: 918273, themeId: 'gaming.drone-power' },
-  ]);
+  expect(requests).toEqual([{}, {}]);
 });
 
 test('home renders localized Norwegian labels', async () => {
