@@ -64,7 +64,7 @@ test('every family x hidden-role x theme x mode x locale combination composes', 
       }
     }
   }
-  expect(composedCount).toBe(7 * 4 * 2 * 2);
+  expect(composedCount).toBe(7 * 5 * 2 * 2);
 });
 
 test('every hidden-role variant stays hidden-answer-private', () => {

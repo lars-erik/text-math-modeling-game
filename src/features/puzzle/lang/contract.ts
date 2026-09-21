@@ -30,6 +30,7 @@ export type PuzzleLocaleResources = {
     quantitiesToNamedEquation: string;
     namedEquationToAcademicNotation: string;
     academicNotationToNamedEquation: string;
+    namedModelToStory: string;
     seed: string;
     show: string;
     startSession: string;
@@ -80,6 +81,13 @@ export type PuzzleLocaleResources = {
     accepted: string;
     groupingMismatch: string;
     unknownIdentifier: (identifier: string, available: string) => string;
+  };
+  namedModelToStory: {
+    heading: string;
+    prompt: string;
+    choiceLegend: string;
+    accepted: string;
+    incorrect: string;
   };
   misconceptions: {
     baseAppliedPerItem: (baseLabel: string, countLabel: string) => string;

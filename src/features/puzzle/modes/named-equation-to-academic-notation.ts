@@ -20,7 +20,19 @@ export const namedEquationToAcademicNotationMode: Mode = {
   },
   submit(options) {
     const answer = options.answer as LearnerAnswer;
-    const input = answer.kind === 'text' ? answer.input : answer.label;
+    const input =
+      answer.kind === 'text'
+        ? answer.input
+        : answer.kind === 'relation-choice'
+          ? answer.label
+          : '';
+    if (answer.kind === 'story-choice') {
+      return {
+        state: composeState(options, input),
+        feedback: { kind: 'incorrect', message: incorrectMessage(options) },
+        submission: { kind: 'academic-notation', input },
+      };
+    }
     const symbols = createAcademicSymbolMap(options.problem);
     const parsed = parseAcademicRelation(input, symbols);
     if (parsed.kind !== 'success') {
@@ -95,4 +107,7 @@ function localizeDiagnostic(
       diagnostic.availableIdentifiers.join(', '),
     ),
   };
+}
+function incorrectMessage(options: ModeSubmitOptions): string {
+  return puzzleResources[options.locale].namedModelToStory.incorrect;
 }

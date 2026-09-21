@@ -19,6 +19,10 @@ import {
   createNamedEquationChoiceSeeds,
   type NamedEquationChoiceSeed,
 } from './modes/named-equation-choices';
+import {
+  createStoryCandidateSeeds,
+  type StoryCandidateSeed,
+} from './modes/story-candidates';
 import type {
   ModeId,
   ModeResult,
@@ -110,11 +114,30 @@ export type AcademicNotationToNamedEquationScreen = {
   input: { kind: 'expression'; value: string };
 };
 
+export type ScreenStoryCandidate = {
+  id: string;
+  optionPosition: number;
+  relation: Relation;
+  label: string;
+};
+
+export type NamedModelToStoryScreen = {
+  modeId: 'named-model-to-story';
+  source: { kind: 'named-model'; relation: Relation };
+  target: {
+    kind: 'story-choices';
+    prompt: string;
+    candidates: readonly ScreenStoryCandidate[];
+  };
+  input: { kind: 'story-choice'; selectedChoiceId?: string };
+};
+
 export type PuzzleScreenTask =
   | StoryToQuantitiesScreen
   | QuantitiesToNamedEquationScreen
   | NamedEquationToAcademicNotationScreen
-  | AcademicNotationToNamedEquationScreen;
+  | AcademicNotationToNamedEquationScreen
+  | NamedModelToStoryScreen;
 
 export type PuzzleScreen = {
   screen: PuzzleScreenTask;
@@ -266,7 +289,40 @@ function mergeTask(
         input: state.input,
       };
     }
+    case 'named-model-to-story': {
+      const resources = puzzleResources[options.locale];
+      return {
+        modeId: state.modeId,
+        source: state.source,
+        target: {
+          kind: 'story-choices',
+          prompt: resources.namedModelToStory.prompt,
+          candidates: createStoryCandidates(options.problem, presentation),
+        },
+        input: state.input.kind === 'story-choice'
+          ? state.input
+          : { kind: 'story-choice' },
+      };
+    }
   }
+}
+
+export function createStoryCandidates(
+  problem: Problem,
+  presentation: ThemePresentation,
+): readonly ScreenStoryCandidate[] {
+  const names = new Map(
+    presentation.facts.map((fact) => [fact.canonicalId, fact.variableName]),
+  );
+  return createStoryCandidateSeeds(problem).map((seed) => ({
+    id: seed.id,
+    optionPosition: seed.optionPosition,
+    relation: seed.relation,
+    label: formatNamedRelation(
+      seed.relation,
+      Object.fromEntries(names),
+    ),
+  }));
 }
 
 function toQuantityNameMap(

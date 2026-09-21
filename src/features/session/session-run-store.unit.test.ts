@@ -63,7 +63,9 @@ function correctAnswerFor(session: GrayboxSession):
         kind: 'text',
         input: formatAcademicInput(task.source.relation, task.target.symbols),
       };
-  }
+      case 'named-model-to-story':
+      return { kind: 'story-choice', choiceId: 'matching' };
+}
 }
 
 function inMemoryRunIdMemory(): RunIdMemory & { value: string | undefined } {

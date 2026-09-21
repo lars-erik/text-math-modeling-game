@@ -30,6 +30,7 @@ export const en = {
     quantitiesToNamedEquation: 'Quantities to named equation',
     namedEquationToAcademicNotation: 'Named equation to academic notation',
     academicNotationToNamedEquation: 'Academic notation to named equation',
+    namedModelToStory: 'Named model to matching story',
     seed: 'Seed',
     show: 'Show puzzle',
     startSession: 'Start session',
@@ -83,6 +84,13 @@ export const en = {
     groupingMismatch: 'The named equation does not match the relationship.',
     unknownIdentifier: (identifier, available) =>
       `Unknown identifier ${JSON.stringify(identifier)}. Available identifiers: ${available}.`,
+  },
+  namedModelToStory: {
+    heading: 'Named model to matching story',
+    prompt: 'Choose the situation that matches this model.',
+    choiceLegend: 'Choose the matching situation',
+    accepted: 'The situation matches the model.',
+    incorrect: 'That situation groups the quantities differently than the model.',
   },
   misconceptions: {
     baseAppliedPerItem: (baseLabel, countLabel) =>

@@ -87,6 +87,8 @@ function describeLoggedSubmission(submission: ModeSubmission): string {
       return `named-equation ${JSON.stringify(submission.input)}`;
     case 'academic-notation':
       return `academic-notation ${JSON.stringify(submission.input)}`;
+    case 'story-choice':
+      return `story-choice ${submission.choiceId}`;
   }
 }
 

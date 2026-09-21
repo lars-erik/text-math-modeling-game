@@ -270,6 +270,8 @@ function snapshotSubmission(
               : { choiceId: submission.choiceId }),
           }
         : { kind: 'academic-notation', input: submission.input };
+    case 'story-choice':
+      return { kind: 'story-choice', choiceId: submission.choiceId };
   }
 }
 
@@ -311,7 +313,8 @@ function restoreSubmission(
       };
     }
     case 'named-equation':
-    case 'academic-notation': {
+    case 'academic-notation':
+    case 'story-choice': {
       const answer = submissionToAnswer(submission);
       if (answer === undefined) {
         return undefined;
@@ -383,6 +386,8 @@ function submissionToAnswer(
       return { kind: 'text', input: submission.input };
     case 'academic-notation':
       return { kind: 'text', input: submission.input };
+    case 'story-choice':
+      return { kind: 'story-choice', choiceId: submission.choiceId };
   }
 }
 

@@ -29,6 +29,12 @@ function startRun(
   return startSessionRun(options, runId);
 }
 
+function wrongAnswerFor(session: GrayboxSession): LearnerAnswer {
+  return session.screen?.screen.modeId === 'named-model-to-story'
+    ? { kind: 'story-choice', choiceId: 'factor-into-group' }
+    : { kind: 'text', input: 'wrong = wrong' };
+}
+
 function correctAnswerFor(session: GrayboxSession):
   | LearnerAnswer
   | QuantitySelection {
@@ -68,7 +74,9 @@ function correctAnswerFor(session: GrayboxSession):
           task.target.symbols,
         ),
       };
-  }
+      case 'named-model-to-story':
+      return { kind: 'story-choice', choiceId: 'matching' };
+}
 }
 
 function seekToMode(
@@ -85,7 +93,7 @@ function seekToMode(
 test('an active session snapshot round-trips through an in-memory repository', () => {
   const persistence = createInMemorySessionPersistence();
   const session = startRun();
-  const submitted = session.submit({ kind: 'text', input: 'wrong = wrong' });
+  const submitted = session.submit(wrongAnswerFor(session));
   const advanced = submitted.submit(correctAnswerFor(submitted)).next();
   persistence.profileRepository.saveProfile({
     activeSession: snapshotSessionRun(advanced),
@@ -124,7 +132,7 @@ test('a snapshot is plain JSON data with schema and planner versions', () => {
 test('restoring an active run preserves the current item, latest answers, hint and next availability', () => {
   const current = seekToMode(startRun(), 'quantities-to-named-equation');
   const withHint = current.requestHint();
-  const submitted = withHint.submit({ kind: 'text', input: 'wrong = wrong' });
+  const submitted = withHint.submit(wrongAnswerFor(withHint));
   const snapshot = snapshotSessionRun(submitted);
   const restored = restoreSessionRun(snapshot);
   expect(restored.kind).toBe('restored');
@@ -236,7 +244,7 @@ test('invalid snapshots are rejected instead of restoring a broken run', () => {
 
 test('restore recalculates acceptance through the mode checker instead of trusting persisted booleans', () => {
   const session = startRun();
-  const wrong = session.submit({ kind: 'text', input: 'wrong = wrong' });
+  const wrong = session.submit(wrongAnswerFor(session));
   const snapshot = snapshotSessionRun(wrong);
   const tampered: typeof snapshot = {
     ...snapshot,
@@ -257,7 +265,7 @@ test('restore recalculates acceptance through the mode checker instead of trusti
 
 test('restore rejects a completed snapshot whose log is not genuinely accepted', () => {
   const session = startRun();
-  const partial = session.submit({ kind: 'text', input: 'wrong = wrong' });
+  const partial = session.submit(wrongAnswerFor(session));
   const snapshot = snapshotSessionRun(partial);
   const fakeComplete: typeof snapshot = {
     ...snapshot,
@@ -294,7 +302,7 @@ test('restore rejects an active snapshot that skipped ahead without accepted pri
   ).toBe('incompatible');
 
   const session = startRun();
-  const rejected = session.submit({ kind: 'text', input: 'wrong = wrong' });
+  const rejected = session.submit(wrongAnswerFor(session));
   const rejectedSnapshot = snapshotSessionRun(rejected);
   expect(
     restoreSessionRun({ ...rejectedSnapshot, currentIndex: 1 }).kind,

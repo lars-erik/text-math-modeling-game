@@ -13,7 +13,8 @@ export type SnapshotSubmission =
       input: string;
       choiceId?: string;
     }
-  | { kind: 'academic-notation'; input: string };
+  | { kind: 'academic-notation'; input: string }
+  | { kind: 'story-choice'; choiceId: string };
 
 export type SnapshotItemLog = {
   itemIndex: number;

@@ -7,7 +7,7 @@ import { defaultProblemFamilyId, problemFamilies } from '../problem-generation/p
 import type { HiddenRole } from '../problem-generation/hidden-role';
 import { modeIds, type ModeId } from '../puzzle/modes';
 
-export const sessionPlannerVersion = 'session-plan-v2';
+export const sessionPlannerVersion = 'session-plan-v3';
 
 const minimumSessionLength = 5;
 const maximumSessionLength = 10;

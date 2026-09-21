@@ -67,7 +67,7 @@ test('one canonical Problem, DSL, and answer key serve every theme and mode in b
   }
   expect(generated.problem).toEqual(problemBefore);
   expect(serializeProblem(generated.problem)).toBe(dslBefore);
-  expect(composedCount).toBe(2 * 4 * 2);
+  expect(composedCount).toBe(2 * 5 * 2);
   expect(generated.problem).not.toHaveProperty('academicSymbols');
   expect(dslBefore).not.toContain('academic-symbol');
 });

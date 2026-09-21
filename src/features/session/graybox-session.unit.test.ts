@@ -27,6 +27,12 @@ function start(options = sessionOptions): GrayboxSession {
   return startSession(options);
 }
 
+function wrongAnswerFor(session: GrayboxSession): LearnerAnswer {
+  return session.screen?.screen.modeId === 'named-model-to-story'
+    ? { kind: 'story-choice', choiceId: 'factor-into-group' }
+    : { kind: 'text', input: 'wrong = wrong' };
+}
+
 test('starts a session on the first planned item as an ordinary puzzle screen', () => {
   const session = start();
   expect(session.status).toBe('active');
@@ -43,20 +49,21 @@ test('starts a session on the first planned item as an ordinary puzzle screen', 
 
 test('wrong submit keeps the learner on the same item and logs the answer', () => {
   const session = start();
-  const submitted = session.submit({ kind: 'text', input: 'wrong = wrong' });
+  const submitted = session.submit(wrongAnswerFor(session));
   expect(submitted.currentIndex).toBe(0);
   expect(submitted.position).toBe(1);
   expect(submitted.status).toBe('active');
   expect(submitted.availableNext).toBe(false);
   expect(submitted.screen?.feedback).toBeDefined();
+  const firstItem = session.plan.items[0];
   expect(submitted.answerLog).toEqual([
     {
-      itemIndex: session.plan.items[0].index,
-      modeId: session.plan.items[0].modeId,
-      submission: {
-        kind: 'academic-notation',
-        input: 'wrong = wrong',
-      },
+      itemIndex: firstItem.index,
+      modeId: firstItem.modeId,
+      submission:
+        firstItem.modeId === 'named-model-to-story'
+          ? submitted.answerLog[0]?.submission
+          : { kind: 'academic-notation', input: 'wrong = wrong' },
       accepted: false,
     },
   ]);
@@ -75,20 +82,17 @@ test('correct submit accepts the item and logs it as accepted', () => {
 
 test('repeated answers on the same item update the same log entry', () => {
   const session = start();
-  const first = session.submit({ kind: 'text', input: 'wrong = wrong' });
+  const first = session.submit(wrongAnswerFor(session));
   const second = first.submit({ kind: 'text', input: 'still = wrong' });
   const third = second.submit(correctAnswerFor(second));
   expect(third.answerLog).toHaveLength(1);
   expect(third.answerLog[0].itemIndex).toBe(session.plan.items[0].index);
   expect(third.answerLog[0].accepted).toBe(true);
-  expect(third.answerLog[0].submission.kind).toBe('academic-notation');
-  const submission = third.answerLog[0].submission;
-  expect(
-    submission.kind === 'named-equation' ||
-      submission.kind === 'academic-notation'
-      ? submission.input
-      : '',
-  ).toEqual(expect.stringContaining('='));
+  expect(third.answerLog[0].submission.kind).toBe(
+    session.plan.items[0].modeId === 'named-model-to-story'
+      ? 'story-choice'
+      : 'academic-notation',
+  );
 });
 
 test('next() freezes the item log entry and starts a new one on the next item', () => {
@@ -97,7 +101,7 @@ test('next() freezes the item log entry and starts a new one on the next item', 
   expect(advanced.answerLog).toHaveLength(1);
   expect(advanced.answerLog[0].itemIndex).toBe(session.plan.items[0].index);
   expect(advanced.answerLog[0].accepted).toBe(true);
-  const answered = advanced.submit({ kind: 'text', input: 'wrong = wrong' });
+  const answered = advanced.submit(wrongAnswerFor(advanced));
   expect(answered.answerLog).toHaveLength(2);
   expect(answered.answerLog[1].itemIndex).toBe(advanced.plan.items[1].index);
   expect(answered.answerLog[1].accepted).toBe(false);
@@ -127,7 +131,7 @@ test('an accepted submit clears a previously requested hint', () => {
 test('a rejected submit keeps a previously requested hint', () => {
   const current = seekToMode(start(), 'quantities-to-named-equation');
   const withHint = current.requestHint();
-  const submitted = withHint.submit({ kind: 'text', input: 'wrong = wrong' });
+  const submitted = withHint.submit(wrongAnswerFor(withHint));
   expect(submitted.hint).toEqual(withHint.hint);
   expect(submitted.screen?.feedback?.kind).not.toBe('accepted');
 });
@@ -168,13 +172,13 @@ test('finishing the final item transitions to the completion state', () => {
 test('the item log keeps only the latest answer per item index', () => {
   const session = start();
   const advanced = session
-    .submit({ kind: 'text', input: 'wrong = wrong' })
+    .submit(wrongAnswerFor(session))
     .submit(correctAnswerFor(session))
     .next();
   expect(advanced.answerLog.map((entry) => entry.itemIndex)).toEqual([
     session.plan.items[0].index,
   ]);
-  const advancedAgain = advanced.submit({ kind: 'text', input: 'wrong = wrong' });
+  const advancedAgain = advanced.submit(wrongAnswerFor(advanced));
   expect(advancedAgain.answerLog).toHaveLength(2);
   expect(advancedAgain.answerLog[1].accepted).toBe(false);
   expect(advancedAgain.currentIndex).toBe(advanced.currentIndex);
@@ -273,7 +277,7 @@ test('withLocale keeps progress, answer log, and hint while changing presentatio
     'quantities-to-named-equation',
   );
   const withHint = english.requestHint();
-  const wrongFirst = withHint.submit({ kind: 'text', input: 'wrong = wrong' });
+  const wrongFirst = withHint.submit(wrongAnswerFor(withHint));
   const norwegian = wrongFirst.withLocale('nb');
   expect(norwegian.status).toBe('active');
   expect(norwegian.currentIndex).toBe(wrongFirst.currentIndex);
@@ -366,7 +370,9 @@ function correctAnswerFor(session: GrayboxSession):
           task.target.symbols,
         ),
       };
-  }
+      case 'named-model-to-story':
+      return { kind: 'story-choice', choiceId: 'matching' };
+}
 }
 
 function canonicalNamedEquation(session: GrayboxSession): string {

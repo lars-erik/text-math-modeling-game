@@ -46,6 +46,7 @@ export class PuzzleMenu extends LitElement {
     quantitiesToNamedEquationLabel: { attribute: false },
     namedEquationToAcademicNotationLabel: { attribute: false },
     academicNotationToNamedEquationLabel: { attribute: false },
+    namedModelToStoryLabel: { attribute: false },
     seedLabel: { attribute: false },
     showLabel: { attribute: false },
     startSessionLabel: { attribute: false },
@@ -133,6 +134,7 @@ export class PuzzleMenu extends LitElement {
   declare quantitiesToNamedEquationLabel: string;
   declare namedEquationToAcademicNotationLabel: string;
   declare academicNotationToNamedEquationLabel: string;
+  declare namedModelToStoryLabel: string;
   declare seedLabel: string;
   declare showLabel: string;
   declare startSessionLabel: string;
@@ -164,6 +166,7 @@ export class PuzzleMenu extends LitElement {
       'Named equation to academic notation';
     this.academicNotationToNamedEquationLabel =
       'Academic notation to named equation';
+    this.namedModelToStoryLabel = 'Named model to matching story';
     this.seedLabel = 'Seed';
     this.showLabel = 'Show puzzle';
     this.startSessionLabel = 'Start session';
@@ -234,6 +237,9 @@ export class PuzzleMenu extends LitElement {
             </option>
             <option value="academic-notation-to-named-equation">
               ${this.academicNotationToNamedEquationLabel}
+            </option>
+            <option value="named-model-to-story">
+              ${this.namedModelToStoryLabel}
             </option>
           </select>
         </label>

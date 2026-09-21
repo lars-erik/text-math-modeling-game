@@ -51,7 +51,7 @@ test('every declared family x theme x mode x locale combination composes', () =>
       expect(serializeProblem(generated.problem)).toBe(dslBefore);
     }
   }
-  expect(composedCount).toBe(2 * 2 * 4 * 2);
+  expect(composedCount).toBe(2 * 2 * 5 * 2);
 });
 
 test('the family cross-product stays hidden-answer-private', () => {

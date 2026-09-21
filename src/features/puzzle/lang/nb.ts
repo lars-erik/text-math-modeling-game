@@ -30,6 +30,7 @@ export const nb = {
     quantitiesToNamedEquation: 'Fra størrelser til navngitt likning',
     namedEquationToAcademicNotation: 'Fra navngitt likning til akademisk notasjon',
     academicNotationToNamedEquation: 'Fra akademisk notasjon til navngitt likning',
+    namedModelToStory: 'Fra navngitt modell til fortelling',
     seed: 'Frø',
     show: 'Vis oppgave',
     startSession: 'Start økt',
@@ -83,6 +84,13 @@ export const nb = {
     groupingMismatch: 'Den navngitte likningen stemmer ikke med sammenhengen.',
     unknownIdentifier: (identifier, available) =>
       `Ukjent navn ${JSON.stringify(identifier)}. Tilgjengelige navn: ${available}.`,
+  },
+  namedModelToStory: {
+    heading: 'Fra navngitt modell til fortelling',
+    prompt: 'Velg situasjonen som passer til denne modellen.',
+    choiceLegend: 'Velg den passende situasjonen',
+    accepted: 'Situasjonen stemmer med modellen.',
+    incorrect: 'Den situasjonen grupperer størrelsene annerledes enn modellen.',
   },
   misconceptions: {
     baseAppliedPerItem: (baseLabel, countLabel) =>

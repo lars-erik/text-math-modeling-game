@@ -4,6 +4,7 @@ import {
   namedEquationStructurePolicy,
   relationsHaveNormalizedStructure,
 } from '../../problem-model/normalized-structure';
+import { generateFamilyCase } from '../../problem-generation/problem-families';
 import { createStoryCandidateSeeds } from './story-candidates';
 
 test('a fixed problem contains exactly one matching story candidate', () => {
@@ -77,4 +78,27 @@ test('candidate generation is deterministic for the same problem', () => {
   const first = createStoryCandidateSeeds(totalFromPartsProblem);
   const second = createStoryCandidateSeeds(totalFromPartsProblem);
   expect(first).toEqual(second);
+});
+
+test('groups-total produces the add-instead-of-multiply distractor only', () => {
+  const generated = generateFamilyCase('groups-total', { seed: 17 });
+  const candidates = createStoryCandidateSeeds(generated.problem);
+
+  expect(candidates.map((candidate) => candidate.id)).toEqual([
+    'matching',
+    'add-instead-of-multiply',
+  ]);
+  expect(candidates.map((candidate) => candidate.optionPosition)).toEqual([
+    0, 1,
+  ]);
+  const addInsteadOfMultiply = candidates[1];
+  expect(addInsteadOfMultiply.relation).toEqual({
+    kind: 'equation',
+    left: { kind: 'quantity', id: 'total' },
+    right: {
+      kind: 'add',
+      left: { kind: 'quantity', id: 'count' },
+      right: { kind: 'quantity', id: 'unitValue' },
+    },
+  });
 });

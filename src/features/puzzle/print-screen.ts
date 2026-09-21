@@ -34,12 +34,30 @@ export function printScreen(puzzleScreen: PuzzleScreen): string {
       ...printSymbolKey(screen.symbolKey),
       `input academic = ${JSON.stringify(screen.input.value)}`,
     );
-  } else {
+  } else if (screen.modeId === 'academic-notation-to-named-equation') {
     lines.push(
       `academic-input ${formatAcademicInput(screen.source.relation, screen.source.symbols)}`,
       `academic-display ${renderToString(screen.source.relation, screen.source.symbols)}`,
       ...printSymbolKey(screen.symbolKey),
       `input named = ${JSON.stringify(screen.input.value)}`,
+    );
+  } else {
+    lines.push(
+      `named-model ${formatNamedRelation(
+        screen.source.relation,
+        Object.fromEntries(
+          context.quantities.map((quantity) => [
+            quantity.id,
+            quantity.variableName,
+          ]),
+        ),
+      )}`,
+      'candidates',
+      ...screen.target.candidates.flatMap((candidate) => [
+        `  ${candidate.optionPosition}: ${candidate.id}`,
+        `    ${candidate.label}`,
+      ]),
+      `input story-choice = ${screen.input.selectedChoiceId ?? 'none'}`,
     );
   }
   if (puzzleScreen.submission !== undefined) {
@@ -55,6 +73,11 @@ export function printScreen(puzzleScreen: PuzzleScreen): string {
       }
     } else if (submission.kind === 'academic-notation') {
       lines.push(`  input ${JSON.stringify(submission.input)}`);
+      if (submission.relation !== undefined) {
+        lines.push(...indent(printRelation(submission.relation)));
+      }
+    } else if (submission.kind === 'story-choice') {
+      lines.push(`  choice ${submission.choiceId}`);
       if (submission.relation !== undefined) {
         lines.push(...indent(printRelation(submission.relation)));
       }

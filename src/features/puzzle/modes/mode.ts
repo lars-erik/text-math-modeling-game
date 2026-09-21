@@ -17,6 +17,7 @@ export const modeIds = [
   'quantities-to-named-equation',
   'named-equation-to-academic-notation',
   'academic-notation-to-named-equation',
+  'named-model-to-story',
 ] as const;
 
 export type ModeId = (typeof modeIds)[number];
@@ -92,6 +93,11 @@ export type ModeSubmission =
       kind: 'academic-notation';
       input: string;
       relation?: Relation;
+    }
+  | {
+      kind: 'story-choice';
+      choiceId: string;
+      relation?: Relation;
     };
 
 export type StoryToQuantitiesState = {
@@ -139,11 +145,25 @@ export type AcademicNotationToNamedEquationState = {
   input: { kind: 'expression'; value: string };
 };
 
+export type NamedModelToStoryState = {
+  modeId: 'named-model-to-story';
+  source: { kind: 'named-model'; relation: Relation };
+  target: {
+    kind: 'story-choices';
+    candidateIds: readonly string[];
+  };
+  input: {
+    kind: 'story-choice';
+    selectedChoiceId?: string;
+  };
+};
+
 export type ModeState =
   | StoryToQuantitiesState
   | QuantitiesToNamedEquationState
   | NamedEquationToAcademicNotationState
-  | AcademicNotationToNamedEquationState;
+  | AcademicNotationToNamedEquationState
+  | NamedModelToStoryState;
 
 export type ModeResult = {
   state: ModeState;

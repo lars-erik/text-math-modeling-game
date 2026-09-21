@@ -1,5 +1,4 @@
 import type { GuidanceEntry } from '../../problem-model/problem';
-
 export {
   isModeId,
   modeIds,
@@ -10,6 +9,7 @@ export {
   type ModeSubmitOptions,
   type ModeState,
   type ModeSubmission,
+  type NamedModelToStoryState,
   type PuzzleFeedback,
   type QuantitySelection,
   type StoryToQuantitiesState,
@@ -21,21 +21,28 @@ export { storyToQuantitiesMode } from './story-to-quantities';
 export { quantitiesToNamedEquationMode } from './quantities-to-named-equation';
 export { namedEquationToAcademicNotationMode } from './named-equation-to-academic-notation';
 export { academicNotationToNamedEquationMode } from './academic-notation-to-named-equation';
+export { namedModelToStoryMode } from './named-model-to-story';
 export {
   createNamedEquationChoiceSeeds,
   type NamedEquationChoiceSeed,
 } from './named-equation-choices';
+export {
+  createStoryCandidateSeeds,
+  type StoryCandidateSeed,
+} from './story-candidates';
 import type { Mode, ModeId } from './mode';
 import { storyToQuantitiesMode } from './story-to-quantities';
 import { quantitiesToNamedEquationMode } from './quantities-to-named-equation';
 import { namedEquationToAcademicNotationMode } from './named-equation-to-academic-notation';
 import { academicNotationToNamedEquationMode } from './academic-notation-to-named-equation';
+import { namedModelToStoryMode } from './named-model-to-story';
 
 export const modes: Readonly<Record<ModeId, Mode>> = {
   'story-to-quantities': storyToQuantitiesMode,
   'quantities-to-named-equation': quantitiesToNamedEquationMode,
   'named-equation-to-academic-notation': namedEquationToAcademicNotationMode,
   'academic-notation-to-named-equation': academicNotationToNamedEquationMode,
+  'named-model-to-story': namedModelToStoryMode,
 };
 
 export function selectGuidanceForMode({

@@ -1,0 +1,75 @@
+=== Start ===
+puzzle named-model -> story-choices
+replay seed=0 generator=hand-built-v1 theme=gaming.drone-power story-seed=0 locale=en
+prompt Choose the situation that matches this model.
+quantities
+  basePower [base] = 30
+  droneCount [count] = 4
+  dronePower [per-item] = ?
+  totalPower [total] = 210
+named-model totalPower = basePower + droneCount * dronePower
+candidates
+  0: matching
+    totalPower = basePower + droneCount * dronePower
+  1: factor-into-group
+    totalPower = droneCount * (basePower + dronePower)
+  2: add-instead-of-multiply
+    totalPower = basePower + droneCount + dronePower
+input story-choice = none
+=== Correct ===
+puzzle named-model -> story-choices
+replay seed=0 generator=hand-built-v1 theme=gaming.drone-power story-seed=0 locale=en
+prompt Choose the situation that matches this model.
+quantities
+  basePower [base] = 30
+  droneCount [count] = 4
+  dronePower [per-item] = ?
+  totalPower [total] = 210
+named-model totalPower = basePower + droneCount * dronePower
+candidates
+  0: matching
+    totalPower = basePower + droneCount * dronePower
+  1: factor-into-group
+    totalPower = droneCount * (basePower + dronePower)
+  2: add-instead-of-multiply
+    totalPower = basePower + droneCount + dronePower
+input story-choice = matching
+submission story-choice
+  choice matching
+  equation
+    quantity total
+    add
+      quantity base
+      multiply
+        quantity count
+        quantity unitValue
+check normalized-structure equation-sides=swappable
+feedback accepted: The situation matches the model.
+=== Distractor ===
+puzzle named-model -> story-choices
+replay seed=0 generator=hand-built-v1 theme=gaming.drone-power story-seed=0 locale=en
+prompt Choose the situation that matches this model.
+quantities
+  basePower [base] = 30
+  droneCount [count] = 4
+  dronePower [per-item] = ?
+  totalPower [total] = 210
+named-model totalPower = basePower + droneCount * dronePower
+candidates
+  0: matching
+    totalPower = basePower + droneCount * dronePower
+  1: factor-into-group
+    totalPower = droneCount * (basePower + dronePower)
+  2: add-instead-of-multiply
+    totalPower = basePower + droneCount + dronePower
+input story-choice = factor-into-group
+submission story-choice
+  choice factor-into-group
+  equation
+    quantity total
+    multiply
+      quantity count
+      add
+        quantity base
+        quantity unitValue
+feedback incorrect: That situation groups the quantities differently than the model.

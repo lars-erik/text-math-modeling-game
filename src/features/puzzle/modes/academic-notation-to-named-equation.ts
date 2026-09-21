@@ -23,7 +23,19 @@ export const academicNotationToNamedEquationMode: Mode = {
   },
   submit(options) {
     const answer = options.answer as LearnerAnswer;
-    const input = answer.kind === 'text' ? answer.input : answer.label;
+    const input =
+      answer.kind === 'text'
+        ? answer.input
+        : answer.kind === 'relation-choice'
+          ? answer.label
+          : '';
+    if (answer.kind === 'story-choice') {
+      return {
+        state: composeState(options, input),
+        feedback: { kind: 'incorrect', message: incorrectMessage(options) },
+        submission: { kind: 'named-equation', answerKind: 'text', input },
+      };
+    }
     const parsed = parseNamedRelation(input, options.names);
     if (parsed.kind !== 'success') {
       return {
@@ -118,4 +130,7 @@ function localizeDiagnostic(
       diagnostic.availableIdentifiers.join(', '),
     ),
   };
+}
+function incorrectMessage(options: ModeSubmitOptions): string {
+  return puzzleResources[options.locale].namedModelToStory.incorrect;
 }

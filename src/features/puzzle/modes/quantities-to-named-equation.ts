@@ -32,11 +32,26 @@ export const quantitiesToNamedEquationMode: Mode = {
   },
   submit(options: ModeSubmitOptions): ModeResult {
     const answer = options.answer as PuzzleLearnerAnswer;
-    const displayInput = answer.kind === 'text' ? answer.input : answer.label;
-    const parsed =
+    const displayInput =
       answer.kind === 'text'
-        ? parseNamedRelation(answer.input, options.names)
-        : ({ kind: 'success' as const, relation: answer.relation } as const);
+        ? answer.input
+        : answer.kind === 'relation-choice'
+          ? answer.label
+          : '';
+    const parsed =
+      answer.kind === 'relation-choice'
+        ? ({ kind: 'success' as const, relation: answer.relation } as const)
+        : answer.kind === 'text'
+          ? parseNamedRelation(answer.input, options.names)
+          : ({
+              kind: 'syntax-error' as const,
+              message: 'A story choice cannot be submitted as an equation.',
+              expected: 'named equation',
+              range: {
+                start: { line: 1, column: 1, offset: 0 },
+                end: { line: 1, column: 1, offset: 0 },
+              },
+            });
     if (parsed.kind !== 'success') {
       return {
         state: composeState(options, displayInput),
@@ -107,7 +122,7 @@ function submissionOf(
 ): ModeSubmission {
   return {
     kind: 'named-equation',
-    answerKind: answer.kind,
+    answerKind: answer.kind === 'text' ? 'text' : 'relation-choice',
     input: displayInput,
     ...(answer.kind === 'relation-choice'
       ? { choiceId: answer.choiceId }

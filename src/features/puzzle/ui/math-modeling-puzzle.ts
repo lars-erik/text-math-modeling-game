@@ -61,8 +61,12 @@ import {
   textAcademicDisplayAdapter,
   type AcademicDisplayAdapter,
 } from './academic-display-adapter';
-import { formatNamedRelation } from '../../representations/named-relation';
+import {
+  formatNamedRelation,
+  type QuantityNameMap,
+} from '../../representations/named-relation';
 import './story-quantities-input';
+import './story-choice-input';
 import './puzzle-shell';
 import './puzzle-menu';
 import './academic-notation-display';
@@ -405,7 +409,8 @@ export class MathModelingPuzzle extends LitElement {
         return resources.namedEquationToAcademicNotation.heading;
       case 'academic-notation-to-named-equation':
         return resources.academicNotationToNamedEquation.heading;
-    }
+          case 'named-model-to-story':
+        return resources.namedModelToStory.heading;}
   }
 
   private renderSource(
@@ -441,7 +446,11 @@ export class MathModelingPuzzle extends LitElement {
             screen.screen,
             resources.academicNotationToNamedEquation.symbolKey,
           )}`;
-    }
+          case 'named-model-to-story':
+        return html`${this.renderQuantityList(screen)}
+          <p class="equation">
+            ${formatNamedRelation(screen.screen.source.relation, this.nameMapOf(screen))}
+          </p>`;}
   }
 
   private renderQuantityList(screen: PuzzleScreen) {
@@ -455,6 +464,14 @@ export class MathModelingPuzzle extends LitElement {
     </ul>`;
   }
 
+  private nameMapOf(screen: PuzzleScreen): QuantityNameMap {
+    return Object.fromEntries(
+      screen.context.quantities.map((quantity) => [
+        quantity.role,
+        quantity.variableName,
+      ]),
+    );
+  }
   private renderSymbolKey(
     task:
       | Extract<PuzzleScreenTask, { modeId: 'named-equation-to-academic-notation' }>
@@ -499,6 +516,15 @@ export class MathModelingPuzzle extends LitElement {
           resources.academicNotationToNamedEquation.inputLabel,
           resources.controls.check,
         );
+      case 'named-model-to-story':
+        return html`<div @puzzle-answer=${this.handleAnswer}>
+          <story-choice-input
+            .candidates=${screen.screen.target.candidates}
+            .selectedChoiceId=${screen.screen.input.selectedChoiceId}
+            .legend=${resources.namedModelToStory.choiceLegend}
+            .checkLabel=${resources.controls.check}
+          ></story-choice-input>
+        </div>`;
     }
   }
 
@@ -839,7 +865,8 @@ export class MathModelingPuzzle extends LitElement {
       case 'named-equation':
       case 'academic-notation':
         return submission.input;
-    }
+          case 'story-choice':
+        return `choice=${submission.choiceId}`;}
   }
 
   private handleNavigateHome(): void {
@@ -882,7 +909,8 @@ export class MathModelingPuzzle extends LitElement {
         return resources.namedEquationToAcademicNotation.heading;
       case 'academic-notation-to-named-equation':
         return resources.academicNotationToNamedEquation.heading;
-    }
+          case 'named-model-to-story':
+        return resources.namedModelToStory.heading;}
   }
 
   private handleSessionNext(): void {
@@ -976,6 +1004,7 @@ export class MathModelingPuzzle extends LitElement {
           .quantitiesToNamedEquationLabel=${resources.puzzleMenu.quantitiesToNamedEquation}
           .namedEquationToAcademicNotationLabel=${resources.puzzleMenu.namedEquationToAcademicNotation}
           .academicNotationToNamedEquationLabel=${resources.puzzleMenu.academicNotationToNamedEquation}
+          .namedModelToStoryLabel=${resources.puzzleMenu.namedModelToStory}
           .seedLabel=${resources.puzzleMenu.seed}
           .showLabel=${resources.puzzleMenu.show}
           .startSessionLabel=${resources.puzzleMenu.startSession}

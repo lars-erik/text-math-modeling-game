@@ -42,7 +42,9 @@ function correctAnswerFor(session: GrayboxSession):
           task.target.symbols,
         ),
       };
-  }
+      case 'named-model-to-story':
+      return { kind: 'story-choice', choiceId: 'matching' };
+}
 }
 
 function canonicalNamedEquation(session: GrayboxSession): string {
