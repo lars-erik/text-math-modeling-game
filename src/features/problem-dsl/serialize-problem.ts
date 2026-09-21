@@ -37,6 +37,11 @@ export function serializeProblem(problem: Problem): string {
           `${indentation}replay {`,
           `${indentation.repeat(2)}seed ${problem.replay.seed}`,
           `${indentation.repeat(2)}generator ${problem.replay.generatorVersion}`,
+          ...(problem.replay.hiddenRole
+            ? [
+                `${indentation.repeat(2)}hidden-role ${problem.replay.hiddenRole}`,
+              ]
+            : []),
           `${indentation}}`,
         ]
       : []),

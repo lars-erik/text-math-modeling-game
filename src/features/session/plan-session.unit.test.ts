@@ -4,6 +4,10 @@ import {
   generateTotalFromPartsCase,
   defaultTotalFromPartsGenerationConfig,
 } from '../problem-generation/generate-total-from-parts';
+import {
+  defaultProblemFamilyId,
+  problemFamilies,
+} from '../problem-generation/problem-families';
 import { modeIds } from '../puzzle/modes';
 import {
   planSession,
@@ -81,6 +85,33 @@ test('generates a validated problem for every planned item', () => {
 
 test('stamps the plan with the planner version', () => {
   expect(planOf(exampleSeed).plannerVersion).toBe(sessionPlannerVersion);
+});
+
+test('plans deterministic hidden roles per item', () => {
+  const first = planOf(exampleSeed);
+  const second = planOf(exampleSeed);
+  expect(first.items.map((item) => item.hiddenRole)).toEqual(
+    second.items.map((item) => item.hiddenRole),
+  );
+  for (const item of first.items) {
+    expect(item.hiddenRole).toBeOneOf([...problemFamilies[defaultProblemFamilyId].hiddenRoles]);
+  }
+});
+
+test('sessions with at least seven items vary the hidden role across items', () => {
+  let varied = false;
+  for (let seed = 0; seed < 1000; seed += 1) {
+    const plan = planOf(seed);
+    if (plan.length < 7) {
+      continue;
+    }
+    const roles = new Set(plan.items.map((item) => item.hiddenRole));
+    if (roles.size > 1) {
+      varied = true;
+      break;
+    }
+  }
+  expect(varied).toBe(true);
 });
 
 test('rejects invalid session seeds', () => {

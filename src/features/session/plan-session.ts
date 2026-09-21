@@ -3,9 +3,11 @@ import {
   maximumTotalFromPartsSeed,
   type RandomSource,
 } from '../problem-generation/generate-total-from-parts';
+import { defaultProblemFamilyId, problemFamilies } from '../problem-generation/problem-families';
+import type { HiddenRole } from '../problem-generation/hidden-role';
 import { modeIds, type ModeId } from '../puzzle/modes';
 
-export const sessionPlannerVersion = 'session-plan-v1';
+export const sessionPlannerVersion = 'session-plan-v2';
 
 const minimumSessionLength = 5;
 const maximumSessionLength = 10;
@@ -19,6 +21,7 @@ export type PlannedSessionItem = {
   index: number;
   problemSeed: number;
   modeId: ModeId;
+  hiddenRole: HiddenRole;
 };
 
 export type SessionPlan = {
@@ -66,12 +69,17 @@ function planItems(
   randomSource: RandomSource,
 ): readonly PlannedSessionItem[] {
   const orderedModes = deterministicShuffle([...modeIds], randomSource);
+  const orderedHiddenRoles = deterministicShuffle(
+    [...problemFamilies[defaultProblemFamilyId].hiddenRoles],
+    randomSource,
+  );
   const items: PlannedSessionItem[] = [];
   for (let index = 0; index < length; index += 1) {
     items.push({
       index: index + 1,
       problemSeed: deriveProblemSeed(seed, index),
       modeId: orderedModes[index % orderedModes.length],
+      hiddenRole: orderedHiddenRoles[index % orderedHiddenRoles.length],
     });
   }
   return items;

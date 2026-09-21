@@ -158,6 +158,44 @@ describe('Phase 1 problem invariants', () => {
     },
   );
 
+  test('accepts a replay hidden role that matches the hidden quantity role', () => {
+    const problem = {
+      ...totalFromPartsProblem,
+      replay: {
+        ...totalFromPartsProblem.replay,
+        hiddenRole: 'per-item' as const,
+      },
+    };
+    expect(
+      validateProblemAst(problem).filter(
+        (issue) => issue.kind === 'replay-hidden-role-mismatch',
+      ),
+    ).toEqual([]);
+  });
+
+  test('stays valid when the replay metadata omits a hidden role', () => {
+    expect(
+      validateProblemAst(totalFromPartsProblem).filter(
+        (issue) => issue.kind === 'replay-hidden-role-mismatch',
+      ),
+    ).toEqual([]);
+  });
+
+  test('reports a replay hidden role that does not match the hidden quantity', () => {
+    const problem = {
+      ...totalFromPartsProblem,
+      replay: {
+        ...totalFromPartsProblem.replay,
+        hiddenRole: 'base' as const,
+      },
+    };
+    expect(validateProblemAst(problem)).toContainEqual({
+      kind: 'replay-hidden-role-mismatch',
+      replayHiddenRole: 'base',
+      hiddenRole: 'per-item',
+    });
+  });
+
   test('reports a known quantity that has no answer-key binding', () => {
     const answerKeyWithoutKnownCount = {
       bindings: {

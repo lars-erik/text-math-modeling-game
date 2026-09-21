@@ -41,6 +41,7 @@ export type GuidanceId = string;
 export type ProblemReplay = {
   seed: number;
   generatorVersion: string;
+  hiddenRole?: QuantityRole;
 };
 
 export type Problem = {

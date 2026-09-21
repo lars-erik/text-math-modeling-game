@@ -19,6 +19,7 @@ test('parses a puzzle hash route into a typed puzzle selection', () => {
   ).toEqual({
     seed: 17,
     familyId: 'total-from-parts',
+    hiddenRole: 'per-item',
     themeId: 'gaming.drone-power',
     modeId: 'story-to-quantities',
     locale: 'nb',
@@ -63,11 +64,12 @@ test('rejects invalid or missing puzzle route arguments', () => {
 test('round-trips a puzzle selection through route and hash', () => {
   const selection = {
     seed: 321,
-    familyId: 'total-from-parts',
-    themeId: 'creator.followers',
-    modeId: 'quantities-to-named-equation',
-    locale: 'nb',
-  } as const;
+    familyId: 'total-from-parts' as const,
+    hiddenRole: 'per-item' as const,
+    themeId: 'creator.followers' as const,
+    modeId: 'quantities-to-named-equation' as const,
+    locale: 'nb' as const,
+  };
   expect(
     puzzleSelectionFromRoute(
       parseHash(
@@ -170,6 +172,7 @@ test('parses a groups-total family from the puzzle hash route', () => {
   ).toEqual({
     seed: 17,
     familyId: 'groups-total',
+    hiddenRole: 'per-item',
     themeId: 'gaming.drone-power',
     modeId: 'quantities-to-named-equation',
     locale: 'nb',
@@ -179,14 +182,74 @@ test('parses a groups-total family from the puzzle hash route', () => {
 test('round-trips an explicit family through the canonical puzzle hash', () => {
   const selection = {
     seed: 321,
-    familyId: 'groups-total',
-    themeId: 'creator.followers',
+    familyId: 'groups-total' as const,
+    hiddenRole: 'per-item' as const,
+    themeId: 'creator.followers' as const,
+    modeId: 'quantities-to-named-equation' as const,
+    locale: 'nb' as const,
+  };
+  expect(
+    puzzleSelectionFromRoute(parseHash(formatHashOfPuzzleSelection(selection))),
+  ).toEqual(selection);
+});
+
+test('parses an explicit hidden role from the puzzle hash route', () => {
+  expect(
+    puzzleSelectionFromRoute(
+      parseHash(
+        '#puzzle?seed=17&family=total-from-parts&hidden-role=base&scenario=gaming.drone-power&task=quantities-to-named-equation&language=nb',
+      ),
+    ),
+  ).toEqual({
+    seed: 17,
+    familyId: 'total-from-parts',
+    hiddenRole: 'base',
+    themeId: 'gaming.drone-power',
     modeId: 'quantities-to-named-equation',
     locale: 'nb',
+  });
+});
+
+test('a missing hidden role defaults to the per-item unknown', () => {
+  expect(
+    puzzleSelectionFromRoute(
+      parseHash('#puzzle?seed=17&scenario=gaming.drone-power&task=story-to-quantities'),
+    ).hiddenRole,
+  ).toBe('per-item');
+});
+
+test('round-trips an explicit hidden role through the canonical puzzle hash', () => {
+  const selection = {
+    seed: 321,
+    familyId: 'total-from-parts',
+    hiddenRole: 'count',
+    themeId: 'gaming.drone-power',
+    modeId: 'quantities-to-named-equation',
+    locale: 'en',
   } as const;
   expect(
     puzzleSelectionFromRoute(parseHash(formatHashOfPuzzleSelection(selection))),
   ).toEqual(selection);
+});
+
+test('rejects unknown hidden-role route arguments', () => {
+  expect(() =>
+    puzzleSelectionFromRoute(
+      parseHash(
+        '#puzzle?seed=17&hidden-role=nonsense&scenario=gaming.drone-power&task=story-to-quantities',
+      ),
+    ),
+  ).toThrowError(/hidden role/i);
+});
+
+test('rejects hidden roles the family does not support', () => {
+  expect(() =>
+    puzzleSelectionFromRoute(
+      parseHash(
+        '#puzzle?seed=17&family=groups-total&hidden-role=base&scenario=gaming.drone-power&task=story-to-quantities',
+      ),
+    ),
+  ).toThrowError(/hidden role/i);
 });
 
 test('rejects unknown family route arguments', () => {

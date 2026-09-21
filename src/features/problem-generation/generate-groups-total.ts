@@ -12,9 +12,16 @@ import {
   type PositiveIntegerRange,
   type RandomSource,
 } from './random-source';
+import { resolveHiddenRole, type HiddenRole } from './hidden-role';
 
 export const groupsTotalGeneratorVersion = 'groups-total-v1';
 export { maximumGenerationSeed };
+
+export const groupsTotalHiddenRoles = [
+  'per-item',
+  'count',
+  'total',
+] as const satisfies readonly HiddenRole[];
 
 export type GroupsTotalGenerationConfig = {
   count: PositiveIntegerRange;
@@ -41,6 +48,7 @@ export type GeneratedGroupsTotalCase = {
   replay: {
     seed: number;
     generatorVersion: string;
+    hiddenRole: HiddenRole;
     config: GroupsTotalGenerationConfig;
   };
 };
@@ -48,64 +56,74 @@ export type GeneratedGroupsTotalCase = {
 const unsafeTotalError =
   'Generation config must guarantee a positive safe integer result.';
 
+const quantityDeclarations = [
+  {
+    id: 'count',
+    dimension: 'item',
+    role: 'count',
+  },
+  {
+    id: 'unitValue',
+    dimension: 'amountPerItem',
+    role: 'per-item',
+  },
+  {
+    id: 'total',
+    dimension: 'amount',
+    role: 'total',
+  },
+] as const;
+
 export function generateGroupsTotalCase({
   seed,
   config,
+  hiddenRole,
   randomSource,
 }: {
   seed: number;
   config: GroupsTotalGenerationConfig;
+  hiddenRole?: HiddenRole;
   randomSource?: RandomSource;
 }): GeneratedGroupsTotalCase {
   validateGenerationRequest(seed, config);
+  const resolvedHiddenRole = resolveHiddenRole(
+    hiddenRole,
+    groupsTotalHiddenRoles,
+  );
   const resolvedRandomSource =
     randomSource ?? createMulberry32Random(seed);
-
   const count = nextInteger(resolvedRandomSource, config.count);
   const unitValue = nextInteger(resolvedRandomSource, config.unitValue);
   const total = count * unitValue;
-
+  const values = { count, unitValue, total };
   return {
     problem: {
       id: `groups-total-seed-${seed}`,
       concepts: config.concepts,
-      quantities: [
-        {
-          id: 'count',
-          dimension: 'item',
-          role: 'count',
-          given: { kind: 'known', value: count },
-        },
-        {
-          id: 'unitValue',
-          dimension: 'amountPerItem',
-          role: 'per-item',
-          given: { kind: 'hidden' },
-        },
-        {
-          id: 'total',
-          dimension: 'amount',
-          role: 'total',
-          given: { kind: 'known', value: total },
-        },
-      ],
+      quantities: quantityDeclarations.map((declaration) => ({
+        id: declaration.id,
+        dimension: declaration.dimension,
+        role: declaration.role,
+        given:
+          declaration.role === resolvedHiddenRole
+            ? { kind: 'hidden' as const }
+            : { kind: 'known' as const, value: values[declaration.id] },
+      })),
       relation: groupsTotal,
       guidance: groupsTotalGuidance,
       replay: {
         seed,
         generatorVersion: groupsTotalGeneratorVersion,
+        hiddenRole: resolvedHiddenRole,
       },
     },
     answerKey: {
-      bindings: {
-        count,
-        unitValue,
-        total,
-      },
+      bindings: values,
     },
     replay: {
       seed,
       generatorVersion: groupsTotalGeneratorVersion,
+      hiddenRole: resolvedHiddenRole,
       config: cloneConfig(config),
     },
   };

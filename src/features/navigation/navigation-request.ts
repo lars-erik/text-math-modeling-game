@@ -9,6 +9,7 @@ export const navigatePuzzleRequestEvent = 'navigate-puzzle-request';
 export type NavigatePuzzleRequest = {
   seed?: number;
   familyId?: string;
+  hiddenRole?: string;
   themeId?: string;
   modeId?: string;
 };

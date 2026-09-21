@@ -43,7 +43,11 @@ export const nb = {
     },
     countFact: {
       activeDrones: ({ count, noun }) =>
-        `Det driver også ${count} identiske aktive ${noun}.`,
+        `Et skip driver også ${count} identiske aktive ${noun}.`,
+    },
+    perItemFact: {
+      droneDraw: ({ value, unit }) =>
+        `Hver aktiv drone trekker ${value} ${unit}.`,
     },
     totalFact: {
       combinedDraw: ({ value, unit }) =>
@@ -54,6 +58,14 @@ export const nb = {
     question: {
       perDronePower: ({ noun }) =>
         `Hvor mye effekt trekker én ${noun}?`,
+      basePower: ({ noun }) =>
+        `Hvor mye effekt bruker ${noun}et til grunnleggende systemer?`,
+      droneCount: ({ noun }) =>
+        `Hvor mange ${noun} driver skipet?`,
+      totalPower: ({ noun }) =>
+        `Hvor mye effekt trekker skipet og dronene til sammen?`,
+      totalDronePower: ({ noun }) =>
+        `Hvor mye effekt trekker dronene til sammen?`,
     },
   },
 } satisfies ScenarioLocaleResources;
