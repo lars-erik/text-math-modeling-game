@@ -3,6 +3,7 @@ import type { ThemeFact } from '../theme';
 export type CreatorFollowersStoryPlan = {
   scenarioId: 'creator.followers';
   seed: number;
+  structure: 'base-and-parts' | 'groups-only';
   sentences: readonly (
     | {
         fragmentKey:
@@ -12,7 +13,7 @@ export type CreatorFollowersStoryPlan = {
         nounKey: 'creator' | 'post';
       }
     | {
-        fragmentKey: 'totalFact.finalAudience';
+        fragmentKey: 'totalFact.finalAudience' | 'totalFact.postGains';
         factId: ThemeFact['themeQuantityId'];
       }
   )[];
@@ -30,22 +31,30 @@ export function planCreatorFollowersStory(
   const factIdByRole = new Map(
     facts.map((fact) => [fact.role, fact.themeQuantityId]),
   );
+  const hasBase = factIdByRole.has('base');
   return {
     scenarioId: 'creator.followers',
     seed,
+    structure: hasBase ? 'base-and-parts' : 'groups-only',
     sentences: [
-      {
-        fragmentKey: 'baseFact.startingAudience',
-        factId: requireRole(factIdByRole, 'base'),
-        nounKey: 'creator',
-      },
+      ...(hasBase
+        ? [
+            {
+              fragmentKey: 'baseFact.startingAudience' as const,
+              factId: requireRole(factIdByRole, 'base'),
+              nounKey: 'creator' as const,
+            },
+          ]
+        : []),
       {
         fragmentKey: 'countFact.promotedPosts',
         factId: requireRole(factIdByRole, 'count'),
         nounKey: 'post',
       },
       {
-        fragmentKey: 'totalFact.finalAudience',
+        fragmentKey: hasBase
+          ? ('totalFact.finalAudience' as const)
+          : ('totalFact.postGains' as const),
         factId: requireRole(factIdByRole, 'total'),
       },
     ],

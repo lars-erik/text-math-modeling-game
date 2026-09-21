@@ -40,6 +40,11 @@ export function renderDronePowerStory(
           value: String(fact.value),
           unit: resources.units.power,
         });
+      case 'totalFact.droneDraw':
+        return resources.fragments.totalFact.droneDraw({
+          value: String(fact.value),
+          unit: resources.units.power,
+        });
     }
   });
   const questionFact = factsById.get(plan.question.factId);

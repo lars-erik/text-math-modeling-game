@@ -1,5 +1,9 @@
-import type { QuantityRole } from '../../problem-model/problem';
-import type { Theme, ThemeFact } from '../theme';
+import {
+  matchesRoleStructure,
+  rolesOfProblem,
+  type Theme,
+  type ThemeFact,
+} from '../theme';
 import { dronePowerResources } from './lang';
 import { createDronePowerLearnerNames } from './learner-names';
 import { renderDronePowerStory } from './render-story';
@@ -11,18 +15,34 @@ const roleFacts = {
   'per-item': { themeQuantityId: 'dronePower', unitKey: 'powerPerDrone' },
   total: { themeQuantityId: 'totalPower', unitKey: 'power' },
 } as const satisfies Record<
-  QuantityRole,
+  string,
   { themeQuantityId: string; unitKey: 'count' | 'power' | 'powerPerDrone' }
 >;
 
+export const dronePowerSupportedRoleStructures = [
+  { roles: ['base', 'count', 'per-item', 'total'] },
+  { roles: ['count', 'per-item', 'total'] },
+] as const satisfies readonly { roles: readonly string[] }[];
+
 export const dronePowerTheme: Theme = {
   id: 'gaming.drone-power',
+  supportedRoleStructures: dronePowerSupportedRoleStructures,
   present({ problem, locale, storySeed }) {
     const resources = dronePowerResources[locale];
+    const roles = rolesOfProblem(problem);
+    if (
+      !dronePowerSupportedRoleStructures.some((structure) =>
+        matchesRoleStructure(structure, roles),
+      )
+    ) {
+      throw new Error(
+        `Drone-power supports only base-and-parts and groups-total role structures, received ${JSON.stringify(roles)}.`,
+      );
+    }
     const facts: ThemeFact[] = problem.quantities.map((quantity) => {
       if (quantity.role === undefined) {
         throw new Error(
-          `Quantity ${quantity.id} has no total-from-parts role.`,
+          `Quantity ${quantity.id} has no canonical role.`,
         );
       }
       const roleFact = roleFacts[quantity.role];

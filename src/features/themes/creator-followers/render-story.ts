@@ -45,6 +45,11 @@ export function renderCreatorFollowersStory(
           value: String(fact.value),
           unit: resources.units.followers,
         });
+      case 'totalFact.postGains':
+        return resources.fragments.totalFact.postGains({
+          value: String(fact.value),
+          unit: resources.units.followers,
+        });
     }
   });
   const questionFact = factsById.get(plan.question.factId);

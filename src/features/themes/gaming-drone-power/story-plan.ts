@@ -3,14 +3,17 @@ import type { ThemeFact } from '../theme';
 export type DronePowerStoryPlan = {
   scenarioId: 'gaming.drone-power';
   seed: number;
+  structure: 'base-and-parts' | 'groups-only';
   sentences: readonly (
     | {
-        fragmentKey: 'baseFact.basicSystems' | 'countFact.activeDrones';
+        fragmentKey:
+          | 'baseFact.basicSystems'
+          | 'countFact.activeDrones';
         factId: ThemeFact['themeQuantityId'];
         nounKey: 'ship' | 'drone';
       }
     | {
-        fragmentKey: 'totalFact.combinedDraw';
+        fragmentKey: 'totalFact.combinedDraw' | 'totalFact.droneDraw';
         factId: ThemeFact['themeQuantityId'];
       }
   )[];
@@ -26,22 +29,30 @@ export function planDronePowerStory(
   seed: number,
 ): DronePowerStoryPlan {
   const factIdByRole = new Map(facts.map((fact) => [fact.role, fact.themeQuantityId]));
+  const hasBase = factIdByRole.has('base');
   return {
     scenarioId: 'gaming.drone-power',
     seed,
+    structure: hasBase ? 'base-and-parts' : 'groups-only',
     sentences: [
-      {
-        fragmentKey: 'baseFact.basicSystems',
-        factId: requireRole(factIdByRole, 'base'),
-        nounKey: 'ship',
-      },
+      ...(hasBase
+        ? [
+            {
+              fragmentKey: 'baseFact.basicSystems' as const,
+              factId: requireRole(factIdByRole, 'base'),
+              nounKey: 'ship' as const,
+            },
+          ]
+        : []),
       {
         fragmentKey: 'countFact.activeDrones',
         factId: requireRole(factIdByRole, 'count'),
         nounKey: 'drone',
       },
       {
-        fragmentKey: 'totalFact.combinedDraw',
+        fragmentKey: hasBase
+          ? ('totalFact.combinedDraw' as const)
+          : ('totalFact.droneDraw' as const),
         factId: requireRole(factIdByRole, 'total'),
       },
     ],
