@@ -48,6 +48,8 @@ export const nb = {
     totalFact: {
       combinedDraw: ({ value, unit }) =>
         `Skipet og dronene trekker til sammen ${value} ${unit}.`,
+      droneDraw: ({ value, unit }) =>
+        `Dronene trekker til sammen ${value} ${unit}.`,
     },
     question: {
       perDronePower: ({ noun }) =>

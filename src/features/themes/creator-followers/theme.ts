@@ -1,5 +1,9 @@
-import type { QuantityRole } from '../../problem-model/problem';
-import type { Theme, ThemeFact } from '../theme';
+import {
+  matchesRoleStructure,
+  rolesOfProblem,
+  type Theme,
+  type ThemeFact,
+} from '../theme';
 import { creatorFollowersResources } from './lang';
 import { createCreatorFollowersLearnerNames } from './learner-names';
 import { renderCreatorFollowersStory } from './render-story';
@@ -11,18 +15,34 @@ const roleFacts = {
   'per-item': { themeQuantityId: 'followersPerPost', unitKey: 'followersPerPost' },
   total: { themeQuantityId: 'finalFollowers', unitKey: 'followers' },
 } as const satisfies Record<
-  QuantityRole,
+  string,
   { themeQuantityId: string; unitKey: 'followers' | 'posts' | 'followersPerPost' }
 >;
 
+export const creatorFollowersSupportedRoleStructures = [
+  { roles: ['base', 'count', 'per-item', 'total'] },
+  { roles: ['count', 'per-item', 'total'] },
+] as const satisfies readonly { roles: readonly string[] }[];
+
 export const creatorFollowersTheme: Theme = {
   id: 'creator.followers',
+  supportedRoleStructures: creatorFollowersSupportedRoleStructures,
   present({ problem, locale, storySeed }) {
     const resources = creatorFollowersResources[locale];
+    const roles = rolesOfProblem(problem);
+    if (
+      !creatorFollowersSupportedRoleStructures.some((structure) =>
+        matchesRoleStructure(structure, roles),
+      )
+    ) {
+      throw new Error(
+        `Creator-followers supports only base-and-parts and groups-total role structures, received ${JSON.stringify(roles)}.`,
+      );
+    }
     const facts: ThemeFact[] = problem.quantities.map((quantity) => {
       if (quantity.role === undefined) {
         throw new Error(
-          `Quantity ${quantity.id} has no total-from-parts role.`,
+          `Quantity ${quantity.id} has no canonical role.`,
         );
       }
       const roleFact = roleFacts[quantity.role];

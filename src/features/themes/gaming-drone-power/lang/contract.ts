@@ -42,6 +42,7 @@ export type ScenarioLocaleResources = {
     };
     totalFact: {
       combinedDraw: (values: { value: string; unit: string }) => string;
+      droneDraw: (values: { value: string; unit: string }) => string;
     };
     question: {
       perDronePower: (values: { noun: string }) => string;

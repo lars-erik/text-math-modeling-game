@@ -49,14 +49,8 @@ export const quantitiesToNamedEquationMode: Mode = {
       parsed.relation,
       namedEquationStructurePolicy,
     );
-    const sidesAreReversed =
-      !accepted &&
-      relationsHaveNormalizedStructure(options.problem.relation, parsed.relation, {
-        ...namedEquationStructurePolicy,
-        equationSides: 'swappable',
-      });
     const misconception =
-      !accepted && !sidesAreReversed
+      !accepted
         ? classifyMisconception(options.problem.relation, parsed.relation)
         : undefined;
     const resources = puzzleResources[options.locale].quantitiesToNamedEquation;
@@ -78,9 +72,7 @@ export const quantitiesToNamedEquationMode: Mode = {
             }
           : {
               kind: 'structural-mismatch',
-              message: sidesAreReversed
-                ? resources.reversedSides
-                : resources.groupingMismatch,
+              message: resources.groupingMismatch,
               checkPolicy: 'normalized-structure',
               equationSides: namedEquationStructurePolicy.equationSides,
             },

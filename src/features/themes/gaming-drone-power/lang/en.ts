@@ -48,6 +48,8 @@ export const en = {
     totalFact: {
       combinedDraw: ({ value, unit }) =>
         `The ship and its drones draw ${value} ${unit} in total.`,
+      droneDraw: ({ value, unit }) =>
+        `The drones draw ${value} ${unit} in total.`,
     },
     question: {
       perDronePower: ({ noun }) =>

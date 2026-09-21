@@ -35,5 +35,5 @@ submission named-equation
       multiply
         quantity count
         quantity unitValue
-check normalized-structure equation-sides=ordered
+check normalized-structure equation-sides=swappable
 feedback accepted: The named equation matches the relationship.

@@ -30,20 +30,20 @@ export type PuzzleFeedback =
       kind: 'accepted';
       message: string;
       checkPolicy: 'normalized-structure';
-      equationSides: 'ordered';
+      equationSides: 'swappable';
     }
   | {
       kind: 'structural-mismatch';
       message: string;
       checkPolicy: 'normalized-structure';
-      equationSides: 'ordered';
+      equationSides: 'swappable';
     }
   | {
       kind: 'misconception';
       misconception: Misconception;
       message?: string;
       checkPolicy: 'normalized-structure';
-      equationSides: 'ordered';
+      equationSides: 'swappable';
     }
   | {
       kind: 'syntax-error';

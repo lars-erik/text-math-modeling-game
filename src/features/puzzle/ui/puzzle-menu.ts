@@ -1,5 +1,9 @@
 import { css, html, LitElement } from 'lit';
-import { maximumTotalFromPartsSeed } from '../../problem-generation/generate-total-from-parts';
+import {
+  problemFamilyIds,
+  type ProblemFamilyId,
+} from '../../problem-generation/problem-families';
+import { maximumGenerationSeed } from '../../problem-generation/random-source';
 import {
   puzzleSelectionRequestEvent,
   sessionSelectionRequestEvent,
@@ -13,10 +17,14 @@ import { isThemeId, type ThemeId } from '../../themes';
 export class PuzzleMenu extends LitElement {
   static properties = {
     seed: { type: Number },
+    familyId: { attribute: 'family-id', type: String },
     themeId: { attribute: 'theme-id', type: String },
     modeId: { attribute: 'mode-id', type: String },
     locale: { type: String },
     menuLabel: { attribute: false },
+    familyLabel: { attribute: false },
+    totalFromPartsLabel: { attribute: false },
+    groupsTotalLabel: { attribute: false },
     scenarioLabel: { attribute: false },
     dronePowerLabel: { attribute: false },
     creatorFollowersLabel: { attribute: false },
@@ -90,10 +98,14 @@ export class PuzzleMenu extends LitElement {
   `;
 
   declare seed: number;
+  declare familyId: ProblemFamilyId;
   declare themeId: ThemeId;
   declare modeId: ModeId;
   declare locale: PuzzleLocale;
   declare menuLabel: string;
+  declare familyLabel: string;
+  declare totalFromPartsLabel: string;
+  declare groupsTotalLabel: string;
   declare scenarioLabel: string;
   declare dronePowerLabel: string;
   declare creatorFollowersLabel: string;
@@ -109,10 +121,14 @@ export class PuzzleMenu extends LitElement {
   constructor() {
     super();
     this.seed = 17;
+    this.familyId = 'total-from-parts';
     this.themeId = 'gaming.drone-power';
     this.modeId = 'story-to-quantities';
     this.locale = 'en';
     this.menuLabel = 'Puzzle menu';
+    this.familyLabel = 'Problem family';
+    this.totalFromPartsLabel = 'Total from base and parts';
+    this.groupsTotalLabel = 'Equal groups';
     this.scenarioLabel = 'Scenario';
     this.dronePowerLabel = 'Spaceship and drones';
     this.creatorFollowersLabel = 'Creator and followers';
@@ -131,6 +147,17 @@ export class PuzzleMenu extends LitElement {
   render() {
     return html`
       <form aria-label=${this.menuLabel} @submit=${this.handleSubmit}>
+        <label>
+          ${this.familyLabel}
+          <select name="family" .value=${this.familyId}>
+            <option value="total-from-parts">
+              ${this.totalFromPartsLabel}
+            </option>
+            <option value="groups-total">
+              ${this.groupsTotalLabel}
+            </option>
+          </select>
+        </label>
         <label>
           ${this.scenarioLabel}
           <select name="scenario" .value=${this.themeId}>
@@ -165,7 +192,7 @@ export class PuzzleMenu extends LitElement {
             name="seed"
             type="number"
             min="0"
-            max=${maximumTotalFromPartsSeed}
+            max=${maximumGenerationSeed}
             step="1"
             .value=${String(this.seed)}
             required
@@ -187,6 +214,7 @@ export class PuzzleMenu extends LitElement {
       return;
     }
     const data = new FormData(event.currentTarget);
+    const familyId = data.get('family');
     const themeId = data.get('scenario');
     const modeId = data.get('task');
     const seed = Number(data.get('seed'));
@@ -195,6 +223,8 @@ export class PuzzleMenu extends LitElement {
         ? event.submitter.value
         : undefined;
     if (
+      typeof familyId !== 'string' ||
+      !(problemFamilyIds as readonly string[]).includes(familyId) ||
       typeof themeId !== 'string' ||
       !isThemeId(themeId) ||
       typeof modeId !== 'string' ||
@@ -217,7 +247,13 @@ export class PuzzleMenu extends LitElement {
       new CustomEvent<PuzzleSelectionRequest>(puzzleSelectionRequestEvent, {
         bubbles: true,
         composed: true,
-        detail: { seed, themeId, modeId, locale: this.locale },
+        detail: {
+          seed,
+          familyId: familyId as ProblemFamilyId,
+          themeId,
+          modeId,
+          locale: this.locale,
+        },
       }),
     );
   }

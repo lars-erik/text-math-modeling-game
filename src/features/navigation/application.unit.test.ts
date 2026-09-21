@@ -130,6 +130,7 @@ test('selection requests navigate with the canonical hash and keep language', ()
   const h = harness('#home?language=nb');
   const puzzleRequest: PuzzleSelectionRequest = {
     seed: 42,
+    familyId: 'total-from-parts',
     themeId: 'gaming.drone-power',
     modeId: 'quantities-to-named-equation',
     locale: 'nb',
@@ -139,7 +140,7 @@ test('selection requests navigate with the canonical hash and keep language', ()
   );
   expect(h.writes).toEqual([
     {
-      hash: '#puzzle?seed=42&scenario=gaming.drone-power&task=quantities-to-named-equation&language=nb',
+      hash: '#puzzle?seed=42&family=total-from-parts&scenario=gaming.drone-power&task=quantities-to-named-equation&language=nb',
       mode: 'push',
     },
   ]);
@@ -188,7 +189,7 @@ test('semantic home menu requests start default puzzle and session destinations'
   );
   expect(h.writes).toEqual([
     {
-      hash: '#puzzle?seed=17&scenario=gaming.drone-power&task=story-to-quantities&language=nb',
+      hash: '#puzzle?seed=17&family=total-from-parts&scenario=gaming.drone-power&task=story-to-quantities&language=nb',
       mode: 'push',
     },
   ]);

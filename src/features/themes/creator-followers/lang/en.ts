@@ -57,6 +57,8 @@ export const en = {
     totalFact: {
       finalAudience: ({ value, unit }) =>
         `The creator finishes with ${value} ${unit}.`,
+      postGains: ({ value, unit }) =>
+        `The posts bring in ${value} new ${unit} in total.`,
     },
     question: {
       followersPerPost: ({ noun }) =>

@@ -88,6 +88,7 @@ test('switches tasks and input modes while the story stays visible and the math 
   expect(labels).toEqual([
     'totalPower = basePower + droneCount * dronePower',
     'totalPower = droneCount * (basePower + dronePower)',
+    'totalPower = basePower + droneCount + dronePower',
   ]);
 
   const distractorRadio = choiceInput!.shadowRoot?.querySelector(

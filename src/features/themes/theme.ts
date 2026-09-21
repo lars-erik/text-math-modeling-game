@@ -37,8 +37,31 @@ export type ThemePresentation = {
   learnerNames: LearnerNameMap;
 };
 
+export type ThemeRoleStructure = {
+  roles: readonly QuantityRole[];
+};
+
+export function rolesOfProblem(problem: Problem): readonly QuantityRole[] {
+  return problem.quantities.flatMap((quantity) =>
+    quantity.role === undefined ? [] : [quantity.role],
+  );
+}
+
+export function matchesRoleStructure(
+  structure: ThemeRoleStructure,
+  roles: readonly QuantityRole[],
+): boolean {
+  const structureRoles = [...structure.roles].sort();
+  const problemRoles = [...new Set(roles)].sort();
+  return (
+    structureRoles.length === problemRoles.length &&
+    structureRoles.every((role, index) => role === problemRoles[index])
+  );
+}
+
 export type Theme = {
   id: ThemeId;
+  supportedRoleStructures: readonly ThemeRoleStructure[];
   present: (options: {
     problem: Problem;
     locale: PuzzleLocale;

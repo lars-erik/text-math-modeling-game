@@ -26,6 +26,11 @@ import {
 } from './features/puzzle/puzzle-request';
 import { isThemeId, type ThemeId } from './features/themes';
 import { isModeId, type ModeId } from './features/puzzle/modes';
+import {
+  defaultProblemFamilyId,
+  isProblemFamilyId,
+  type ProblemFamilyId,
+} from './features/problem-generation/problem-families';
 import type { PuzzleLocale } from './features/localization/locale';
 import {
   createSessionRunStore,
@@ -35,6 +40,7 @@ import { createInMemorySessionPersistence } from './features/session/persistence
 import type { HomeSessionRunsView } from './features/navigation/session-runs-view';
 
 export const defaultPuzzleSeed = 17;
+export const defaultProblemFamily: ProblemFamilyId = defaultProblemFamilyId;
 export const defaultSessionSeed = 918273;
 export const defaultThemeId: ThemeId = 'gaming.drone-power';
 export const defaultModeId: ModeId = 'story-to-quantities';
@@ -74,6 +80,7 @@ export function puzzleDestination(element: PuzzleAttributes): Destination {
     apply: (route: Route) => {
       const selection = puzzleSelectionFromRoute(route);
       element.setAttribute('seed', String(selection.seed));
+      element.setAttribute('family', selection.familyId);
       element.setAttribute('theme', selection.themeId);
       element.setAttribute('mode', selection.modeId);
       element.setAttribute('locale', selection.locale);
@@ -92,6 +99,7 @@ export function sessionDestination(element: PuzzleAttributes): Destination {
       element.setAttribute('locale', selection.locale);
       element.removeAttribute('seed');
       element.removeAttribute('mode');
+      element.removeAttribute('family');
     },
   };
 }
@@ -211,6 +219,7 @@ export function startMathModelingApplication(
     navigateSafely(() =>
       routeFromPuzzleSelection({
         seed: detail?.seed ?? defaultPuzzleSeed,
+        familyId: familyIdOrThrow(detail?.familyId ?? defaultProblemFamily),
         themeId: themeIdOrThrow(detail?.themeId ?? defaultThemeId),
         modeId: modeIdOrThrow(detail?.modeId ?? defaultModeId),
         locale: currentLanguage(),
@@ -252,6 +261,13 @@ export function startMathModelingApplication(
 function themeIdOrThrow(value: string): ThemeId {
   if (!isThemeId(value)) {
     throw new Error(`Unknown scenario ${JSON.stringify(value)}.`);
+  }
+  return value;
+}
+
+function familyIdOrThrow(value: string): ProblemFamilyId {
+  if (!isProblemFamilyId(value)) {
+    throw new Error(`Unknown problem family ${JSON.stringify(value)}.`);
   }
   return value;
 }

@@ -41,9 +41,11 @@ import {
 } from '../../navigation/navigation-request';
 import { navigationResources } from '../../navigation/lang';
 import {
-  generateTotalFromPartsCase,
-  defaultTotalFromPartsGenerationConfig,
-} from '../../problem-generation/generate-total-from-parts';
+  defaultProblemFamilyId,
+  generateFamilyCase,
+  isProblemFamilyId,
+  type ProblemFamilyId,
+} from '../../problem-generation/problem-families';
 import {
   isPuzzleInputMode,
   puzzleInputProviders,
@@ -62,6 +64,7 @@ import './academic-notation-display';
 export class MathModelingPuzzle extends LitElement {
   static properties = {
     seed: { type: String },
+    family: { type: String },
     session: { type: String },
     themeId: { attribute: 'theme', type: String },
     modeId: { attribute: 'mode', type: String },
@@ -227,6 +230,7 @@ export class MathModelingPuzzle extends LitElement {
   `;
 
   declare seed: string;
+  declare family: string;
   declare session: string;
   declare themeId: string;
   declare modeId: string;
@@ -241,6 +245,7 @@ export class MathModelingPuzzle extends LitElement {
   constructor() {
     super();
     this.seed = '17';
+    this.family = defaultProblemFamilyId;
     this.session = '';
     this.themeId = 'gaming.drone-power';
     this.modeId = 'story-to-quantities';
@@ -248,7 +253,7 @@ export class MathModelingPuzzle extends LitElement {
     this.locale = 'en';
     this.academicDisplayAdapter = textAcademicDisplayAdapter;
     this.screen = undefined;
-    this.generatedProblem = generateCase(17);
+    this.generatedProblem = generateCase(defaultProblemFamilyId, 17);
     this.activeSession = undefined;
   }
 
@@ -269,11 +274,18 @@ export class MathModelingPuzzle extends LitElement {
           )
         : this.composeCurrentSession();
     }
-    if (changedProperties.has('seed')) {
-      this.generatedProblem = generateCase(Number(this.seed));
+    if (
+      changedProperties.has('seed') ||
+      changedProperties.has('family')
+    ) {
+      this.generatedProblem = generateCase(
+        this.currentFamilyId(),
+        Number(this.seed),
+      );
     }
     if (
       changedProperties.has('seed') ||
+      changedProperties.has('family') ||
       changedProperties.has('themeId') ||
       changedProperties.has('modeId') ||
       changedProperties.has('locale') ||
@@ -623,6 +635,12 @@ export class MathModelingPuzzle extends LitElement {
     }
   }
 
+  private currentFamilyId(): ProblemFamilyId {
+    return isProblemFamilyId(this.family)
+      ? this.family
+      : defaultProblemFamilyId;
+  }
+
   private requestSessionState(
     changes: Pick<SessionSelectionRequest, 'locale'>,
   ): void {
@@ -650,6 +668,7 @@ export class MathModelingPuzzle extends LitElement {
         composed: true,
         detail: {
           seed: Number(this.seed),
+          familyId: this.currentFamilyId(),
           themeId: isThemeId(this.themeId) ? this.themeId : 'gaming.drone-power',
           modeId: isModeId(this.modeId)
             ? this.modeId
@@ -905,10 +924,14 @@ export class MathModelingPuzzle extends LitElement {
         <puzzle-menu
           slot="settings"
           .seed=${menuSeed}
+          .familyId=${this.currentFamilyId()}
           .themeId=${this.themeId}
           .modeId=${menuModeId}
           .locale=${locale}
           .menuLabel=${resources.puzzleMenu.label}
+          .familyLabel=${resources.puzzleMenu.family}
+          .totalFromPartsLabel=${resources.puzzleMenu.totalFromParts}
+          .groupsTotalLabel=${resources.puzzleMenu.groupsTotal}
           .scenarioLabel=${resources.puzzleMenu.scenario}
           .dronePowerLabel=${resources.puzzleMenu.dronePower}
           .creatorFollowersLabel=${resources.puzzleMenu.creatorFollowers}
@@ -940,12 +963,9 @@ export class MathModelingPuzzle extends LitElement {
   }
 }
 
-function generateCase(seed: number): Problem {
+function generateCase(familyId: ProblemFamilyId, seed: number): Problem {
   const parsed = Number.isSafeInteger(seed) ? seed : 17;
-  return generateTotalFromPartsCase({
-    seed: parsed,
-    config: defaultTotalFromPartsGenerationConfig,
-  }).problem;
+  return generateFamilyCase(familyId, { seed: parsed }).problem;
 }
 
 if (customElements.get('math-modeling-puzzle') === undefined) {

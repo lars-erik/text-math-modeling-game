@@ -57,6 +57,8 @@ export const nb = {
     totalFact: {
       finalAudience: ({ value, unit }) =>
         `Innholdsskaperen ender med ${value} ${unit}.`,
+      postGains: ({ value, unit }) =>
+        `Innleggene gir til sammen ${value} nye ${unit}.`,
     },
     question: {
       followersPerPost: ({ noun }) =>

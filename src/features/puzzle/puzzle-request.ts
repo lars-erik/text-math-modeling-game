@@ -3,11 +3,16 @@ import type { ThemeId } from '../themes';
 import { isThemeId } from '../themes';
 import type { ModeId } from './modes';
 import { isModeId } from './modes';
+import {
+  isProblemFamilyId,
+  type ProblemFamilyId,
+} from '../problem-generation/problem-families';
 
 export const puzzleSelectionRequestEvent = 'puzzle-selection-request';
 
 export type PuzzleSelectionRequest = {
   seed: number;
+  familyId: ProblemFamilyId;
   themeId: ThemeId;
   modeId: ModeId;
   locale: PuzzleLocale;
@@ -45,6 +50,8 @@ export function isPuzzleSelectionRequest(
   const request = value as Partial<PuzzleSelectionRequest>;
   return (
     typeof request.seed === 'number' &&
+    typeof request.familyId === 'string' &&
+    isProblemFamilyId(request.familyId) &&
     typeof request.themeId === 'string' &&
     isThemeId(request.themeId) &&
     typeof request.modeId === 'string' &&

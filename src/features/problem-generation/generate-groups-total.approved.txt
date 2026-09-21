@@ -1,0 +1,96 @@
+replay {
+  "seed": 17,
+  "generatorVersion": "groups-total-v1",
+  "config": {
+    "count": {
+      "min": 2,
+      "max": 12
+    },
+    "unitValue": {
+      "min": 3,
+      "max": 25
+    },
+    "concepts": [
+      "arithmetic.multiplication",
+      "algebra.variable",
+      "algebra.equation",
+      "linear.one-unknown"
+    ]
+  }
+}
+
+dsl
+problem groups-total-seed-17 {
+    concepts {
+        arithmetic.multiplication
+        algebra.variable
+        algebra.equation
+        linear.one-unknown
+    }
+
+    quantity count: item role count = 9
+    quantity unitValue: amountPerItem role per-item = ?
+    quantity total: amount role total = 63
+
+    equation {
+        total = count * unitValue
+    }
+
+    guidance {
+        watch per-item-scaled-by-count {
+            count count
+            unit unitValue
+        }
+    }
+
+    replay {
+        seed 17
+        generator groups-total-v1
+    }
+}
+
+debug
+problem groups-total-seed-17
+concepts arithmetic.multiplication, algebra.variable, algebra.equation, linear.one-unknown
+quantities
+  quantity count dimension=item role=count visibility=known value=9
+  quantity unitValue dimension=amountPerItem role=per-item visibility=hidden value=?
+  quantity total dimension=amount role=total visibility=known value=63
+relation
+  equation
+    quantity total
+    multiply
+      quantity count
+      quantity unitValue
+replay seed=17 generator=groups-total-v1
+answer-key
+  unitValue = 7
+dsl
+  problem groups-total-seed-17 {
+      concepts {
+          arithmetic.multiplication
+          algebra.variable
+          algebra.equation
+          linear.one-unknown
+      }
+  
+      quantity count: item role count = 9
+      quantity unitValue: amountPerItem role per-item = ?
+      quantity total: amount role total = 63
+  
+      equation {
+          total = count * unitValue
+      }
+  
+      guidance {
+          watch per-item-scaled-by-count {
+              count count
+              unit unitValue
+          }
+      }
+  
+      replay {
+          seed 17
+          generator groups-total-v1
+      }
+  }

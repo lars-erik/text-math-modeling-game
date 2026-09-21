@@ -38,6 +38,7 @@ export type CreatorFollowersLocaleResources = {
     };
     totalFact: {
       finalAudience: (values: { value: string; unit: string }) => string;
+      postGains: (values: { value: string; unit: string }) => string;
     };
     question: {
       followersPerPost: (values: { noun: string }) => string;

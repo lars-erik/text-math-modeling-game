@@ -33,5 +33,5 @@ submission academic-notation
       multiply
         literal 4
         quantity unitValue
-check normalized-structure equation-sides=ordered
+check normalized-structure equation-sides=swappable
 feedback accepted: The academic notation matches the relationship.

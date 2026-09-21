@@ -14,6 +14,9 @@ export type PuzzleLocaleResources = {
   };
   puzzleMenu: {
     label: string;
+    family: string;
+    totalFromParts: string;
+    groupsTotal: string;
     scenario: string;
     dronePower: string;
     creatorFollowers: string;
@@ -53,7 +56,6 @@ export type PuzzleLocaleResources = {
     choiceLegend: string;
     accepted: string;
     groupingMismatch: string;
-    reversedSides: string;
     unknownIdentifier: (identifier: string, available: string) => string;
   };
   namedEquationToAcademicNotation: {

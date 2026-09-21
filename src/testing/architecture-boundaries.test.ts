@@ -168,6 +168,21 @@ test('domain modules do not import Lit or UI modules', () => {
   );
 });
 
+test('domain modules do not import Mode modules', () => {
+  expectNoViolations(
+    'Domain and problem-generation modules own canonical mathematics and must not depend on the Mode axis:',
+    violationLines(
+      productionImports.filter(
+        ({ file }) =>
+          domainFilePattern.test(file) && !modeFilePattern.test(file),
+      ),
+      (file, specifier) =>
+        /^features\/(?:puzzle|session|navigation)(?:\/|$)/.test(
+          resolveSpecifier(file, specifier),
+        ),
+    ),
+  );
+});
 test('mode modules do not import theme modules', () => {
   expectNoViolations(
     'Mode modules must work with canonical quantity IDs only and must not import concrete Theme implementations:',

@@ -14,6 +14,9 @@ export const en = {
   },
   puzzleMenu: {
     label: 'Puzzle menu',
+    family: 'Problem family',
+    totalFromParts: 'Total from base and parts',
+    groupsTotal: 'Equal groups',
     scenario: 'Scenario',
     dronePower: 'Spaceship and drones',
     creatorFollowers: 'Creator and followers',
@@ -53,7 +56,6 @@ export const en = {
     choiceLegend: 'Choose the named equation',
     accepted: 'The equation matches the quantity model.',
     groupingMismatch: 'The equation grouping does not match the quantity model.',
-    reversedSides: 'The equation sides are reversed; keep them in the requested order.',
     unknownIdentifier: (identifier, available) =>
       `Unknown identifier ${JSON.stringify(identifier)}. Available identifiers: ${available}.`,
   },
