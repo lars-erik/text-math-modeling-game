@@ -1,7 +1,7 @@
 import {
-  defaultTotalFromPartsGenerationConfig,
-  generateTotalFromPartsCase,
-} from '../problem-generation/generate-total-from-parts';
+  defaultProblemFamilyId,
+  generateFamilyCase,
+} from '../problem-generation/problem-families';
 import type {
   GuidanceEntry,
   GuidanceId,
@@ -690,9 +690,8 @@ function recomposeScreenWithLocale(
 }
 
 function generateItemProblem(plan: SessionPlan, index: number): Problem {
-  return generateTotalFromPartsCase({
+  return generateFamilyCase(defaultProblemFamilyId, {
     seed: plan.items[index].problemSeed,
-    config: defaultTotalFromPartsGenerationConfig,
   }).problem;
 }
 

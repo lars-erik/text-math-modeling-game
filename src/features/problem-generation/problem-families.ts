@@ -1,5 +1,4 @@
 import type { AnswerKey, Problem, QuantityRole } from '../problem-model/problem';
-import type { ModeId } from '../puzzle/modes';
 import {
   defaultTotalFromPartsGenerationConfig,
   generateTotalFromPartsCase,
@@ -34,7 +33,6 @@ export type GeneratedProblemCase = {
 export type ProblemFamily = {
   id: ProblemFamilyId;
   requiredRoles: readonly QuantityRole[];
-  supportedModeIds: readonly ModeId[];
   generateCase: (options: {
     seed: number;
   }) => GeneratedProblemCase;
@@ -43,12 +41,6 @@ export type ProblemFamily = {
 const totalFromPartsFamily: ProblemFamily = {
   id: 'total-from-parts',
   requiredRoles: ['base', 'count', 'per-item', 'total'],
-  supportedModeIds: [
-    'story-to-quantities',
-    'quantities-to-named-equation',
-    'named-equation-to-academic-notation',
-    'academic-notation-to-named-equation',
-  ],
   generateCase({ seed }) {
     return generateTotalFromPartsCase({
       seed,
@@ -60,12 +52,6 @@ const totalFromPartsFamily: ProblemFamily = {
 const groupsTotalFamily: ProblemFamily = {
   id: 'groups-total',
   requiredRoles: ['count', 'per-item', 'total'],
-  supportedModeIds: [
-    'story-to-quantities',
-    'quantities-to-named-equation',
-    'named-equation-to-academic-notation',
-    'academic-notation-to-named-equation',
-  ],
   generateCase({ seed }) {
     return generateGroupsTotalCase({
       seed,
@@ -82,13 +68,6 @@ export const problemFamilies: Readonly<
 };
 
 export const defaultProblemFamilyId: ProblemFamilyId = 'total-from-parts';
-
-export function familySupportsMode(
-  familyId: ProblemFamilyId,
-  modeId: ModeId,
-): boolean {
-  return problemFamilies[familyId].supportedModeIds.includes(modeId);
-}
 
 export function generateFamilyCase(
   familyId: ProblemFamilyId,
