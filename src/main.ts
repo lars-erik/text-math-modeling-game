@@ -8,6 +8,8 @@ import {
 import { createStorageRunIdMemory } from './features/session/persistence/browser-run-id-memory';
 import { createSessionRunStore } from './features/session/session-run-store';
 
+// comment to trigger build - delete this line
+
 function safeStorage(name: 'localStorage' | 'sessionStorage'): BrowserStorageLike | undefined {
   try {
     const storage = (globalThis as Record<string, unknown>)[name];
