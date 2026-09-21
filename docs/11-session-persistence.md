@@ -29,7 +29,7 @@ LocalStorage adapter (features/session/persistence/local-storage-session-reposit
 A `SessionSnapshot` is a small, explicitly typed, JSON-serializable DTO:
 
 - `schemaVersion` — snapshot shape version; currently `1`.
-- `plannerVersion` — the `sessionPlannerVersion` that planned the run; currently `session-plan-v1`.
+- `plannerVersion` — the `sessionPlannerVersion` that planned the run; currently `session-plan-v2` (v2 adds per-item hidden-role assignment; older plans are re-planned from their seed).
 - `runId` — opaque, stable identifier for one concrete run (see below).
 - replay inputs: `seed`, `themeId`, `locale`.
 - `status` — `active` or `complete`.
