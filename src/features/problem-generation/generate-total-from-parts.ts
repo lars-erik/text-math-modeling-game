@@ -12,11 +12,19 @@ import {
   type PositiveIntegerRange,
   type RandomSource,
 } from './random-source';
+import { resolveHiddenRole, type HiddenRole } from './hidden-role';
 
 export const totalFromPartsGeneratorVersion = 'total-from-parts-v1';
 export const maximumTotalFromPartsSeed = maximumGenerationSeed;
 export { createMulberry32Random };
 export type { RandomSource, PositiveIntegerRange };
+
+export const totalFromPartsHiddenRoles = [
+  'per-item',
+  'base',
+  'count',
+  'total',
+] as const satisfies readonly HiddenRole[];
 
 export type TotalFromPartsGenerationConfig = {
   base: PositiveIntegerRange;
@@ -46,6 +54,7 @@ export type GeneratedProblemCase = {
   replay: {
     seed: number;
     generatorVersion: string;
+    hiddenRole: HiddenRole;
     config: TotalFromPartsGenerationConfig;
   };
 };
@@ -53,72 +62,80 @@ export type GeneratedProblemCase = {
 const unsafeTotalError =
   'Generation config must guarantee a positive safe integer result.';
 
+const quantityDeclarations = [
+  {
+    id: 'base',
+    dimension: 'amount',
+    role: 'base',
+  },
+  {
+    id: 'count',
+    dimension: 'item',
+    role: 'count',
+  },
+  {
+    id: 'unitValue',
+    dimension: 'amountPerItem',
+    role: 'per-item',
+  },
+  {
+    id: 'total',
+    dimension: 'amount',
+    role: 'total',
+  },
+] as const;
+
 export function generateTotalFromPartsCase({
   seed,
   config,
+  hiddenRole,
   randomSource,
 }: {
   seed: number;
   config: TotalFromPartsGenerationConfig;
+  hiddenRole?: HiddenRole;
   randomSource?: RandomSource;
 }): GeneratedProblemCase {
   validateGenerationRequest(seed, config);
+  const resolvedHiddenRole = resolveHiddenRole(
+    hiddenRole,
+    totalFromPartsHiddenRoles,
+  );
   const resolvedRandomSource =
     randomSource ?? createMulberry32Random(seed);
-
   const base = nextInteger(resolvedRandomSource, config.base);
   const count = nextInteger(resolvedRandomSource, config.count);
   const unitValue = nextInteger(resolvedRandomSource, config.unitValue);
   const total = base + count * unitValue;
-
+  const values = { base, count, unitValue, total };
   return {
     problem: {
       id: `total-from-parts-seed-${seed}`,
       concepts: config.concepts,
-      quantities: [
-        {
-          id: 'base',
-          dimension: 'amount',
-          role: 'base',
-          given: { kind: 'known', value: base },
-        },
-        {
-          id: 'count',
-          dimension: 'item',
-          role: 'count',
-          given: { kind: 'known', value: count },
-        },
-        {
-          id: 'unitValue',
-          dimension: 'amountPerItem',
-          role: 'per-item',
-          given: { kind: 'hidden' },
-        },
-        {
-          id: 'total',
-          dimension: 'amount',
-          role: 'total',
-          given: { kind: 'known', value: total },
-        },
-      ],
+      quantities: quantityDeclarations.map((declaration) => ({
+        id: declaration.id,
+        dimension: declaration.dimension,
+        role: declaration.role,
+        given:
+          declaration.role === resolvedHiddenRole
+            ? { kind: 'hidden' as const }
+            : { kind: 'known' as const, value: values[declaration.id] },
+      })),
       relation: totalFromParts,
       guidance: totalFromPartsGuidance,
       replay: {
         seed,
         generatorVersion: totalFromPartsGeneratorVersion,
+        hiddenRole: resolvedHiddenRole,
       },
     },
     answerKey: {
-      bindings: {
-        base,
-        count,
-        unitValue,
-        total,
-      },
+      bindings: values,
     },
     replay: {
       seed,
       generatorVersion: totalFromPartsGeneratorVersion,
+      hiddenRole: resolvedHiddenRole,
       config: cloneConfig(config),
     },
   };

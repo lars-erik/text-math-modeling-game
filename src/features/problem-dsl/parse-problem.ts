@@ -114,11 +114,26 @@ const semantics = problemGrammar.createSemantics().addOperation<ParsedNode>(
         startOffset: source.source.startIdx + leadingWhitespaceLength,
       } as ParsedEquation;
     },
-    Replay(_replay, _open, _seed, seed, _generator, generatorVersion, _close) {
+    Replay(
+      _replay,
+      _open,
+      _seed,
+      seed,
+      _generator,
+      generatorVersion,
+      hiddenRole,
+      _close,
+    ) {
       return {
         seed: Number(seed.sourceString),
         generatorVersion: generatorVersion.sourceString,
+        ...(hiddenRole.children.length === 0
+          ? {}
+          : { hiddenRole: hiddenRole.children[0].toDomain() as QuantityRole }),
       } as ProblemReplay;
+    },
+    HiddenRole(_hiddenRole, role) {
+      return role.sourceString;
     },
     Guidance(_guidance, _open, watches, _close) {
       return watches.children.map((watch) => watch.toDomain());

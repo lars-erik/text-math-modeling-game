@@ -32,6 +32,7 @@ test('generates a valid learner-visible problem and separate answer key', () => 
   expect(generated.problem.replay).toEqual({
     seed: 1234,
     generatorVersion: totalFromPartsGeneratorVersion,
+    hiddenRole: 'per-item',
   });
   expect(
     generated.problem.quantities.filter((quantity) => quantity.given.kind === 'hidden'),
@@ -76,6 +77,7 @@ test('preserves generator replay details outside the canonical problem DSL', () 
   expect(generated.replay).toEqual({
     seed: 7,
     generatorVersion: totalFromPartsGeneratorVersion,
+    hiddenRole: 'per-item',
     config: generationConfig,
   });
 });

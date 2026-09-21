@@ -1,6 +1,7 @@
 replay {
   "seed": 17,
   "generatorVersion": "groups-total-v1",
+  "hiddenRole": "per-item",
   "config": {
     "count": {
       "min": 2,
@@ -46,6 +47,7 @@ problem groups-total-seed-17 {
     replay {
         seed 17
         generator groups-total-v1
+        hidden-role per-item
     }
 }
 
@@ -92,5 +94,6 @@ dsl
       replay {
           seed 17
           generator groups-total-v1
+          hidden-role per-item
       }
   }
