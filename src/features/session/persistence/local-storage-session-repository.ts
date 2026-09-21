@@ -127,16 +127,18 @@ export function createLocalStorageSessionPersistence(
           status: 'complete',
           updatedAt: now(),
         };
+        const existing = readValidCompleted().filter(
+          (candidate) => candidate.runId !== stored.runId,
+        );
+        if (!writeCompletedSnapshots([...existing, stored])) {
+          return;
+        }
         const profile = parseProfile(
           readRaw(sessionStorageKeys.profile) ?? '',
         );
         if (profile?.activeSession?.runId === stored.runId) {
           removeRaw(sessionStorageKeys.profile);
         }
-        const existing = readValidCompleted().filter(
-          (candidate) => candidate.runId !== stored.runId,
-        );
-        writeCompletedSnapshots([...existing, stored]);
       },
       listCompleted: (): readonly CompletedSessionSummary[] =>
         readValidCompleted()

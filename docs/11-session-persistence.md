@@ -61,7 +61,7 @@ On mismatch, only this application's namespaced records (`math-modeling-game:ses
 
 Validation happens before any restoration: malformed item indices, mode mismatches or unknown submissions make the whole snapshot `incompatible` rather than restoring a broken run.
 
-Acceptance is **recalculated, not trusted**: each persisted submission is re-submitted through its Mode checker and the resulting genuine acceptance replaces the persisted boolean, so a structurally valid snapshot cannot claim acceptance or completion it did not earn. The current item's next-availability is derived from the current item's genuine acceptance, and a `complete` snapshot whose log is not genuinely complete (every item present and accepted) is rejected as incompatible. Legitimate latest-answer-per-item and non-advancing restore semantics are unchanged.
+Acceptance is **recalculated, not trusted**: each persisted submission is re-submitted through its Mode checker and the resulting genuine acceptance replaces the persisted boolean, so a structurally valid snapshot cannot claim acceptance or completion it did not earn. The current item's next-availability is derived from the current item's genuine acceptance, and a `complete` snapshot whose log is not genuinely complete (every item present and accepted) is rejected as incompatible. Active snapshots additionally require **genuine progression**: every item before `currentIndex` must have a latest accepted submission, and log entries for items beyond the current position are rejected, so a snapshot cannot restore ahead of the learner's real progress. Legitimate latest-answer-per-item and non-advancing restore semantics are unchanged.
 
 ## Run identity: replay versus resume
 
@@ -80,7 +80,7 @@ The single-active-run policy is deliberate for the MVP: starting a new session r
 
 ## Save points
 
-The store records meaningful transitions only: session start, each submit (which replaces the item's latest answer), hint requests, item progression, locale changes and completion. Completing a run moves it from the active slot to completed history and it is never offered as an active resume again. Only the record whose state actually changed is re-stamped: saving a new completed run never rewrites the completion timestamps of earlier history entries, so history ordering stays correct.
+The store records meaningful transitions only: session start, each submit (which replaces the item's latest answer), hint requests, item progression, locale changes and completion. Completing a run moves it from the active slot to completed history and it is never offered as an active resume again. The history write happens **before** the active profile is cleared, so a failed completion write (quota, blocked storage) leaves the prior active snapshot intact — the learner loses neither the active run nor the completed record. Only the record whose state actually changed is re-stamped: saving a new completed run never rewrites the completion timestamps of earlier history entries, so history ordering stays correct.
 
 ## Resilience
 

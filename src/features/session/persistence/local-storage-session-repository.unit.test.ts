@@ -145,6 +145,40 @@ test('saving a completed run preserves earlier completion timestamps', () => {
   ]);
 });
 
+test('a failed completed-history write preserves the active profile', () => {
+  const storage = memoryStorage();
+  const persistence = createLocalStorageSessionPersistence({ storage });
+  const session = startRun();
+  persistence.profileRepository.saveProfile({
+    activeSession: snapshotSessionRun(session),
+  });
+  const completed = snapshotSessionRun({
+    ...session,
+    status: 'complete',
+  });
+
+  const originalSetItem = storage.setItem;
+  storage.setItem = () => {
+    throw new Error('quota exceeded');
+  };
+  persistence.historyRepository.saveCompleted(completed);
+
+  expect(storage.backing.has(sessionStorageKeys.profile)).toBe(true);
+  const persistence2 = createLocalStorageSessionPersistence({ storage });
+  const active = persistence2.profileRepository.loadProfile().activeSession;
+  expect(active?.runId).toBe(session.runId);
+  expect(active?.status).toBe('active');
+  expect(persistence2.historyRepository.listCompleted()).toEqual([]);
+
+  storage.setItem = originalSetItem;
+  const healthy = createLocalStorageSessionPersistence({ storage });
+  healthy.historyRepository.saveCompleted(completed);
+  expect(
+    healthy.profileRepository.loadProfile().activeSession,
+  ).toBeUndefined();
+  expect(healthy.historyRepository.listCompleted()).toHaveLength(1);
+});
+
 test('removing a completed run keeps the other history entries intact', () => {
   const storage = memoryStorage();
   const persistence = createLocalStorageSessionPersistence({ storage });

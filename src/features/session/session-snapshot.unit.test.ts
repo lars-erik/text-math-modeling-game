@@ -269,17 +269,50 @@ test('restore rejects a completed snapshot whose log is not genuinely accepted',
 
 test('restore rejects an active snapshot claiming progression without an accepted current item', () => {
   const snapshot = snapshotSessionRun(startRun());
-  expect(
-    restoreSessionRun({ ...snapshot, currentCompleted: true }).kind,
-  ).toBe('restored');
   const restored = restoreSessionRun({
     ...snapshot,
     currentCompleted: true,
   });
+  expect(restored.kind).toBe('restored');
   const session2 = restored.kind === 'restored' ? restored.session : undefined!;
   expect(session2.availableNext).toBe(false);
   expect(() => session2.next()).not.toThrow();
   expect(session2.currentIndex).toBe(0);
+});
+
+test('restore rejects an active snapshot that skipped ahead without accepted prior answers', () => {
+  const snapshot = snapshotSessionRun(startRun());
+  expect(
+    restoreSessionRun({ ...snapshot, currentIndex: 5 }).kind,
+  ).toBe('incompatible');
+
+  const session = startRun();
+  const rejected = session.submit({ kind: 'text', input: 'wrong = wrong' });
+  const rejectedSnapshot = snapshotSessionRun(rejected);
+  expect(
+    restoreSessionRun({ ...rejectedSnapshot, currentIndex: 1 }).kind,
+  ).toBe('incompatible');
+
+  const advanced = session
+    .submit(correctAnswerFor(session))
+    .next()
+    .submit({ kind: 'text', input: 'wrong = wrong' });
+  const advancedSnapshot = snapshotSessionRun(advanced);
+  const legitimatelyProgressed = restoreSessionRun(advancedSnapshot);
+  expect(legitimatelyProgressed.kind).toBe('restored');
+
+  const withLaterLog = snapshotSessionRun(advanced);
+  const laterEntry = withLaterLog.answerLog.find(
+    (entry) => entry.itemIndex === 2,
+  );
+  expect(laterEntry).toBeDefined();
+  expect(
+    restoreSessionRun({
+      ...snapshot,
+      currentIndex: 0,
+      answerLog: [laterEntry!],
+    }).kind,
+  ).toBe('incompatible');
 });
 
 test('two runs with the same seed keep distinct run identities', () => {

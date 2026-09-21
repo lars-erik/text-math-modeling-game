@@ -186,6 +186,9 @@ export function restoreSessionRun(
       ),
     };
   }
+  if (!hasGenuineProgression(deduplicatedLog, snapshot.currentIndex)) {
+    return { kind: 'incompatible', reason: 'invalid-snapshot' };
+  }
   const currentItem = plan.items[snapshot.currentIndex];
   const currentLogEntry = deduplicatedLog.find(
     (entry) => entry.itemIndex === currentItem?.index,
@@ -345,6 +348,24 @@ function isGenuinelyComplete(
         entry.itemIndex <= plan.length,
     )
   );
+}
+
+function hasGenuineProgression(
+  log: readonly SessionItemLog[],
+  currentIndex: number,
+): boolean {
+  for (const entry of log) {
+    if (entry.itemIndex > currentIndex + 1) {
+      return false;
+    }
+  }
+  for (let itemIndex = 1; itemIndex <= currentIndex; itemIndex += 1) {
+    const latest = log.find((entry) => entry.itemIndex === itemIndex);
+    if (latest === undefined || !latest.accepted) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function submissionToAnswer(
