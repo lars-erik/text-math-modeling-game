@@ -7,19 +7,21 @@ This document describes how in-progress and completed session runs persist in br
 ## Persistence boundary
 
 ```text
-ApplicationController / session lifecycle (application.ts)
+Application / session lifecycle (application.ts)
         |
 SessionRunStore (features/session/session-run-store.ts)
-        |
-SessionRepository port (features/session/persistence/session-snapshot.ts)
-        |
+      /       \
+UserProfileRepository   SessionHistoryRepository
+      \       /
 LocalStorage adapter (features/session/persistence/local-storage-session-repository.ts)
 ```
 
 - `GrayboxSession` and `planSession` remain the authoritative session behavior. Persistence only snapshots and restores them.
-- The `SessionRepository` port is storage-agnostic. The in-memory adapter backs unit tests; the LocalStorage adapter backs the browser. A later IndexedDB adapter can implement the same port without touching session logic.
+- The **persisted application/user state is a profile, not a session repository**. `UserProfileRepository` is the top-level persistence port; `UserProfile` deliberately has exactly one field, `activeSession`, giving a natural place for later user-local state without session-specific hard couplings.
+- `SessionHistoryRepository` is a separate concern: completed runs, with list/save/remove operations. Keeping the active run in the profile and finished runs in history keeps "completed sessions must not resume as active" structural.
+- Both ports are storage-agnostic. The in-memory adapter backs unit tests; the LocalStorage adapter backs the browser and implements both ports while sharing namespacing/version helpers. The domain/session layer never learns about LocalStorage. A later IndexedDB adapter can implement the same ports without touching session logic.
 - The router (`hash-route.ts`, `app-controller.ts`) never learns about persistence, run identifiers or seed semantics. It remains a generic route → destination mechanism.
-- Lit leaf components never touch the repository. `MathModelingPuzzle` receives the `SessionRunStore` from the application and records session transitions through it.
+- Lit leaf components never touch the repositories. `MathModelingPuzzle` receives the `SessionRunStore` from the application and records session transitions through it. Home receives a small navigation-owned view model (`HomeSessionRunsView`), not persistence DTOs; it does not know which repository produced the data.
 - Canonical mathematics, problem generation and private `AnswerKey` data are never persisted.
 
 ## Snapshot contract
@@ -37,6 +39,15 @@ A `SessionSnapshot` is a small, explicitly typed, JSON-serializable DTO:
 - `updatedAt` — last transition time, used for history ordering.
 
 A snapshot never contains functions, rendered screens, composed `PuzzleScreen` state, generated `Problem` objects, relations or any private answer data. Generated problems are reconstructed from the deterministic replay inputs (seed + planner), not serialized.
+
+## Versioning
+
+Compatibility concerns are kept separate:
+
+- `SessionSnapshot` carries its own `schemaVersion` and `plannerVersion`. Changing the plan algorithm invalidates persisted runs even when the JSON shape is unchanged.
+- The stored profile record has its own profile-shape `schemaVersion`, independent of session snapshot compatibility; the two versions do not need to move in lockstep.
+
+On mismatch, only this application's namespaced records (`math-modeling-game:session:*`) are discarded; unrelated keys and other applications' data are never touched. `localStorage.clear()` is never used. Corrupted individual records (malformed JSON, wrong shape) are removed or ignored without crashing Home or destroying other valid records. An ordinary deployment that does not change persistence compatibility does not wipe progress; there is no app-version check at all. Pre-alpha policy: incompatible data is intentionally disposable and automatically discarded; there is no migration machinery, and the policy will be revisited before public alpha.
 
 ## Reconstruction
 
@@ -61,19 +72,13 @@ These are different operations with different identities:
 
 The `runId` is remembered per browser tab in `sessionStorage` (`math-modeling-game:session:current-run-id`). This is what makes "refresh the active tab" resume while "paste the replay link in a new tab" starts fresh. The URL itself stays on the canonical M10.5 contract: `#session?seed=...&scenario=...&language=...` with no run identifier in the hash. The run id contains no private answer data.
 
+A remembered run is only reused for replay when **all replay inputs that define the run's identity** match the route: seed and scenario/theme. Locale is intentionally mutable (the learner may switch language without losing the run); a route with the same seed but a different theme starts a new run and never receives the old run's theme.
+
 The single-active-run policy is deliberate for the MVP: starting a new session replaces the previously saved active run, which is covered by tests.
 
 ## Save points
 
-The store records meaningful transitions only: session start, each submit (which replaces the item's latest answer), hint requests, item progression, locale changes and completion. Completing a run moves it from the active slot to completed history and it is never offered as an active resume again.
-
-## Versioning and invalidation
-
-- Persisted records carry both a snapshot `schemaVersion` and a `plannerVersion`. Changing the plan algorithm invalidates persisted runs even when the JSON shape is unchanged.
-- On mismatch, only this application's namespaced records (`math-modeling-game:session:*`) are discarded; unrelated keys and other applications' data are never touched. `localStorage.clear()` is never used.
-- Corrupted individual records (malformed JSON, wrong shape) are removed or ignored without crashing Home or destroying other valid records.
-- An ordinary deployment that does not change persistence compatibility does not wipe progress; there is no app-version check at all.
-- Pre-alpha policy: incompatible data is intentionally disposable and automatically discarded. There is no migration machinery; the policy will be revisited before public alpha.
+The store records meaningful transitions only: session start, each submit (which replaces the item's latest answer), hint requests, item progression, locale changes and completion. Completing a run moves it from the active slot to completed history and it is never offered as an active resume again. Only the record whose state actually changed is re-stamped: saving a new completed run never rewrites the completion timestamps of earlier history entries, so history ordering stays correct.
 
 ## Resilience
 
@@ -85,4 +90,4 @@ Home shows **Continue session** only when an active run is remembered, and a mod
 
 ## Local-only retention
 
-All data is browser-local. There are no accounts, no cloud synchronization and no cross-device continuity. Clearing site data clears all progress. The `SessionRepository` port is the seam for a later IndexedDB adapter (M19) when history grows beyond a few small records.
+All data is browser-local. There are no accounts, no cloud synchronization and no cross-device continuity. Clearing site data clears all progress. The `UserProfileRepository` and `SessionHistoryRepository` ports are the seam for a later IndexedDB adapter (M19) when history grows beyond a few small records.

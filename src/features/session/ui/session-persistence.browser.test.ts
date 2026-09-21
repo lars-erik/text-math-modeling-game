@@ -117,11 +117,10 @@ test('a session survives an application reload and Home continue restores the sa
   await nextButton.click();
   await app.puzzle.updateComplete;
   expect(shellText(app.puzzle)).toContain('Puzzle 2 / 10');
-  expect(
-    JSON.parse(
-      window.localStorage.getItem(sessionStorageKeys.profile) ?? '{}',
-    ).answerLog.length,
-  ).toBeGreaterThan(0);
+  const persisted = JSON.parse(
+    window.localStorage.getItem(sessionStorageKeys.profile) ?? '{}',
+  ) as { activeSession?: { answerLog?: unknown[] } };
+  expect(persisted.activeSession?.answerLog?.length).toBeGreaterThan(0);
 
   const reloaded = app.reload(window.location.hash);
   await reloaded.puzzle.updateComplete;
