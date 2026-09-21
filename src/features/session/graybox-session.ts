@@ -15,9 +15,15 @@ import {
 import { selectGuidanceForMode } from '../puzzle/modes';
 import type { LearnerAnswer } from '../puzzle/learner-answer';
 import type { ModeSubmission, QuantitySelection } from '../puzzle/modes';
-import { modeIds, type ModeId } from '../puzzle/modes';
 import type { PuzzleLocale } from '../puzzle/lang';
 import type { ThemeId } from '../themes';
+import { isModeId, modeIds, type ModeId } from '../puzzle/modes';
+import { createNewRunId, type SessionRunId } from './session-run-id';
+import {
+  sessionSnapshotSchemaVersion,
+  type SessionSnapshot,
+  type SnapshotSubmission,
+} from './persistence/session-snapshot';
 import {
   planSession,
   sessionPlannerVersion,
@@ -49,6 +55,7 @@ export type SessionHint = {
 
 export type GrayboxSession = {
   replay: SessionReplay;
+  runId: SessionRunId;
   plan: SessionPlan;
   status: 'active' | 'complete';
   currentIndex: number;
@@ -73,11 +80,291 @@ export type StartSessionOptions = {
 };
 
 export function startSession(options: StartSessionOptions): GrayboxSession {
-  const plan = planSession({ seed: options.seed });
-  return createActiveSession(options, plan, 0, [], undefined, undefined);
+  return startSessionRun(options, createNewRunId());
 }
+
+export function startSessionRun(
+  options: StartSessionOptions,
+  runId: SessionRunId,
+): GrayboxSession {
+  const plan = planSession({ seed: options.seed });
+  return createActiveSession(
+    { ...options, runId },
+    plan,
+    0,
+    [],
+    undefined,
+    undefined,
+  );
+}
+
+export type RestoreSessionRunResult =
+  | { kind: 'restored'; session: GrayboxSession }
+  | {
+      kind: 'incompatible';
+      reason: 'schema-version' | 'planner-version' | 'invalid-snapshot';
+    };
+
+export function snapshotSessionRun(session: GrayboxSession): SessionSnapshot {
+  return {
+    schemaVersion: sessionSnapshotSchemaVersion,
+    plannerVersion: sessionPlannerVersion,
+    runId: session.runId,
+    seed: session.replay.seed,
+    themeId: session.replay.themeId,
+    locale: session.replay.locale,
+    status: session.status,
+    currentIndex: session.currentIndex,
+    currentCompleted:
+      session.status === 'complete' ? true : session.availableNext,
+    hintGuidanceId: session.hint?.guidanceId,
+    answerLog: session.answerLog.map(toSnapshotItemLog),
+    updatedAt: Date.now(),
+  };
+}
+
+export function restoreSessionRun(
+  snapshot: SessionSnapshot,
+): RestoreSessionRunResult {
+  if (snapshot.schemaVersion !== sessionSnapshotSchemaVersion) {
+    return { kind: 'incompatible', reason: 'schema-version' };
+  }
+  if (snapshot.plannerVersion !== sessionPlannerVersion) {
+    return { kind: 'incompatible', reason: 'planner-version' };
+  }
+  const options: StartSessionOptions | undefined = toSessionOptions(snapshot);
+  if (options === undefined) {
+    return { kind: 'incompatible', reason: 'invalid-snapshot' };
+  }
+  const plan = planSession({ seed: options.seed });
+  const restoredLog: SessionItemLog[] = [];
+  for (const entry of snapshot.answerLog) {
+    const item = plan.items[entry.itemIndex - 1];
+    if (
+      item === undefined ||
+      item.modeId !== entry.modeId ||
+      !isModeId(entry.modeId)
+    ) {
+      return { kind: 'incompatible', reason: 'invalid-snapshot' };
+    }
+    const submission = restoreSubmission(
+      entry.submission,
+      options,
+      plan,
+      entry.itemIndex - 1,
+    );
+    if (submission === undefined) {
+      return { kind: 'incompatible', reason: 'invalid-snapshot' };
+    }
+    restoredLog.push({
+      itemIndex: entry.itemIndex,
+      modeId: entry.modeId,
+      submission,
+      accepted: entry.accepted,
+    });
+  }
+  if (
+    snapshot.status === 'active' &&
+    (!Number.isSafeInteger(snapshot.currentIndex) ||
+      snapshot.currentIndex < 0 ||
+      snapshot.currentIndex >= plan.length)
+  ) {
+    return { kind: 'incompatible', reason: 'invalid-snapshot' };
+  }
+  const deduplicatedLog = latestAnswerPerItem(restoredLog);
+  if (snapshot.status === 'complete') {
+    return {
+      kind: 'restored',
+      session: createCompletedSession(
+        { ...options, runId: snapshot.runId },
+        plan,
+        deduplicatedLog,
+        undefined,
+      ),
+    };
+  }
+  const hint =
+    snapshot.hintGuidanceId === undefined
+      ? undefined
+      : { guidanceId: snapshot.hintGuidanceId };
+  const session = createActiveSession(
+    { ...options, runId: snapshot.runId },
+    plan,
+    snapshot.currentIndex,
+    deduplicatedLog,
+    restoredScreen(
+      options,
+      plan,
+      snapshot.currentIndex,
+      deduplicatedLog,
+    ),
+    hint,
+    snapshot.currentCompleted,
+  );
+  return { kind: 'restored', session };
+}
+
+type SessionCompositionOptions = StartSessionOptions & {
+  runId: SessionRunId;
+};
+
+function toSessionOptions(
+  snapshot: SessionSnapshot,
+): StartSessionOptions | undefined {
+  if (
+    !Number.isSafeInteger(snapshot.seed) ||
+    snapshot.seed < 0 ||
+    snapshot.status !== 'active' &&
+      snapshot.status !== 'complete'
+  ) {
+    return undefined;
+  }
+  return {
+    seed: snapshot.seed,
+    themeId: snapshot.themeId,
+    locale: snapshot.locale,
+  };
+}
+
+function toSnapshotItemLog(entry: SessionItemLog): SessionSnapshot['answerLog'][number] {
+  return {
+    itemIndex: entry.itemIndex,
+    modeId: entry.modeId,
+    accepted: entry.accepted,
+    submission: snapshotSubmission(entry.submission),
+  };
+}
+
+function snapshotSubmission(
+  submission: ModeSubmission,
+): SnapshotSubmission {
+  switch (submission.kind) {
+    case 'quantity-selection':
+      return {
+        kind: 'quantity-selection',
+        knownIds: [...submission.knownIds],
+        ...(submission.unknownId === undefined
+          ? {}
+          : { unknownId: submission.unknownId }),
+      };
+    case 'named-equation':
+    case 'academic-notation':
+      return submission.kind === 'named-equation'
+        ? {
+            kind: 'named-equation',
+            answerKind: submission.answerKind,
+            input: submission.input,
+            ...(submission.choiceId === undefined
+              ? {}
+              : { choiceId: submission.choiceId }),
+          }
+        : { kind: 'academic-notation', input: submission.input };
+  }
+}
+
+function restoreSubmission(
+  submission: SnapshotSubmission,
+  options: StartSessionOptions,
+  plan: SessionPlan,
+  itemIndex: number,
+): ModeSubmission | undefined {
+  const item = plan.items[itemIndex];
+  if (item === undefined) {
+    return undefined;
+  }
+  switch (submission.kind) {
+    case 'quantity-selection':
+      return {
+        kind: 'quantity-selection',
+        knownIds: [...submission.knownIds],
+        ...(submission.unknownId === undefined
+          ? {}
+          : { unknownId: submission.unknownId }),
+      };
+    case 'named-equation':
+    case 'academic-notation': {
+      const answer = submissionToAnswer(submission);
+      if (answer === undefined) {
+        return undefined;
+      }
+      const screen = submitPuzzle({
+        problem: generateItemProblem(plan, itemIndex),
+        themeId: options.themeId,
+        modeId: item.modeId,
+        locale: options.locale,
+        storySeed: item.problemSeed,
+        answer,
+      });
+      return screen.submission;
+    }
+  }
+}
+
+function submissionToAnswer(
+  submission: SnapshotSubmission,
+): LearnerAnswer | QuantitySelection | undefined {
+  switch (submission.kind) {
+    case 'quantity-selection':
+      return {
+        knownIds: submission.knownIds,
+        ...(submission.unknownId === undefined
+          ? {}
+          : { unknownId: submission.unknownId }),
+      };
+    case 'named-equation':
+      return { kind: 'text', input: submission.input };
+    case 'academic-notation':
+      return { kind: 'text', input: submission.input };
+  }
+}
+
+function restoredScreen(
+  options: StartSessionOptions,
+  plan: SessionPlan,
+  currentIndex: number,
+  answerLog: readonly SessionItemLog[],
+): PuzzleScreen | undefined {
+  const item = plan.items[currentIndex];
+  if (item === undefined) {
+    return undefined;
+  }
+  const logEntry = answerLog.find(
+    (entry) => entry.itemIndex === item.index,
+  );
+  if (logEntry === undefined) {
+    return composeItemScreen(options, plan, currentIndex);
+  }
+  const problem = generateItemProblem(plan, currentIndex);
+  const answer = submissionToAnswer(
+    snapshotSubmission(logEntry.submission),
+  );
+  if (answer === undefined) {
+    return composeItemScreen(options, plan, currentIndex);
+  }
+  return submitPuzzle({
+    problem,
+    themeId: options.themeId,
+    modeId: item.modeId,
+    locale: options.locale,
+    storySeed: item.problemSeed,
+    answer,
+  });
+}
+
+function latestAnswerPerItem(
+  log: readonly SessionItemLog[],
+): SessionItemLog[] {
+  const latest = new Map<number, SessionItemLog>();
+  for (const entry of log) {
+    latest.set(entry.itemIndex, entry);
+  }
+  return [...latest.values()].sort(
+    (left, right) => left.itemIndex - right.itemIndex,
+  );
+}
+
 type InternalSessionState = {
-  options: StartSessionOptions;
+  options: SessionCompositionOptions;
   plan: SessionPlan;
   currentIndex: number;
   answerLog: readonly SessionItemLog[];
@@ -88,7 +375,7 @@ type InternalSessionState = {
 };
 
 function createActiveSession(
-  options: StartSessionOptions,
+  options: SessionCompositionOptions,
   plan: SessionPlan,
   currentIndex: number,
   answerLog: readonly SessionItemLog[],
@@ -119,6 +406,7 @@ function createActiveSession(
       themeId: options.themeId,
       locale: options.locale,
     },
+    runId: options.runId,
     plan,
     status: 'active',
     currentIndex,
@@ -218,7 +506,7 @@ function createActiveSession(
 }
 
 function createCompletedSession(
-  options: StartSessionOptions,
+  options: SessionCompositionOptions,
   plan: SessionPlan,
   answerLog: readonly SessionItemLog[],
   finalScreen: PuzzleScreen | undefined,
@@ -233,6 +521,7 @@ function createCompletedSession(
       themeId: options.themeId,
       locale: options.locale,
     },
+    runId: options.runId,
     plan,
     status: 'complete',
     currentIndex: plan.length - 1,
