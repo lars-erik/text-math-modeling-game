@@ -43,7 +43,7 @@ export const nb = {
     },
     countFact: {
       activeDrones: ({ count, noun }) =>
-        `Det driver også ${count} identiske aktive ${noun}.`,
+        `Et skip driver også ${count} identiske aktive ${noun}.`,
     },
     perItemFact: {
       droneDraw: ({ value, unit }) =>
@@ -61,7 +61,7 @@ export const nb = {
       basePower: ({ noun }) =>
         `Hvor mye effekt bruker ${noun}et til grunnleggende systemer?`,
       droneCount: ({ noun }) =>
-        `Hvor mange ${noun} driver den?`,
+        `Hvor mange ${noun} driver skipet?`,
       totalPower: ({ noun }) =>
         `Hvor mye effekt trekker skipet og dronene til sammen?`,
       totalDronePower: ({ noun }) =>

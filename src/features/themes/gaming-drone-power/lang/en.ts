@@ -43,7 +43,7 @@ export const en = {
     },
     countFact: {
       activeDrones: ({ count, noun }) =>
-        `It also powers ${count} identical active ${noun}.`,
+        `A ship also powers ${count} identical active ${noun}.`,
     },
     perItemFact: {
       droneDraw: ({ value, unit }) =>
@@ -61,7 +61,7 @@ export const en = {
       basePower: ({ noun }) =>
         `How much power does the ${noun} use for basic systems?`,
       droneCount: ({ noun }) =>
-        `How many ${noun} does it power?`,
+        `How many ${noun} does the ship power?`,
       totalPower: ({ noun }) =>
         `How much power do the ship and its ${noun} draw in total?`,
       totalDronePower: ({ noun }) =>

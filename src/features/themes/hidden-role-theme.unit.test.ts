@@ -199,6 +199,32 @@ test('every theme renders all mathematically necessary known facts into the stor
   }
 });
 
+test('drone-power count wording never depends on an unstated ship subject', () => {
+  const variants = [
+    generateFamilyCase('total-from-parts', { seed: 91, hiddenRole: 'base' }),
+    generateFamilyCase('groups-total', { seed: 91, hiddenRole: 'per-item' }),
+    generateFamilyCase('groups-total', { seed: 91, hiddenRole: 'count' }),
+    generateFamilyCase('groups-total', { seed: 91, hiddenRole: 'total' }),
+  ];
+  for (const variant of variants) {
+    for (const locale of locales) {
+      const story = presentTheme(
+        'gaming.drone-power',
+        variant.problem,
+        locale,
+        0,
+      ).story.text;
+      expect(story, `${locale}/${variant.replay.hiddenRole}`).not.toMatch(
+        /\b(It also powers|does it power)\b/i,
+      );
+      expect(story, `${locale}/${variant.replay.hiddenRole}`).not.toMatch(
+        /\b(Det driver ogs\u00e5|driver den\?)\b/i,
+      );
+      expect(story).toMatch(/ship|skip/i);
+    }
+  }
+});
+
 test('theme projection stays invariant across hidden-role variants', () => {
   for (const familyId of ['total-from-parts', 'groups-total'] as const) {
     const reference = generateFamilyCase(familyId, { seed: 91 });
