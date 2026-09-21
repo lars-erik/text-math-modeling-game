@@ -19,6 +19,7 @@ export type AppControllerOptions = {
   root: { querySelector: (tagName: string) => ViewElement | null };
   history: HistoryAdapter;
   views: Readonly<Record<string, ViewBinding>>;
+  validateRoute?: (route: Route) => void;
 };
 
 export type AppController = {
@@ -99,6 +100,9 @@ export function startAppController(
     current = { name: route.name, routeParams: new Map(route.routeParams) };
   };
 
+  if (options.validateRoute !== undefined) {
+    options.validateRoute(current);
+  }
   applyRoute(current);
   if (options.initialHash === '') {
     options.history.replace(formatHash(current), options.basePath);
@@ -108,6 +112,9 @@ export function startAppController(
     const popped = parseHash(options.getHash());
     if (formatHash(popped) === formatHash(current)) {
       return;
+    }
+    if (options.validateRoute !== undefined) {
+      options.validateRoute(popped);
     }
     applyRoute(popped);
   });
@@ -120,6 +127,9 @@ export function startAppController(
     navigate: (route: Route) => {
       const binding = bindingFor(route.name);
       elementFor(binding);
+      if (options.validateRoute !== undefined) {
+        options.validateRoute(route);
+      }
       applyRoute(route);
       options.history.push(formatHash(route), options.basePath);
     },
