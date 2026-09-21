@@ -1,4 +1,4 @@
-import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T as u,_ as d,a as f,d as p,f as m,g as h,h as g,i as _,j as v,k as y,m as b,n as x,o as S,p as C,r as w,t as T,v as E,w as D}from"./academic-relation-By4lgCE6.js";var O=class extends w{static properties={choices:{attribute:!1},selectedChoiceId:{attribute:!1},legend:{attribute:!1},checkLabel:{attribute:!1}};static styles=f`
+import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T as u,_ as d,a as f,d as p,f as m,g as h,h as g,i as _,j as v,k as y,m as b,n as x,o as S,p as C,r as w,t as T,v as E,w as D}from"./academic-relation-B72PV4NA.js";var O=class extends w{static properties={choices:{attribute:!1},selectedChoiceId:{attribute:!1},legend:{attribute:!1},checkLabel:{attribute:!1}};static styles=f`
     :host {
       display: block;
       min-width: 0;
@@ -276,7 +276,91 @@ import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T a
         </fieldset>
         <button type="submit">${this.checkLabel}</button>
       </form>
-    `}handleSubmit(e){if(e.preventDefault(),!(e.currentTarget instanceof HTMLFormElement))return;let t=new FormData(e.currentTarget),n=t.get(`unknown-quantity`);if(typeof n!=`string`)return;let r={knownIds:t.getAll(`known-quantity`).filter(e=>typeof e==`string`),unknownId:n};this.dispatchEvent(new CustomEvent(`puzzle-quantity-selection`,{bubbles:!0,composed:!0,detail:r}))}};customElements.get(`story-quantities-input`)===void 0&&customElements.define(`story-quantities-input`,N);var P=class extends w{static properties={heading:{type:String},sourceLabel:{attribute:`source-label`,type:String},targetLabel:{attribute:`target-label`,type:String},feedbackLabel:{attribute:`feedback-label`,type:String},prompt:{type:String},feedback:{type:String},replayLabel:{attribute:`replay-label`,type:String},hasReplay:{attribute:`has-replay`,type:Boolean}};static styles=f`
+    `}handleSubmit(e){if(e.preventDefault(),!(e.currentTarget instanceof HTMLFormElement))return;let t=new FormData(e.currentTarget),n=t.get(`unknown-quantity`);if(typeof n!=`string`)return;let r={knownIds:t.getAll(`known-quantity`).filter(e=>typeof e==`string`),unknownId:n};this.dispatchEvent(new CustomEvent(`puzzle-quantity-selection`,{bubbles:!0,composed:!0,detail:r}))}};customElements.get(`story-quantities-input`)===void 0&&customElements.define(`story-quantities-input`,N);var P=class extends w{static properties={candidates:{attribute:!1},selectedChoiceId:{attribute:!1},legend:{attribute:!1},checkLabel:{attribute:!1}};static styles=f`
+    :host {
+      display: block;
+      min-width: 0;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    form,
+    fieldset {
+      display: grid;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+    fieldset {
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+    legend {
+      margin-block-end: 0.5rem;
+      font-weight: 700;
+    }
+    label {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      min-width: 0;
+      padding: 0.7rem 0.75rem;
+      border: 1px solid #c5cbd1;
+      border-radius: 0.35rem;
+      background: #fff;
+      overflow-wrap: anywhere;
+      cursor: pointer;
+    }
+    label:has(input:checked) {
+      border-color: #285f78;
+      background: #edf5f8;
+    }
+    input {
+      flex: 0 0 auto;
+      width: 1.15rem;
+      height: 1.15rem;
+      margin: 0.15rem 0 0;
+      accent-color: #285f78;
+    }
+    button {
+      justify-self: start;
+      min-height: 2.75rem;
+      padding: 0.6rem 1rem;
+      border: 1px solid #17475d;
+      border-radius: 0.35rem;
+      background: #285f78;
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    @media (max-width: 30rem) {
+      button {
+        width: 100%;
+      }
+    }
+  `;constructor(){super(),this.candidates=[],this.selectedChoiceId=void 0,this.legend=`Choose the matching situation`,this.checkLabel=`Check`}render(){return _`
+      <form @submit=${this.handleSubmit}>
+        <fieldset>
+          <legend>${this.legend}</legend>
+          ${this.candidates.map(e=>_`
+              <div>
+                <label>
+                  <input
+                    type="radio"
+                    name="story-choice"
+                    value=${e.id}
+                    .checked=${e.id===this.selectedChoiceId}
+                    required
+                  />
+                  ${e.label}
+                </label>
+              </div>
+            `)}
+        </fieldset>
+        <button type="submit">${this.checkLabel}</button>
+      </form>
+    `}handleSubmit(e){if(e.preventDefault(),!(e.currentTarget instanceof HTMLFormElement))return;let t=new FormData(e.currentTarget).get(`story-choice`);typeof t==`string`&&(this.selectedChoiceId=t,this.dispatchEvent(new CustomEvent(`puzzle-answer`,{bubbles:!0,composed:!0,detail:{kind:`story-choice`,choiceId:t}})))}};customElements.get(`story-choice-input`)===void 0&&customElements.define(`story-choice-input`,P);var F=class extends w{static properties={heading:{type:String},sourceLabel:{attribute:`source-label`,type:String},targetLabel:{attribute:`target-label`,type:String},feedbackLabel:{attribute:`feedback-label`,type:String},prompt:{type:String},feedback:{type:String},replayLabel:{attribute:`replay-label`,type:String},hasReplay:{attribute:`has-replay`,type:Boolean}};static styles=f`
     :host {
       --border: #c5cbd1;
       --surface: #ffffff;
@@ -486,7 +570,7 @@ import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T a
               </details>
             `:null}
       </main>
-    `}};customElements.get(`puzzle-shell`)===void 0&&customElements.define(`puzzle-shell`,P);var F=class extends w{static properties={seed:{type:Number},familyId:{attribute:`family-id`,type:String},hiddenRole:{attribute:`hidden-role`,type:String},themeId:{attribute:`theme-id`,type:String},modeId:{attribute:`mode-id`,type:String},locale:{type:String},menuLabel:{attribute:!1},familyLabel:{attribute:!1},hiddenRoleLabel:{attribute:!1},perItemUnknownLabel:{attribute:!1},baseUnknownLabel:{attribute:!1},countUnknownLabel:{attribute:!1},totalUnknownLabel:{attribute:!1},totalFromPartsLabel:{attribute:!1},groupsTotalLabel:{attribute:!1},scenarioLabel:{attribute:!1},dronePowerLabel:{attribute:!1},creatorFollowersLabel:{attribute:!1},taskLabel:{attribute:!1},storyToQuantitiesLabel:{attribute:!1},quantitiesToNamedEquationLabel:{attribute:!1},namedEquationToAcademicNotationLabel:{attribute:!1},academicNotationToNamedEquationLabel:{attribute:!1},seedLabel:{attribute:!1},showLabel:{attribute:!1},startSessionLabel:{attribute:!1}};static styles=f`
+    `}};customElements.get(`puzzle-shell`)===void 0&&customElements.define(`puzzle-shell`,F);var I=class extends w{static properties={seed:{type:Number},familyId:{attribute:`family-id`,type:String},hiddenRole:{attribute:`hidden-role`,type:String},themeId:{attribute:`theme-id`,type:String},modeId:{attribute:`mode-id`,type:String},locale:{type:String},menuLabel:{attribute:!1},familyLabel:{attribute:!1},hiddenRoleLabel:{attribute:!1},perItemUnknownLabel:{attribute:!1},baseUnknownLabel:{attribute:!1},countUnknownLabel:{attribute:!1},totalUnknownLabel:{attribute:!1},totalFromPartsLabel:{attribute:!1},groupsTotalLabel:{attribute:!1},scenarioLabel:{attribute:!1},dronePowerLabel:{attribute:!1},creatorFollowersLabel:{attribute:!1},taskLabel:{attribute:!1},storyToQuantitiesLabel:{attribute:!1},quantitiesToNamedEquationLabel:{attribute:!1},namedEquationToAcademicNotationLabel:{attribute:!1},academicNotationToNamedEquationLabel:{attribute:!1},namedModelToStoryLabel:{attribute:!1},seedLabel:{attribute:!1},showLabel:{attribute:!1},startSessionLabel:{attribute:!1}};static styles=f`
     :host {
       display: block;
       min-width: 0;
@@ -543,7 +627,7 @@ import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T a
         width: 100%;
       }
     }
-  `;constructor(){super(),this.seed=17,this.familyId=`total-from-parts`,this.hiddenRole=`per-item`,this.themeId=`gaming.drone-power`,this.modeId=`story-to-quantities`,this.locale=`en`,this.menuLabel=`Puzzle menu`,this.familyLabel=`Problem family`,this.hiddenRoleLabel=`Unknown quantity`,this.perItemUnknownLabel=`Value per item`,this.baseUnknownLabel=`Base value`,this.countUnknownLabel=`Number of items`,this.totalUnknownLabel=`Total`,this.totalFromPartsLabel=`Total from base and parts`,this.groupsTotalLabel=`Equal groups`,this.scenarioLabel=`Scenario`,this.dronePowerLabel=`Spaceship and drones`,this.creatorFollowersLabel=`Creator and followers`,this.taskLabel=`Task`,this.storyToQuantitiesLabel=`Story to quantities`,this.quantitiesToNamedEquationLabel=`Quantities to named equation`,this.namedEquationToAcademicNotationLabel=`Named equation to academic notation`,this.academicNotationToNamedEquationLabel=`Academic notation to named equation`,this.seedLabel=`Seed`,this.showLabel=`Show puzzle`,this.startSessionLabel=`Start session`}willUpdate(e){if(e.has(`familyId`)){let e=u[this.familyId].hiddenRoles;e.includes(this.hiddenRole)||(this.hiddenRole=e.includes(`per-item`)?n:e[0])}}render(){return _`
+  `;constructor(){super(),this.seed=17,this.familyId=`total-from-parts`,this.hiddenRole=`per-item`,this.themeId=`gaming.drone-power`,this.modeId=`story-to-quantities`,this.locale=`en`,this.menuLabel=`Puzzle menu`,this.familyLabel=`Problem family`,this.hiddenRoleLabel=`Unknown quantity`,this.perItemUnknownLabel=`Value per item`,this.baseUnknownLabel=`Base value`,this.countUnknownLabel=`Number of items`,this.totalUnknownLabel=`Total`,this.totalFromPartsLabel=`Total from base and parts`,this.groupsTotalLabel=`Equal groups`,this.scenarioLabel=`Scenario`,this.dronePowerLabel=`Spaceship and drones`,this.creatorFollowersLabel=`Creator and followers`,this.taskLabel=`Task`,this.storyToQuantitiesLabel=`Story to quantities`,this.quantitiesToNamedEquationLabel=`Quantities to named equation`,this.namedEquationToAcademicNotationLabel=`Named equation to academic notation`,this.academicNotationToNamedEquationLabel=`Academic notation to named equation`,this.namedModelToStoryLabel=`Named model to matching story`,this.seedLabel=`Seed`,this.showLabel=`Show puzzle`,this.startSessionLabel=`Start session`}willUpdate(e){if(e.has(`familyId`)){let e=u[this.familyId].hiddenRoles;e.includes(this.hiddenRole)||(this.hiddenRole=e.includes(`per-item`)?n:e[0])}}render(){return _`
       <form aria-label=${this.menuLabel} @submit=${this.handleSubmit}>
         <label>
           ${this.familyLabel}
@@ -594,6 +678,9 @@ import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T a
             <option value="academic-notation-to-named-equation">
               ${this.academicNotationToNamedEquationLabel}
             </option>
+            <option value="named-model-to-story">
+              ${this.namedModelToStoryLabel}
+            </option>
           </select>
         </label>
         <label>
@@ -615,7 +702,7 @@ import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T a
           ${this.startSessionLabel}
         </button>
       </form>
-    `}handleFamilyChange(e){e.currentTarget instanceof HTMLSelectElement&&D(e.currentTarget.value)&&(this.familyId=e.currentTarget.value)}labelForHiddenRole(e){switch(e){case`per-item`:return this.perItemUnknownLabel;case`base`:return this.baseUnknownLabel;case`count`:return this.countUnknownLabel;case`total`:return this.totalUnknownLabel}}handleSubmit(e){if(e.preventDefault(),!(e.currentTarget instanceof HTMLFormElement))return;let t=new FormData(e.currentTarget),n=t.get(`family`),i=t.get(`hidden-role`),o=t.get(`scenario`),l=t.get(`task`),f=Number(t.get(`seed`)),p=e.submitter instanceof HTMLButtonElement?e.submitter.value:void 0;if(typeof n==`string`&&r.includes(n)&&typeof i==`string`&&s(i)&&u[n].hiddenRoles.includes(i)&&typeof o==`string`&&c(o)&&typeof l==`string`&&a(l)&&Number.isInteger(f)){if(p===`session`){this.dispatchEvent(new CustomEvent(d,{bubbles:!0,composed:!0,detail:{seed:f,themeId:o,locale:this.locale}}));return}this.dispatchEvent(new CustomEvent(h,{bubbles:!0,composed:!0,detail:{seed:f,familyId:n,hiddenRole:i,themeId:o,modeId:l,locale:this.locale}}))}}};customElements.get(`puzzle-menu`)===void 0&&customElements.define(`puzzle-menu`,F);var I=class extends w{static properties={relation:{attribute:!1},symbols:{attribute:!1},adapter:{attribute:!1}};static styles=f`
+    `}handleFamilyChange(e){e.currentTarget instanceof HTMLSelectElement&&D(e.currentTarget.value)&&(this.familyId=e.currentTarget.value)}labelForHiddenRole(e){switch(e){case`per-item`:return this.perItemUnknownLabel;case`base`:return this.baseUnknownLabel;case`count`:return this.countUnknownLabel;case`total`:return this.totalUnknownLabel}}handleSubmit(e){if(e.preventDefault(),!(e.currentTarget instanceof HTMLFormElement))return;let t=new FormData(e.currentTarget),n=t.get(`family`),i=t.get(`hidden-role`),o=t.get(`scenario`),l=t.get(`task`),f=Number(t.get(`seed`)),p=e.submitter instanceof HTMLButtonElement?e.submitter.value:void 0;if(typeof n==`string`&&r.includes(n)&&typeof i==`string`&&s(i)&&u[n].hiddenRoles.includes(i)&&typeof o==`string`&&c(o)&&typeof l==`string`&&a(l)&&Number.isInteger(f)){if(p===`session`){this.dispatchEvent(new CustomEvent(d,{bubbles:!0,composed:!0,detail:{seed:f,themeId:o,locale:this.locale}}));return}this.dispatchEvent(new CustomEvent(h,{bubbles:!0,composed:!0,detail:{seed:f,familyId:n,hiddenRole:i,themeId:o,modeId:l,locale:this.locale}}))}}};customElements.get(`puzzle-menu`)===void 0&&customElements.define(`puzzle-menu`,I);var L=class extends w{static properties={relation:{attribute:!1},symbols:{attribute:!1},adapter:{attribute:!1}};static styles=f`
     :host {
       display: block;
       min-width: 0;
@@ -624,7 +711,7 @@ import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T a
       min-width: 0;
       overflow-x: auto;
     }
-  `;constructor(){super(),this.relation=void 0,this.symbols={},this.adapter=M}render(){let e=this.relation?T(this.relation,this.symbols):``;return _`<div class="output" aria-label=${e}></div>`}updated(e){let t=this.renderRoot.querySelector(`.output`);t!==null&&this.relation!==void 0&&this.adapter.render(this.relation,this.symbols,t)}};customElements.get(`academic-notation-display`)===void 0&&customElements.define(`academic-notation-display`,I);var L=class extends w{static properties={seed:{type:String},family:{type:String},hiddenRole:{attribute:`hidden-role`,type:String},session:{type:String},themeId:{attribute:`theme`,type:String},modeId:{attribute:`mode`,type:String},inputMode:{attribute:`input-mode`,reflect:!0,type:String},locale:{reflect:!0,type:String},academicDisplayAdapter:{attribute:!1},screen:{state:!0},activeSession:{state:!0}};static styles=f`
+  `;constructor(){super(),this.relation=void 0,this.symbols={},this.adapter=M}render(){let e=this.relation?T(this.relation,this.symbols):``;return _`<div class="output" aria-label=${e}></div>`}updated(e){let t=this.renderRoot.querySelector(`.output`);t!==null&&this.relation!==void 0&&this.adapter.render(this.relation,this.symbols,t)}};customElements.get(`academic-notation-display`)===void 0&&customElements.define(`academic-notation-display`,L);var R=class extends w{static properties={seed:{type:String},family:{type:String},hiddenRole:{attribute:`hidden-role`,type:String},session:{type:String},themeId:{attribute:`theme`,type:String},modeId:{attribute:`mode`,type:String},inputMode:{attribute:`input-mode`,reflect:!0,type:String},locale:{reflect:!0,type:String},academicDisplayAdapter:{attribute:!1},screen:{state:!0},activeSession:{state:!0}};static styles=f`
     :host {
       display: block;
       min-width: 0;
@@ -776,13 +863,13 @@ import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T a
         padding: 0;
       }
     }
-  `;constructor(){super(),this.seed=`17`,this.family=l,this.hiddenRole=n,this.session=``,this.themeId=`gaming.drone-power`,this.modeId=`story-to-quantities`,this.inputMode=`text`,this.locale=`en`,this.academicDisplayAdapter=M,this.screen=void 0,this.generatedProblem=R(l,n,17),this.activeSession=void 0}willUpdate(e){if(e.has(`session`)||e.has(`themeId`)||e.has(`locale`)){let t=e.has(`locale`)&&!e.has(`session`)&&!e.has(`themeId`)&&this.activeSession!==void 0;this.activeSession=t?this.recordSession(this.activeSession?.withLocale(this.locale)):this.composeCurrentSession()}(e.has(`seed`)||e.has(`family`)||e.has(`hiddenRole`))&&(this.generatedProblem=R(this.currentFamilyId(),this.currentHiddenRole(),Number(this.seed))),(e.has(`seed`)||e.has(`family`)||e.has(`hiddenRole`)||e.has(`themeId`)||e.has(`modeId`)||e.has(`locale`)||e.has(`session`))&&(this.screen=this.activeSession===void 0?this.composeCurrentScreen():this.activeSession.screen)}composeCurrentSession(){if(!this.session||!c(this.themeId)||!i(this.locale))return;let e=this.sessionRunStore?.provide({seed:Number(this.session),themeId:this.themeId,locale:this.locale});return e===void 0?void 0:this.recordSession(e)}recordSession(e){return e!==void 0&&this.sessionRunStore?.record(e),e}composeCurrentScreen(){if(c(this.themeId)&&i(this.locale))return p({problem:this.generatedProblem,themeId:this.themeId,modeId:a(this.modeId)?this.modeId:`story-to-quantities`,locale:this.locale,storySeed:Number(this.seed)})}render(){if(!c(this.themeId))return _`<p role="alert">
+  `;constructor(){super(),this.seed=`17`,this.family=l,this.hiddenRole=n,this.session=``,this.themeId=`gaming.drone-power`,this.modeId=`story-to-quantities`,this.inputMode=`text`,this.locale=`en`,this.academicDisplayAdapter=M,this.screen=void 0,this.generatedProblem=z(l,n,17),this.activeSession=void 0}willUpdate(e){if(e.has(`session`)||e.has(`themeId`)||e.has(`locale`)){let t=e.has(`locale`)&&!e.has(`session`)&&!e.has(`themeId`)&&this.activeSession!==void 0;this.activeSession=t?this.recordSession(this.activeSession?.withLocale(this.locale)):this.composeCurrentSession()}(e.has(`seed`)||e.has(`family`)||e.has(`hiddenRole`))&&(this.generatedProblem=z(this.currentFamilyId(),this.currentHiddenRole(),Number(this.seed))),(e.has(`seed`)||e.has(`family`)||e.has(`hiddenRole`)||e.has(`themeId`)||e.has(`modeId`)||e.has(`locale`)||e.has(`session`))&&(this.screen=this.activeSession===void 0?this.composeCurrentScreen():this.activeSession.screen)}composeCurrentSession(){if(!this.session||!c(this.themeId)||!i(this.locale))return;let e=this.sessionRunStore?.provide({seed:Number(this.session),themeId:this.themeId,locale:this.locale});return e===void 0?void 0:this.recordSession(e)}recordSession(e){return e!==void 0&&this.sessionRunStore?.record(e),e}composeCurrentScreen(){if(c(this.themeId)&&i(this.locale))return p({problem:this.generatedProblem,themeId:this.themeId,modeId:a(this.modeId)?this.modeId:`story-to-quantities`,locale:this.locale,storySeed:Number(this.seed)})}render(){if(!c(this.themeId))return _`<p role="alert">
         Unknown scenario ${JSON.stringify(this.themeId)}.
       </p>`;if(this.activeSession!==void 0)return this.renderSession(this.activeSession);if(!a(this.modeId))return _`<p role="alert">
         Unknown task ${JSON.stringify(this.modeId)}.
       </p>`;if(!i(this.locale))return _`<p role="alert">
         Unknown locale ${JSON.stringify(this.locale)}.
-      </p>`;if(this.screen===void 0)return _`<p role="alert">Puzzle screen is unavailable.</p>`;let e=this.screen,t=v[this.locale],n=this.headingFor(e.screen,t);return this.renderShell({locale:this.locale,heading:n,prompt:e.screen.target.prompt,feedback:e.feedback?.message??``,replay:e.context.replay,menuSeed:Number(this.seed),menuModeId:a(this.modeId)?this.modeId:`story-to-quantities`,source:this.renderSource(e,t),input:this.renderInput(e,t)})}headingFor(e,t){switch(e.modeId){case`story-to-quantities`:return t.storyToQuantities.heading;case`quantities-to-named-equation`:return t.quantitiesToNamedEquation.heading;case`named-equation-to-academic-notation`:return t.namedEquationToAcademicNotation.heading;case`academic-notation-to-named-equation`:return t.academicNotationToNamedEquation.heading}}renderSource(e,t){let n=_`<p>${e.context.story}</p>`;switch(e.screen.modeId){case`story-to-quantities`:return n;case`quantities-to-named-equation`:return _`${n}${this.renderQuantityList(e)}`;case`named-equation-to-academic-notation`:return _`${n}${this.renderQuantityList(e)}
+      </p>`;if(this.screen===void 0)return _`<p role="alert">Puzzle screen is unavailable.</p>`;let e=this.screen,t=v[this.locale],n=this.headingFor(e.screen,t);return this.renderShell({locale:this.locale,heading:n,prompt:e.screen.target.prompt,feedback:e.feedback?.message??``,replay:e.context.replay,menuSeed:Number(this.seed),menuModeId:a(this.modeId)?this.modeId:`story-to-quantities`,source:this.renderSource(e,t),input:this.renderInput(e,t)})}headingFor(e,t){switch(e.modeId){case`story-to-quantities`:return t.storyToQuantities.heading;case`quantities-to-named-equation`:return t.quantitiesToNamedEquation.heading;case`named-equation-to-academic-notation`:return t.namedEquationToAcademicNotation.heading;case`academic-notation-to-named-equation`:return t.academicNotationToNamedEquation.heading;case`named-model-to-story`:return t.namedModelToStory.heading}}renderSource(e,t){let n=_`<p>${e.context.story}</p>`;switch(e.screen.modeId){case`story-to-quantities`:return n;case`quantities-to-named-equation`:return _`${n}${this.renderQuantityList(e)}`;case`named-equation-to-academic-notation`:return _`${n}${this.renderQuantityList(e)}
           <p class="equation">
             ${g(e.screen.source.relation,e.screen.source.names)}
           </p>
@@ -792,12 +879,15 @@ import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T a
             .symbols=${e.screen.source.symbols}
             .adapter=${this.academicDisplayAdapter}
           ></academic-notation-display>
-          ${this.renderSymbolKey(e.screen,t.academicNotationToNamedEquation.symbolKey)}`}}renderQuantityList(e){return _`<ul class="quantity-list">
+          ${this.renderSymbolKey(e.screen,t.academicNotationToNamedEquation.symbolKey)}`;case`named-model-to-story`:return _`${this.renderQuantityList(e)}
+          <p class="equation">
+            ${g(e.screen.source.relation,this.nameMapOf(e))}
+          </p>`}}renderQuantityList(e){return _`<ul class="quantity-list">
       ${e.context.quantities.map(e=>_`<li>
           ${e.variableName} =
           ${e.given.kind===`known`?e.given.value:`?`}
         </li>`)}
-    </ul>`}renderSymbolKey(e,t){return _`<section class="symbol-key" aria-label=${t}>
+    </ul>`}nameMapOf(e){return Object.fromEntries(e.context.quantities.map(e=>[e.id,e.variableName]))}renderSymbolKey(e,t){return _`<section class="symbol-key" aria-label=${t}>
       <h3>${t}</h3>
       <dl>
         ${e.symbolKey.map(e=>_`<dt>${e.symbol}</dt><dd>${e.variableName}</dd>`)}
@@ -809,7 +899,14 @@ import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T a
             .unknownLegend=${t.storyToQuantities.unknownLegend}
             .checkLabel=${t.controls.check}
           ></story-quantities-input>
-        </div>`;case`quantities-to-named-equation`:return this.renderNamedEquationInput(this.locale);case`named-equation-to-academic-notation`:return this.renderTextExpressionInput(e,t.namedEquationToAcademicNotation.inputLabel,t.controls.check);case`academic-notation-to-named-equation`:return this.renderTextExpressionInput(e,t.academicNotationToNamedEquation.inputLabel,t.controls.check)}}renderTextExpressionInput(e,t,n){let r=e.screen.input.kind===`expression`?e.screen.input.value:``,i=e.screen.modeId===`named-equation-to-academic-notation`&&e.feedback?.kind===`accepted`&&e.submission?.kind===`academic-notation`?e.submission.relation:void 0;return _`<div @puzzle-answer=${this.handleAnswer}>
+        </div>`;case`quantities-to-named-equation`:return this.renderNamedEquationInput(this.locale);case`named-equation-to-academic-notation`:return this.renderTextExpressionInput(e,t.namedEquationToAcademicNotation.inputLabel,t.controls.check);case`academic-notation-to-named-equation`:return this.renderTextExpressionInput(e,t.academicNotationToNamedEquation.inputLabel,t.controls.check);case`named-model-to-story`:return _`<div @puzzle-answer=${this.handleAnswer}>
+          <story-choice-input
+            .candidates=${e.screen.target.candidates}
+            .selectedChoiceId=${e.screen.input.selectedChoiceId}
+            .legend=${t.namedModelToStory.choiceLegend}
+            .checkLabel=${t.controls.check}
+          ></story-choice-input>
+        </div>`}}renderTextExpressionInput(e,t,n){let r=e.screen.input.kind===`expression`?e.screen.input.value:``,i=e.screen.modeId===`named-equation-to-academic-notation`&&e.feedback?.kind===`accepted`&&e.submission?.kind===`academic-notation`?e.submission.relation:void 0;return _`<div @puzzle-answer=${this.handleAnswer}>
       <named-equation-text-input
         .value=${r}
         .inputLabel=${t}
@@ -893,7 +990,7 @@ import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T a
             </li>`)}
         </ol>
       </section>
-    `}describeSubmission(e){switch(e.kind){case`quantity-selection`:return`known=[${e.knownIds.join(`, `)}] unknown=${e.unknownId??`none`}`;case`named-equation`:case`academic-notation`:return e.input}}handleNavigateHome(){this.dispatchEvent(new CustomEvent(E,{bubbles:!0,composed:!0,detail:{}}))}supportsHint(t){if(t.status!==`active`)return!1;let n=t.currentProblem,r=t.plan.items[t.currentIndex];return n===void 0||r===void 0?!1:e({modeId:r.modeId,guidance:n.guidance??[]})!==void 0}modeLabel(e,t){switch(e){case`story-to-quantities`:return t.storyToQuantities.heading;case`quantities-to-named-equation`:return t.quantitiesToNamedEquation.heading;case`named-equation-to-academic-notation`:return t.namedEquationToAcademicNotation.heading;case`academic-notation-to-named-equation`:return t.academicNotationToNamedEquation.heading}}handleSessionNext(){this.activeSession!==void 0&&(this.activeSession=this.recordSession(this.activeSession.next()),this.screen=this.activeSession?.screen)}handleSessionHint(){this.activeSession!==void 0&&(this.activeSession=this.recordSession(this.activeSession.requestHint()))}renderShell({locale:e,heading:t,positionLabel:n,prompt:r,source:i,input:a,feedback:o,replay:s,menuSeed:c,menuModeId:l}){let u=v[e],d=x[e]??x.en;return _`
+    `}describeSubmission(e){switch(e.kind){case`quantity-selection`:return`known=[${e.knownIds.join(`, `)}] unknown=${e.unknownId??`none`}`;case`named-equation`:case`academic-notation`:return e.input;case`story-choice`:return`choice=${e.choiceId}`}}handleNavigateHome(){this.dispatchEvent(new CustomEvent(E,{bubbles:!0,composed:!0,detail:{}}))}supportsHint(t){if(t.status!==`active`)return!1;let n=t.currentProblem,r=t.plan.items[t.currentIndex];return n===void 0||r===void 0?!1:e({modeId:r.modeId,guidance:n.guidance??[]})!==void 0}modeLabel(e,t){switch(e){case`story-to-quantities`:return t.storyToQuantities.heading;case`quantities-to-named-equation`:return t.quantitiesToNamedEquation.heading;case`named-equation-to-academic-notation`:return t.namedEquationToAcademicNotation.heading;case`academic-notation-to-named-equation`:return t.academicNotationToNamedEquation.heading;case`named-model-to-story`:return t.namedModelToStory.heading}}handleSessionNext(){this.activeSession!==void 0&&(this.activeSession=this.recordSession(this.activeSession.next()),this.screen=this.activeSession?.screen)}handleSessionHint(){this.activeSession!==void 0&&(this.activeSession=this.recordSession(this.activeSession.requestHint()))}renderShell({locale:e,heading:t,positionLabel:n,prompt:r,source:i,input:a,feedback:o,replay:s,menuSeed:c,menuModeId:l}){let u=v[e],d=x[e]??x.en;return _`
       <puzzle-shell
         .heading=${n===void 0?t:`${t} — ${n}`}
         .sourceLabel=${u.common.source}
@@ -941,6 +1038,7 @@ import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T a
           .quantitiesToNamedEquationLabel=${u.puzzleMenu.quantitiesToNamedEquation}
           .namedEquationToAcademicNotationLabel=${u.puzzleMenu.namedEquationToAcademicNotation}
           .academicNotationToNamedEquationLabel=${u.puzzleMenu.academicNotationToNamedEquation}
+          .namedModelToStoryLabel=${u.puzzleMenu.namedModelToStory}
           .seedLabel=${u.puzzleMenu.seed}
           .showLabel=${u.puzzleMenu.show}
           .startSessionLabel=${u.puzzleMenu.startSession}
@@ -958,4 +1056,4 @@ import{A as e,C as t,D as n,E as r,F as i,M as a,N as o,O as s,P as c,S as l,T a
               <dd>${s.storySeed}</dd>
             </dl>`}
       </puzzle-shell>
-    `}};function R(e,n,r){return t(e,{seed:Number.isSafeInteger(r)?r:17,hiddenRole:n}).problem}customElements.get(`math-modeling-puzzle`)===void 0&&customElements.define(`math-modeling-puzzle`,L);export{L as MathModelingPuzzle};
+    `}};function z(e,n,r){return t(e,{seed:Number.isSafeInteger(r)?r:17,hiddenRole:n}).problem}customElements.get(`math-modeling-puzzle`)===void 0&&customElements.define(`math-modeling-puzzle`,R);export{R as MathModelingPuzzle};
