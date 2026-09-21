@@ -99,18 +99,21 @@ test('#37 the named-equation-to-academic-notation mode accepts swapped sides', (
   const canonical = namedEquationToAcademicNotationMode.submit({
     problem: totalFromPartsProblem,
     locale: 'en',
+    names: {},
     answer: { kind: 'text', input: '210 = 30 + 4*p' },
   });
   expect(canonical.feedback?.kind).toBe('accepted');
   const swapped = namedEquationToAcademicNotationMode.submit({
     problem: totalFromPartsProblem,
     locale: 'en',
+    names: {},
     answer: { kind: 'text', input: '30 + 4*p = 210' },
   });
   expect(swapped.feedback?.kind).toBe('accepted');
   const regrouped = namedEquationToAcademicNotationMode.submit({
     problem: totalFromPartsProblem,
     locale: 'en',
+    names: {},
     answer: { kind: 'text', input: '210 = 4*(30 + p)' },
   });
   expect(regrouped.feedback?.kind).toBe('structural-mismatch');

@@ -1,7 +1,7 @@
 import {
-  totalFromParts,
-  totalFromPartsGuidance,
-} from '../problem-model/total-from-parts';
+  groupsTotal,
+  groupsTotalGuidance,
+} from '../problem-model/groups-total';
 import type { AnswerKey, ConceptId, Problem } from '../problem-model/problem';
 import {
   createMulberry32Random,
@@ -13,75 +13,63 @@ import {
   type RandomSource,
 } from './random-source';
 
-export const totalFromPartsGeneratorVersion = 'total-from-parts-v1';
-export const maximumTotalFromPartsSeed = maximumGenerationSeed;
-export { createMulberry32Random };
-export type { RandomSource, PositiveIntegerRange };
+export const groupsTotalGeneratorVersion = 'groups-total-v1';
+export { maximumGenerationSeed };
 
-export type TotalFromPartsGenerationConfig = {
-  base: PositiveIntegerRange;
+export type GroupsTotalGenerationConfig = {
   count: PositiveIntegerRange;
   unitValue: PositiveIntegerRange;
   concepts: readonly ConceptId[];
 };
 
-export const defaultTotalFromPartsConcepts = [
-  'arithmetic.addition',
+export const defaultGroupsTotalConcepts = [
   'arithmetic.multiplication',
   'algebra.variable',
   'algebra.equation',
   'linear.one-unknown',
 ] as const satisfies readonly ConceptId[];
 
-export const defaultTotalFromPartsGenerationConfig = {
-  base: { min: 10, max: 40 },
-  count: { min: 2, max: 8 },
-  unitValue: { min: 3, max: 20 },
-  concepts: defaultTotalFromPartsConcepts,
-} as const satisfies TotalFromPartsGenerationConfig;
+export const defaultGroupsTotalGenerationConfig = {
+  count: { min: 2, max: 12 },
+  unitValue: { min: 3, max: 25 },
+  concepts: defaultGroupsTotalConcepts,
+} as const satisfies GroupsTotalGenerationConfig;
 
-export type GeneratedProblemCase = {
+export type GeneratedGroupsTotalCase = {
   problem: Problem;
   answerKey: AnswerKey;
   replay: {
     seed: number;
     generatorVersion: string;
-    config: TotalFromPartsGenerationConfig;
+    config: GroupsTotalGenerationConfig;
   };
 };
 
 const unsafeTotalError =
   'Generation config must guarantee a positive safe integer result.';
 
-export function generateTotalFromPartsCase({
+export function generateGroupsTotalCase({
   seed,
   config,
   randomSource,
 }: {
   seed: number;
-  config: TotalFromPartsGenerationConfig;
+  config: GroupsTotalGenerationConfig;
   randomSource?: RandomSource;
-}): GeneratedProblemCase {
+}): GeneratedGroupsTotalCase {
   validateGenerationRequest(seed, config);
   const resolvedRandomSource =
     randomSource ?? createMulberry32Random(seed);
 
-  const base = nextInteger(resolvedRandomSource, config.base);
   const count = nextInteger(resolvedRandomSource, config.count);
   const unitValue = nextInteger(resolvedRandomSource, config.unitValue);
-  const total = base + count * unitValue;
+  const total = count * unitValue;
 
   return {
     problem: {
-      id: `total-from-parts-seed-${seed}`,
+      id: `groups-total-seed-${seed}`,
       concepts: config.concepts,
       quantities: [
-        {
-          id: 'base',
-          dimension: 'amount',
-          role: 'base',
-          given: { kind: 'known', value: base },
-        },
         {
           id: 'count',
           dimension: 'item',
@@ -101,16 +89,15 @@ export function generateTotalFromPartsCase({
           given: { kind: 'known', value: total },
         },
       ],
-      relation: totalFromParts,
-      guidance: totalFromPartsGuidance,
+      relation: groupsTotal,
+      guidance: groupsTotalGuidance,
       replay: {
         seed,
-        generatorVersion: totalFromPartsGeneratorVersion,
+        generatorVersion: groupsTotalGeneratorVersion,
       },
     },
     answerKey: {
       bindings: {
-        base,
         count,
         unitValue,
         total,
@@ -118,7 +105,7 @@ export function generateTotalFromPartsCase({
     },
     replay: {
       seed,
-      generatorVersion: totalFromPartsGeneratorVersion,
+      generatorVersion: groupsTotalGeneratorVersion,
       config: cloneConfig(config),
     },
   };
@@ -126,36 +113,34 @@ export function generateTotalFromPartsCase({
 
 function validateGenerationRequest(
   seed: number,
-  config: TotalFromPartsGenerationConfig,
+  config: GroupsTotalGenerationConfig,
 ): void {
   validateSeed(seed);
 
-  for (const range of [config.base, config.count, config.unitValue]) {
+  for (const range of [config.count, config.unitValue]) {
     validatePositiveIntegerRange(range);
   }
 
-  const supportedConcepts = new Set<ConceptId>(defaultTotalFromPartsConcepts);
+  const supportedConcepts = new Set<ConceptId>(defaultGroupsTotalConcepts);
   const unsupportedConcepts = config.concepts.filter(
     (concept) => !supportedConcepts.has(concept),
   );
   if (unsupportedConcepts.length > 0) {
     throw new Error(
-      `Total-from-parts generation does not represent requested concepts: ${unsupportedConcepts.join(', ')}.`,
+      `Groups-total generation does not represent requested concepts: ${unsupportedConcepts.join(', ')}.`,
     );
   }
 
-  const maxTotal =
-    config.base.max + config.count.max * config.unitValue.max;
+  const maxTotal = config.count.max * config.unitValue.max;
   if (!Number.isSafeInteger(maxTotal)) {
     throw new Error(unsafeTotalError);
   }
 }
 
 function cloneConfig(
-  config: TotalFromPartsGenerationConfig,
-): TotalFromPartsGenerationConfig {
+  config: GroupsTotalGenerationConfig,
+): GroupsTotalGenerationConfig {
   return {
-    base: { ...config.base },
     count: { ...config.count },
     unitValue: { ...config.unitValue },
     concepts: [...config.concepts],
