@@ -1,11 +1,6 @@
 import type { GuidanceEntry } from '../../problem-model/problem';
 
 export type PuzzleLocaleResources = {
-  home: {
-    heading: string;
-    puzzleLabel: string;
-    sessionLabel: string;
-  };
   language: {
     label: string;
     en: string;

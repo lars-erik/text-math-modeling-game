@@ -1,7 +1,7 @@
 export type HistoryAdapter = {
   push: (hash: string, basePath: string) => void;
   replace: (hash: string, basePath: string) => void;
-  onRoutePopped: (listener: () => void) => void;
+  onRouteChanged: (listener: () => void) => void;
   dispose?: () => void;
 };
 
@@ -41,7 +41,7 @@ export function browserHistoryAdapter(
     replace: (hash: string, basePath: string) => {
       history.replaceState(null, '', `${basePath}${hash}`);
     },
-    onRoutePopped: (listener: () => void) => {
+    onRouteChanged: (listener: () => void) => {
       routeChangeListeners.push(listener);
     },
     dispose: () => {

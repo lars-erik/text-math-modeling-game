@@ -14,7 +14,7 @@ function recordingAdapter(
     push: (hash, basePath) => onWrite({ url: `${basePath}${hash}`, mode: 'push' }),
     replace: (hash, basePath) =>
       onWrite({ url: `${basePath}${hash}`, mode: 'replace' }),
-    onRoutePopped: () => {},
+    onRouteChanged: () => {},
   });
 }
 
@@ -66,7 +66,7 @@ test('the browser adapter delegates to pushState, replaceState and popstate', ()
     expect.arrayContaining(['popstate', 'hashchange']),
   );
   const popped: string[] = [];
-  adapter.onRoutePopped(() => popped.push('popped'));
+  adapter.onRouteChanged(() => popped.push('popped'));
   adapter.dispose?.();
   expect(removeEventListener).toHaveBeenCalledWith(
     'popstate',
@@ -88,7 +88,7 @@ test('route change notifications reach registered listeners from both browser ev
     } as unknown as Pick<Window, 'addEventListener' | 'removeEventListener'>,
   });
   const popped: string[] = [];
-  adapter.onRoutePopped(() => popped.push('one'));
+  adapter.onRouteChanged(() => popped.push('one'));
   expect(listeners).toHaveLength(2);
   for (const listener of [...listeners]) {
     listener();

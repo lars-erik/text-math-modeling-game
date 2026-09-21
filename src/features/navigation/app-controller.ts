@@ -16,7 +16,6 @@ export type AppControllerOptions = {
   basePath: string;
   history: HistoryAdapter;
   destinations: Readonly<Record<string, Destination>>;
-  validateRoute?: (route: Route) => void;
 };
 
 export type AppController = {
@@ -43,29 +42,23 @@ export function startAppController(
 
   const applyRoute = (route: Route): void => {
     const destination = destinationFor(route.name);
+    destination.apply(route);
     for (const other of Object.values(destinations)) {
       other.view.hidden = true;
     }
-    destination.apply(route);
     destination.view.hidden = false;
     current = { name: route.name, routeParams: new Map(route.routeParams) };
   };
 
-  if (options.validateRoute !== undefined) {
-    options.validateRoute(current);
-  }
   applyRoute(current);
   if (options.initialHash === '') {
     options.history.replace(formatHash(current), options.basePath);
   }
 
-  options.history.onRoutePopped(() => {
+  options.history.onRouteChanged(() => {
     const changed = parseHash(options.getHash());
     if (formatHash(changed) === formatHash(current)) {
       return;
-    }
-    if (options.validateRoute !== undefined) {
-      options.validateRoute(changed);
     }
     applyRoute(changed);
   });
@@ -77,9 +70,6 @@ export function startAppController(
     }),
     navigate: (route: Route) => {
       destinationFor(route.name);
-      if (options.validateRoute !== undefined) {
-        options.validateRoute(route);
-      }
       applyRoute(route);
       options.history.push(formatHash(route), options.basePath);
     },

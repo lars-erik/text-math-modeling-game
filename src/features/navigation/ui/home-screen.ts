@@ -1,5 +1,6 @@
 import { css, html, LitElement } from 'lit';
-import { puzzleResources, type PuzzleLocale } from '../../puzzle/lang';
+import { navigationResources } from '../lang';
+import type { PuzzleLocale } from '../../puzzle/lang';
 import {
   navigatePuzzleRequestEvent,
   navigateSessionRequestEvent,
@@ -58,7 +59,8 @@ export class HomeScreen extends LitElement {
 
   render() {
     const resources =
-      puzzleResources[this.locale as PuzzleLocale] ?? puzzleResources.en;
+      navigationResources[this.locale as PuzzleLocale] ??
+      navigationResources.en;
     return html`
       <section>
         <h1>${resources.home.heading}</h1>

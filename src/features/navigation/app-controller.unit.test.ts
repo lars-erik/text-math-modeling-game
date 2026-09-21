@@ -18,7 +18,7 @@ type Harness = {
   home: FakeView;
   puzzle: FakeView;
   writes: Array<{ hash: string; mode: 'push' | 'replace' }>;
-  pops: Array<() => void>;
+  routeChanges: Array<() => void>;
   setHash: (hash: string) => void;
   controller: ReturnType<typeof startAppController>;
 };
@@ -34,12 +34,12 @@ function harness(initialHash: string): Harness {
   const home = new FakeView(() => {});
   const puzzle = new FakeView(() => {});
   const writes: Harness['writes'] = [];
-  const pops: Array<() => void> = [];
+  const routeChanges: Array<() => void> = [];
   let currentHash = initialHash;
   const history: HistoryAdapter = {
     push: (hash: string) => writes.push({ hash, mode: 'push' }),
     replace: (hash: string) => writes.push({ hash, mode: 'replace' }),
-    onRoutePopped: (listener: () => void) => pops.push(listener),
+    onRouteChanged: (listener: () => void) => routeChanges.push(listener),
   };
   const controller = startAppController({
     initialHash,
@@ -55,7 +55,7 @@ function harness(initialHash: string): Harness {
     home,
     puzzle,
     writes,
-    pops,
+    routeChanges,
     setHash: (hash: string) => {
       currentHash = hash;
     },
@@ -103,8 +103,8 @@ test('browser navigation restores the popped route without pushing history', () 
   h.controller.navigate(parseHash('#puzzle?seed=42&language=en'));
   h.setHash('#home');
   const writesBefore = h.writes.length;
-  for (const pop of h.pops) {
-    pop();
+  for (const notify of h.routeChanges) {
+    notify();
   }
   expect(h.writes.length).toBe(writesBefore);
   expect(h.controller.currentRoute().name).toBe('home');
@@ -115,9 +115,9 @@ test('browser navigation restores the popped route without pushing history', () 
 test('repeated external notifications for the same route apply it only once', () => {
   const h = harness('#home');
   h.setHash('#puzzle?seed=7&language=en');
-  for (const pop of h.pops) {
-    pop();
-    pop();
+  for (const notify of h.routeChanges) {
+    notify();
+    notify();
   }
   expect(h.controller.currentRoute().name).toBe('puzzle');
   expect(h.puzzle.applied).toHaveLength(1);
@@ -130,39 +130,6 @@ test('unknown route names are rejected explicitly', () => {
   expect(() =>
     h.controller.navigate({ name: 'unknown-route', routeParams: new Map() }),
   ).toThrowError(/No destination is bound/);
-});
-
-test('a validation hook rejects invalid routes before they are applied', () => {
-  const writes: Array<{ hash: string; mode: 'push' | 'replace' }> = [];
-  const history: HistoryAdapter = {
-    push: (hash: string) => writes.push({ hash, mode: 'push' }),
-    replace: (hash: string) => writes.push({ hash, mode: 'replace' }),
-    onRoutePopped: () => {},
-  };
-  const view = new FakeView(() => {});
-  const otherView = new FakeView(() => {});
-  const start = () =>
-    startAppController({
-      initialHash: '#home',
-      getHash: () => '#home',
-      basePath: '/',
-      history,
-      destinations: {
-        home: destinationOf(view),
-        puzzle: destinationOf(otherView),
-      },
-      validateRoute: (route: Route) => {
-        if (route.name !== 'home') {
-          throw new Error(`Rejected ${route.name}.`);
-        }
-      },
-    });
-  const controller = start();
-  expect(() =>
-    controller.navigate({ name: 'puzzle', routeParams: new Map() }),
-  ).toThrowError(/Rejected/);
-  expect(view.applied.map((route) => route.name)).toEqual(['home']);
-  expect(writes).toEqual([]);
 });
 
 test('the current route round-trips through the canonical hash format', () => {

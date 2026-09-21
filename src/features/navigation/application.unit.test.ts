@@ -32,12 +32,12 @@ function harness(initialHash: string) {
     'math-modeling-puzzle': new FakeElement(),
   };
   const writes: Array<{ hash: string; mode: 'push' | 'replace' }> = [];
-  const pops: Array<() => void> = [];
+  const routeChanges: Array<() => void> = [];
   let currentHash = initialHash;
   const history: HistoryAdapter = {
     push: (hash: string) => writes.push({ hash, mode: 'push' }),
     replace: (hash: string) => writes.push({ hash, mode: 'replace' }),
-    onRoutePopped: (listener: () => void) => pops.push(listener),
+    onRouteChanged: (listener: () => void) => routeChanges.push(listener),
   };
   const controller = startMathModelingApplication({
     hash: initialHash,
@@ -53,7 +53,7 @@ function harness(initialHash: string) {
   return {
     elements,
     writes,
-    pops,
+    routeChanges,
     controller,
     setHash: (hash: string) => {
       currentHash = hash;
@@ -196,8 +196,8 @@ test('browser Back/Forward notifications restore routes without new writes', () 
   );
   const writesBefore = h.writes.length;
   h.setHash('#home');
-  for (const pop of h.pops) {
-    pop();
+  for (const notify of h.routeChanges) {
+    notify();
   }
   expect(h.writes.length).toBe(writesBefore);
   expect(h.elements['home-screen'].hidden).toBe(false);
@@ -209,8 +209,8 @@ test('an external hash edit restores the route without new writes', () => {
   h.setHash(
     '#puzzle?seed=7&scenario=gaming.drone-power&task=story-to-quantities&language=en',
   );
-  for (const pop of h.pops) {
-    pop();
+  for (const notify of h.routeChanges) {
+    notify();
   }
   expect(h.controller.currentRoute().name).toBe('puzzle');
   expect(h.elements['math-modeling-puzzle'].attributes.get('seed')).toBe('7');

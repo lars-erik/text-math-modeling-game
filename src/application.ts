@@ -95,16 +95,6 @@ export function homeDestination(element: HomeAttributes): Destination {
   };
 }
 
-export function validateAppRoute(route: Route): void {
-  if (route.name === 'home') {
-    homeSelectionFromRoute(route);
-  } else if (route.name === 'puzzle') {
-    puzzleSelectionFromRoute(route);
-  } else if (route.name === 'session') {
-    sessionSelectionFromRoute(route);
-  }
-}
-
 export function startMathModelingApplication(
   options: ApplicationOptions,
 ): AppController {
@@ -136,7 +126,6 @@ export function startMathModelingApplication(
       puzzle: puzzleDestination(puzzleElement),
       session: sessionDestination(puzzleElement),
     },
-    validateRoute: validateAppRoute,
   });
 
   const currentLanguage = (): PuzzleLocale => {
