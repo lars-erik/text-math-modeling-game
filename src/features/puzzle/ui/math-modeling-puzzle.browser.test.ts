@@ -39,6 +39,30 @@ function storyOf(puzzle: MathModelingPuzzle): string {
   );
 }
 
+function quantityLinesOf(puzzle: MathModelingPuzzle): string[] {
+  return Array.from(
+    puzzle.shadowRoot?.querySelectorAll('div[slot="source"] li') ?? [],
+  ).map((item) => (item.textContent ?? '').replace(/\s+/g, ' ').trim());
+}
+
+async function submitCorrectGroupsTotalEquation(puzzle: MathModelingPuzzle) {
+  const inputComponent = puzzle.shadowRoot?.querySelector(
+    'named-equation-text-input',
+  ) as (HTMLElement & { updateComplete: Promise<unknown> }) | null;
+  expect(inputComponent).not.toBeNull();
+  await inputComponent!.updateComplete;
+  const input = inputComponent!.shadowRoot?.querySelector(
+    'input[type="text"]',
+  ) as HTMLInputElement | null;
+  expect(input).not.toBeNull();
+  input!.value = 'totalPower = droneCount * dronePower';
+  inputComponent!.shadowRoot?.querySelector('form')?.requestSubmit();
+  await puzzle.updateComplete;
+  expect(shellText(puzzle)).toContain(
+    'The equation matches the quantity model.',
+  );
+}
+
 test('switches tasks and input modes while the story stays visible and the math is identical', async () => {
   const puzzle = mountPuzzle(
     '#puzzle?seed=17&scenario=gaming.drone-power&task=story-to-quantities&language=en',
@@ -137,11 +161,6 @@ test('the puzzle header offers a persistent way back to home', async () => {
 });
 
 test('varies the hidden role from the route while the values stay identical', async () => {
-  const quantityLinesOf = (puzzle: MathModelingPuzzle): string[] =>
-    Array.from(
-      puzzle.shadowRoot?.querySelectorAll('div[slot="source"] li') ?? [],
-    ).map((item) => (item.textContent ?? '').replace(/\s+/g, ' ').trim());
-
   const baseHash =
     '#puzzle?seed=17&scenario=gaming.drone-power&task=quantities-to-named-equation&language=en';
   const perItem = mountPuzzle(baseHash);
@@ -200,6 +219,51 @@ test('varies the hidden role from the route while the values stay identical', as
     '#puzzle?seed=17&family=total-from-parts&hidden-role=total&scenario=gaming.drone-power&task=quantities-to-named-equation&language=en',
   );
   expect(quantityLinesOf(totalHidden).join('\n')).toContain('totalPower = ?');
+});
+
+test('changing the family normalizes an unsupported hidden role and still submits', async () => {
+  const puzzle = mountPuzzle(
+    '#puzzle?seed=17&family=total-from-parts&hidden-role=base&scenario=gaming.drone-power&task=quantities-to-named-equation&language=en',
+  );
+  await puzzle.updateComplete;
+  expect(puzzle.family).toBe('total-from-parts');
+  expect(puzzle.hiddenRole).toBe('base');
+  expect(quantityLinesOf(puzzle).join('\n')).toContain('basePower = ?');
+
+  const menu = puzzle.shadowRoot?.querySelector('puzzle-menu');
+  const familySelect = menu?.shadowRoot?.querySelector(
+    'select[name="family"]',
+  ) as HTMLSelectElement | null;
+  expect(familySelect).not.toBeNull();
+  familySelect!.value = 'groups-total';
+  familySelect!.dispatchEvent(new Event('change'));
+  const menuElement = menu as (HTMLElement & {
+    updateComplete: Promise<unknown>;
+  }) | null;
+  await menuElement?.updateComplete;
+  menu?.shadowRoot?.querySelector('form')?.requestSubmit();
+  await puzzle.updateComplete;
+  await new Promise((resolve) => setTimeout(resolve, 250));
+
+  expect(globalThis.location.hash).toContain('family=groups-total');
+  expect(globalThis.location.hash).toContain('hidden-role=per-item');
+  expect(puzzle.family).toBe('groups-total');
+  const hiddenRoleSelect = menu?.shadowRoot?.querySelector(
+    'select[name="hidden-role"]',
+  ) as HTMLSelectElement | null;
+  expect(hiddenRoleSelect).not.toBeNull();
+  expect(
+    Array.from(hiddenRoleSelect!.options).map((option) => option.value),
+  ).toEqual(['per-item', 'count', 'total']);
+  expect(hiddenRoleSelect!.value).toBe('per-item');
+
+  const quantities = quantityLinesOf(puzzle);
+  expect(quantities).toEqual([
+    'droneCount = 9',
+    'dronePower = ?',
+    'totalPower = 63',
+  ]);
+  await submitCorrectGroupsTotalEquation(puzzle);
 });
 
 test('replays the same problem from the URL state', async () => {

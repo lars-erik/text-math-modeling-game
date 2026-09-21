@@ -1,10 +1,12 @@
-import { css, html, LitElement } from 'lit';
+import { css, html, LitElement, type PropertyValues } from 'lit';
 import {
+  isProblemFamilyId,
   problemFamilyIds,
   problemFamilies,
   type ProblemFamilyId,
 } from '../../problem-generation/problem-families';
 import {
+  defaultHiddenRole,
   isHiddenRole,
   type HiddenRole,
 } from '../../problem-generation/hidden-role';
@@ -167,12 +169,27 @@ export class PuzzleMenu extends LitElement {
     this.startSessionLabel = 'Start session';
   }
 
+  protected willUpdate(changedProperties: PropertyValues<this>): void {
+    if (changedProperties.has('familyId')) {
+      const hiddenRoles = problemFamilies[this.familyId].hiddenRoles;
+      if (!hiddenRoles.includes(this.hiddenRole)) {
+        this.hiddenRole = hiddenRoles.includes(defaultHiddenRole)
+          ? defaultHiddenRole
+          : hiddenRoles[0];
+      }
+    }
+  }
+
   render() {
     return html`
       <form aria-label=${this.menuLabel} @submit=${this.handleSubmit}>
         <label>
           ${this.familyLabel}
-          <select name="family" .value=${this.familyId}>
+          <select
+            name="family"
+            .value=${this.familyId}
+            @change=${this.handleFamilyChange}
+          >
             <option value="total-from-parts">
               ${this.totalFromPartsLabel}
             </option>
@@ -240,6 +257,15 @@ export class PuzzleMenu extends LitElement {
         </button>
       </form>
     `;
+  }
+
+  private handleFamilyChange(event: Event): void {
+    if (
+      event.currentTarget instanceof HTMLSelectElement &&
+      isProblemFamilyId(event.currentTarget.value)
+    ) {
+      this.familyId = event.currentTarget.value;
+    }
   }
 
   private labelForHiddenRole(hiddenRole: HiddenRole): string {

@@ -130,14 +130,21 @@ test('the total question distinguishes base-and-parts from groups-only in both l
         locale,
         0,
       ).story.text;
+      const totalQuestion =
+        hiddenRoleQuestions[themeId][locale].total;
+      expect(totalQuestion).toBeInstanceOf(Object);
       expect(
         baseAndPartsStory,
         `${themeId}/${locale} base-and-parts`,
-      ).toMatch(hiddenRoleQuestions[themeId][locale].total['base-and-parts']);
+      ).toMatch(
+        (totalQuestion as Record<Structure, RegExp>)['base-and-parts'],
+      );
       expect(
         groupsOnlyStory,
         `${themeId}/${locale} groups-only`,
-      ).toMatch(hiddenRoleQuestions[themeId][locale].total['groups-only']);
+      ).toMatch(
+        (totalQuestion as Record<Structure, RegExp>)['groups-only'],
+      );
     }
   }
 });
