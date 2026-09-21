@@ -174,6 +174,7 @@ test('named-equation choice relations are canonical and identical across themes'
   expect(seeds.map((seed) => seed.id)).toEqual([
     'matching',
     'factor-into-group',
+    'add-instead-of-multiply',
   ]);
   const matching = seeds.find((seed) => seed.id === 'matching');
   expect(matching?.relation).toEqual(generated.problem.relation);
