@@ -1,4 +1,4 @@
-import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f as u,g as d,h as f,i as p,k as m,m as h,n as g,o as _,p as v,r as y,t as b,v as x,w as S}from"./academic-relation-CLAX3U_d.js";var C=class extends y{static properties={choices:{attribute:!1},selectedChoiceId:{attribute:!1},legend:{attribute:!1},checkLabel:{attribute:!1}};static styles=c`
+import{A as e,C as t,D as n,E as r,M as i,O as a,S as o,T as s,_ as c,a as l,d as u,f as d,g as f,h as p,i as m,j as h,k as g,m as _,n as v,o as y,p as b,r as x,t as S,v as C,w}from"./academic-relation-C4lGwpkF.js";var T=class extends x{static properties={choices:{attribute:!1},selectedChoiceId:{attribute:!1},legend:{attribute:!1},checkLabel:{attribute:!1}};static styles=l`
     :host {
       display: block;
       min-width: 0;
@@ -70,11 +70,11 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
         width: 100%;
       }
     }
-  `;constructor(){super(),this.choices=[],this.selectedChoiceId=void 0,this.legend=`Choose the named equation`,this.checkLabel=`Check`}render(){return p`
+  `;constructor(){super(),this.choices=[],this.selectedChoiceId=void 0,this.legend=`Choose the named equation`,this.checkLabel=`Check`}render(){return m`
       <form @submit=${this.handleSubmit}>
         <fieldset>
           <legend>${this.legend}</legend>
-          ${this.choices.map(e=>p`
+          ${this.choices.map(e=>m`
               <div>
                 <label>
                   <input
@@ -91,7 +91,7 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
         </fieldset>
         <button type="submit">${this.checkLabel}</button>
       </form>
-    `}handleSubmit(e){if(e.preventDefault(),!(e.currentTarget instanceof HTMLFormElement))return;let t=new FormData(e.currentTarget).get(`named-equation-choice`),n=this.choices.find(e=>e.id===t);n!==void 0&&(this.selectedChoiceId=n.id,this.dispatchEvent(new CustomEvent(`puzzle-answer`,{bubbles:!0,composed:!0,detail:{kind:`relation-choice`,choiceId:n.id,label:n.label,relation:n.relation}})))}};customElements.get(`named-equation-choice-input`)===void 0&&customElements.define(`named-equation-choice-input`,C);var w=class extends y{static properties={value:{type:String},inputLabel:{attribute:!1},checkLabel:{attribute:!1}};static styles=c`
+    `}handleSubmit(e){if(e.preventDefault(),!(e.currentTarget instanceof HTMLFormElement))return;let t=new FormData(e.currentTarget).get(`named-equation-choice`),n=this.choices.find(e=>e.id===t);n!==void 0&&(this.selectedChoiceId=n.id,this.dispatchEvent(new CustomEvent(`puzzle-answer`,{bubbles:!0,composed:!0,detail:{kind:`relation-choice`,choiceId:n.id,label:n.label,relation:n.relation}})))}};customElements.get(`named-equation-choice-input`)===void 0&&customElements.define(`named-equation-choice-input`,T);var E=class extends x{static properties={value:{type:String},inputLabel:{attribute:!1},checkLabel:{attribute:!1}};static styles=l`
     :host {
       display: block;
       min-width: 0;
@@ -144,7 +144,7 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
         width: 100%;
       }
     }
-  `;constructor(){super(),this.value=``,this.inputLabel=`Named equation`,this.checkLabel=`Check`}render(){return p`
+  `;constructor(){super(),this.value=``,this.inputLabel=`Named equation`,this.checkLabel=`Check`}render(){return m`
       <form @submit=${this.handleSubmit}>
         <label for="named-equation">${this.inputLabel}</label>
         <input
@@ -156,20 +156,20 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
         />
         <button type="submit">${this.checkLabel}</button>
       </form>
-    `}handleSubmit(e){if(e.preventDefault(),!(e.currentTarget instanceof HTMLFormElement))return;let t=new FormData(e.currentTarget).get(`named-equation`);typeof t==`string`&&this.dispatchEvent(new CustomEvent(`puzzle-answer`,{bubbles:!0,composed:!0,detail:{kind:`text`,input:t}}))}};customElements.get(`named-equation-text-input`)===void 0&&customElements.define(`named-equation-text-input`,w);var T={"multiple-choice":{label:`Multiple choice`,render:({definition:e,screen:t,resources:n})=>p`
+    `}handleSubmit(e){if(e.preventDefault(),!(e.currentTarget instanceof HTMLFormElement))return;let t=new FormData(e.currentTarget).get(`named-equation`);typeof t==`string`&&this.dispatchEvent(new CustomEvent(`puzzle-answer`,{bubbles:!0,composed:!0,detail:{kind:`text`,input:t}}))}};customElements.get(`named-equation-text-input`)===void 0&&customElements.define(`named-equation-text-input`,E);var D={"multiple-choice":{label:`Multiple choice`,render:({definition:e,screen:t,resources:n})=>m`
       <named-equation-choice-input
         .choices=${e.choices}
         .selectedChoiceId=${t.submission?.kind===`named-equation`?t.submission.choiceId:void 0}
         .legend=${n.quantitiesToNamedEquation.choiceLegend}
         .checkLabel=${n.controls.check}
       ></named-equation-choice-input>
-    `},text:{label:`Text input`,render:({screen:e,resources:t})=>p`
+    `},text:{label:`Text input`,render:({screen:e,resources:t})=>m`
       <named-equation-text-input
         .value=${e.submission?.kind===`named-equation`&&e.submission.answerKind===`text`?e.submission.input:``}
         .inputLabel=${t.quantitiesToNamedEquation.inputLabel}
         .checkLabel=${t.controls.check}
       ></named-equation-text-input>
-    `}};function E(e){return Object.hasOwn(T,e)}var D={render(e,t,n){n.textContent=b(e,t)}},O=class extends y{static properties={screen:{attribute:!1},knownLegend:{attribute:!1},unknownLegend:{attribute:!1},checkLabel:{attribute:!1}};static styles=c`
+    `}};function O(e){return Object.hasOwn(D,e)}var k={render(e,t,n){n.textContent=S(e,t)}},A=class extends x{static properties={screen:{attribute:!1},knownLegend:{attribute:!1},unknownLegend:{attribute:!1},checkLabel:{attribute:!1}};static styles=l`
     :host {
       display: block;
       min-width: 0;
@@ -243,11 +243,11 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
         width: 100%;
       }
     }
-  `;constructor(){super(),this.screen={modeId:`story-to-quantities`,source:{kind:`story`},target:{kind:`quantities`,prompt:``,quantities:[]},input:{kind:`quantity-selection`,knownIds:[]}},this.knownLegend=``,this.unknownLegend=``,this.checkLabel=``}render(){return p`
+  `;constructor(){super(),this.screen={modeId:`story-to-quantities`,source:{kind:`story`},target:{kind:`quantities`,prompt:``,quantities:[]},input:{kind:`quantity-selection`,knownIds:[]}},this.knownLegend=``,this.unknownLegend=``,this.checkLabel=``}render(){return m`
       <form @submit=${this.handleSubmit}>
         <fieldset>
           <legend>${this.knownLegend}</legend>
-          ${this.screen.target.quantities.map(e=>p`
+          ${this.screen.target.quantities.map(e=>m`
               <label>
                 <input
                   type="checkbox"
@@ -261,7 +261,7 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
         </fieldset>
         <fieldset>
           <legend>${this.unknownLegend}</legend>
-          ${this.screen.target.quantities.map(e=>p`
+          ${this.screen.target.quantities.map(e=>m`
               <label>
                 <input
                   type="radio"
@@ -276,7 +276,7 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
         </fieldset>
         <button type="submit">${this.checkLabel}</button>
       </form>
-    `}handleSubmit(e){if(e.preventDefault(),!(e.currentTarget instanceof HTMLFormElement))return;let t=new FormData(e.currentTarget),n=t.get(`unknown-quantity`);if(typeof n!=`string`)return;let r={knownIds:t.getAll(`known-quantity`).filter(e=>typeof e==`string`),unknownId:n};this.dispatchEvent(new CustomEvent(`puzzle-quantity-selection`,{bubbles:!0,composed:!0,detail:r}))}};customElements.get(`story-quantities-input`)===void 0&&customElements.define(`story-quantities-input`,O);var k=class extends y{static properties={heading:{type:String},sourceLabel:{attribute:`source-label`,type:String},targetLabel:{attribute:`target-label`,type:String},feedbackLabel:{attribute:`feedback-label`,type:String},prompt:{type:String},feedback:{type:String},replayLabel:{attribute:`replay-label`,type:String},hasReplay:{attribute:`has-replay`,type:Boolean}};static styles=c`
+    `}handleSubmit(e){if(e.preventDefault(),!(e.currentTarget instanceof HTMLFormElement))return;let t=new FormData(e.currentTarget),n=t.get(`unknown-quantity`);if(typeof n!=`string`)return;let r={knownIds:t.getAll(`known-quantity`).filter(e=>typeof e==`string`),unknownId:n};this.dispatchEvent(new CustomEvent(`puzzle-quantity-selection`,{bubbles:!0,composed:!0,detail:r}))}};customElements.get(`story-quantities-input`)===void 0&&customElements.define(`story-quantities-input`,A);var j=class extends x{static properties={heading:{type:String},sourceLabel:{attribute:`source-label`,type:String},targetLabel:{attribute:`target-label`,type:String},feedbackLabel:{attribute:`feedback-label`,type:String},prompt:{type:String},feedback:{type:String},replayLabel:{attribute:`replay-label`,type:String},hasReplay:{attribute:`has-replay`,type:Boolean}};static styles=l`
     :host {
       --border: #c5cbd1;
       --surface: #ffffff;
@@ -451,7 +451,7 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
         padding-inline: 1rem;
       }
     }
-  `;constructor(){super(),this.heading=``,this.sourceLabel=``,this.targetLabel=``,this.feedbackLabel=``,this.prompt=``,this.feedback=``,this.replayLabel=``,this.hasReplay=!1}render(){return p`
+  `;constructor(){super(),this.heading=``,this.sourceLabel=``,this.targetLabel=``,this.feedbackLabel=``,this.prompt=``,this.feedback=``,this.replayLabel=``,this.hasReplay=!1}render(){return m`
       <main aria-labelledby="puzzle-heading">
         <header>
           <h1 id="puzzle-heading">${this.heading}</h1>
@@ -479,14 +479,14 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
           <p role="status" aria-live="polite">${this.feedback}</p>
         </section>
 
-        ${this.hasReplay?p`
+        ${this.hasReplay?m`
               <details>
                 <summary>${this.replayLabel}</summary>
                 <slot name="replay"></slot>
               </details>
             `:null}
       </main>
-    `}};customElements.get(`puzzle-shell`)===void 0&&customElements.define(`puzzle-shell`,k);var A=class extends y{static properties={seed:{type:Number},themeId:{attribute:`theme-id`,type:String},modeId:{attribute:`mode-id`,type:String},locale:{type:String},menuLabel:{attribute:!1},scenarioLabel:{attribute:!1},dronePowerLabel:{attribute:!1},creatorFollowersLabel:{attribute:!1},taskLabel:{attribute:!1},storyToQuantitiesLabel:{attribute:!1},quantitiesToNamedEquationLabel:{attribute:!1},namedEquationToAcademicNotationLabel:{attribute:!1},academicNotationToNamedEquationLabel:{attribute:!1},seedLabel:{attribute:!1},showLabel:{attribute:!1},startSessionLabel:{attribute:!1}};static styles=c`
+    `}};customElements.get(`puzzle-shell`)===void 0&&customElements.define(`puzzle-shell`,j);var M=class extends x{static properties={seed:{type:Number},familyId:{attribute:`family-id`,type:String},themeId:{attribute:`theme-id`,type:String},modeId:{attribute:`mode-id`,type:String},locale:{type:String},menuLabel:{attribute:!1},familyLabel:{attribute:!1},totalFromPartsLabel:{attribute:!1},groupsTotalLabel:{attribute:!1},scenarioLabel:{attribute:!1},dronePowerLabel:{attribute:!1},creatorFollowersLabel:{attribute:!1},taskLabel:{attribute:!1},storyToQuantitiesLabel:{attribute:!1},quantitiesToNamedEquationLabel:{attribute:!1},namedEquationToAcademicNotationLabel:{attribute:!1},academicNotationToNamedEquationLabel:{attribute:!1},seedLabel:{attribute:!1},showLabel:{attribute:!1},startSessionLabel:{attribute:!1}};static styles=l`
     :host {
       display: block;
       min-width: 0;
@@ -543,8 +543,19 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
         width: 100%;
       }
     }
-  `;constructor(){super(),this.seed=17,this.themeId=`gaming.drone-power`,this.modeId=`story-to-quantities`,this.locale=`en`,this.menuLabel=`Puzzle menu`,this.scenarioLabel=`Scenario`,this.dronePowerLabel=`Spaceship and drones`,this.creatorFollowersLabel=`Creator and followers`,this.taskLabel=`Task`,this.storyToQuantitiesLabel=`Story to quantities`,this.quantitiesToNamedEquationLabel=`Quantities to named equation`,this.namedEquationToAcademicNotationLabel=`Named equation to academic notation`,this.academicNotationToNamedEquationLabel=`Academic notation to named equation`,this.seedLabel=`Seed`,this.showLabel=`Show puzzle`,this.startSessionLabel=`Start session`}render(){return p`
+  `;constructor(){super(),this.seed=17,this.familyId=`total-from-parts`,this.themeId=`gaming.drone-power`,this.modeId=`story-to-quantities`,this.locale=`en`,this.menuLabel=`Puzzle menu`,this.familyLabel=`Problem family`,this.totalFromPartsLabel=`Total from base and parts`,this.groupsTotalLabel=`Equal groups`,this.scenarioLabel=`Scenario`,this.dronePowerLabel=`Spaceship and drones`,this.creatorFollowersLabel=`Creator and followers`,this.taskLabel=`Task`,this.storyToQuantitiesLabel=`Story to quantities`,this.quantitiesToNamedEquationLabel=`Quantities to named equation`,this.namedEquationToAcademicNotationLabel=`Named equation to academic notation`,this.academicNotationToNamedEquationLabel=`Academic notation to named equation`,this.seedLabel=`Seed`,this.showLabel=`Show puzzle`,this.startSessionLabel=`Start session`}render(){return m`
       <form aria-label=${this.menuLabel} @submit=${this.handleSubmit}>
+        <label>
+          ${this.familyLabel}
+          <select name="family" .value=${this.familyId}>
+            <option value="total-from-parts">
+              ${this.totalFromPartsLabel}
+            </option>
+            <option value="groups-total">
+              ${this.groupsTotalLabel}
+            </option>
+          </select>
+        </label>
         <label>
           ${this.scenarioLabel}
           <select name="scenario" .value=${this.themeId}>
@@ -579,7 +590,7 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
             name="seed"
             type="number"
             min="0"
-            max=${S}
+            max=${n}
             step="1"
             .value=${String(this.seed)}
             required
@@ -592,7 +603,7 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
           ${this.startSessionLabel}
         </button>
       </form>
-    `}handleSubmit(e){if(e.preventDefault(),!(e.currentTarget instanceof HTMLFormElement))return;let t=new FormData(e.currentTarget),r=t.get(`scenario`),i=t.get(`task`),a=Number(t.get(`seed`)),o=e.submitter instanceof HTMLButtonElement?e.submitter.value:void 0;if(typeof r==`string`&&m(r)&&typeof i==`string`&&n(i)&&Number.isInteger(a)){if(o===`session`){this.dispatchEvent(new CustomEvent(s,{bubbles:!0,composed:!0,detail:{seed:a,themeId:r,locale:this.locale}}));return}this.dispatchEvent(new CustomEvent(d,{bubbles:!0,composed:!0,detail:{seed:a,themeId:r,modeId:i,locale:this.locale}}))}}};customElements.get(`puzzle-menu`)===void 0&&customElements.define(`puzzle-menu`,A);var j=class extends y{static properties={relation:{attribute:!1},symbols:{attribute:!1},adapter:{attribute:!1}};static styles=c`
+    `}handleSubmit(e){if(e.preventDefault(),!(e.currentTarget instanceof HTMLFormElement))return;let t=new FormData(e.currentTarget),n=t.get(`family`),i=t.get(`scenario`),a=t.get(`task`),o=Number(t.get(`seed`)),s=e.submitter instanceof HTMLButtonElement?e.submitter.value:void 0;if(typeof n==`string`&&r.includes(n)&&typeof i==`string`&&h(i)&&typeof a==`string`&&g(a)&&Number.isInteger(o)){if(s===`session`){this.dispatchEvent(new CustomEvent(c,{bubbles:!0,composed:!0,detail:{seed:o,themeId:i,locale:this.locale}}));return}this.dispatchEvent(new CustomEvent(f,{bubbles:!0,composed:!0,detail:{seed:o,familyId:n,themeId:i,modeId:a,locale:this.locale}}))}}};customElements.get(`puzzle-menu`)===void 0&&customElements.define(`puzzle-menu`,M);var N=class extends x{static properties={relation:{attribute:!1},symbols:{attribute:!1},adapter:{attribute:!1}};static styles=l`
     :host {
       display: block;
       min-width: 0;
@@ -601,7 +612,7 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
       min-width: 0;
       overflow-x: auto;
     }
-  `;constructor(){super(),this.relation=void 0,this.symbols={},this.adapter=D}render(){let e=this.relation?b(this.relation,this.symbols):``;return p`<div class="output" aria-label=${e}></div>`}updated(e){let t=this.renderRoot.querySelector(`.output`);t!==null&&this.relation!==void 0&&this.adapter.render(this.relation,this.symbols,t)}};customElements.get(`academic-notation-display`)===void 0&&customElements.define(`academic-notation-display`,j);var M=class extends y{static properties={seed:{type:String},session:{type:String},themeId:{attribute:`theme`,type:String},modeId:{attribute:`mode`,type:String},inputMode:{attribute:`input-mode`,reflect:!0,type:String},locale:{reflect:!0,type:String},academicDisplayAdapter:{attribute:!1},screen:{state:!0},activeSession:{state:!0}};static styles=c`
+  `;constructor(){super(),this.relation=void 0,this.symbols={},this.adapter=k}render(){let e=this.relation?S(this.relation,this.symbols):``;return m`<div class="output" aria-label=${e}></div>`}updated(e){let t=this.renderRoot.querySelector(`.output`);t!==null&&this.relation!==void 0&&this.adapter.render(this.relation,this.symbols,t)}};customElements.get(`academic-notation-display`)===void 0&&customElements.define(`academic-notation-display`,N);var P=class extends x{static properties={seed:{type:String},family:{type:String},session:{type:String},themeId:{attribute:`theme`,type:String},modeId:{attribute:`mode`,type:String},inputMode:{attribute:`input-mode`,reflect:!0,type:String},locale:{reflect:!0,type:String},academicDisplayAdapter:{attribute:!1},screen:{state:!0},activeSession:{state:!0}};static styles=l`
     :host {
       display: block;
       min-width: 0;
@@ -753,116 +764,116 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
         padding: 0;
       }
     }
-  `;constructor(){super(),this.seed=`17`,this.session=``,this.themeId=`gaming.drone-power`,this.modeId=`story-to-quantities`,this.inputMode=`text`,this.locale=`en`,this.academicDisplayAdapter=D,this.screen=void 0,this.generatedProblem=N(17),this.activeSession=void 0}willUpdate(e){if(e.has(`session`)||e.has(`themeId`)||e.has(`locale`)){let t=e.has(`locale`)&&!e.has(`session`)&&!e.has(`themeId`)&&this.activeSession!==void 0;this.activeSession=t?this.recordSession(this.activeSession?.withLocale(this.locale)):this.composeCurrentSession()}e.has(`seed`)&&(this.generatedProblem=N(Number(this.seed))),(e.has(`seed`)||e.has(`themeId`)||e.has(`modeId`)||e.has(`locale`)||e.has(`session`))&&(this.screen=this.activeSession===void 0?this.composeCurrentScreen():this.activeSession.screen)}composeCurrentSession(){if(!this.session||!m(this.themeId)||!e(this.locale))return;let t=this.sessionRunStore?.provide({seed:Number(this.session),themeId:this.themeId,locale:this.locale});return t===void 0?void 0:this.recordSession(t)}recordSession(e){return e!==void 0&&this.sessionRunStore?.record(e),e}composeCurrentScreen(){if(m(this.themeId)&&e(this.locale))return l({problem:this.generatedProblem,themeId:this.themeId,modeId:n(this.modeId)?this.modeId:`story-to-quantities`,locale:this.locale,storySeed:Number(this.seed)})}render(){if(!m(this.themeId))return p`<p role="alert">
+  `;constructor(){super(),this.seed=`17`,this.family=t,this.session=``,this.themeId=`gaming.drone-power`,this.modeId=`story-to-quantities`,this.inputMode=`text`,this.locale=`en`,this.academicDisplayAdapter=k,this.screen=void 0,this.generatedProblem=F(t,17),this.activeSession=void 0}willUpdate(e){if(e.has(`session`)||e.has(`themeId`)||e.has(`locale`)){let t=e.has(`locale`)&&!e.has(`session`)&&!e.has(`themeId`)&&this.activeSession!==void 0;this.activeSession=t?this.recordSession(this.activeSession?.withLocale(this.locale)):this.composeCurrentSession()}(e.has(`seed`)||e.has(`family`))&&(this.generatedProblem=F(this.currentFamilyId(),Number(this.seed))),(e.has(`seed`)||e.has(`family`)||e.has(`themeId`)||e.has(`modeId`)||e.has(`locale`)||e.has(`session`))&&(this.screen=this.activeSession===void 0?this.composeCurrentScreen():this.activeSession.screen)}composeCurrentSession(){if(!this.session||!h(this.themeId)||!i(this.locale))return;let e=this.sessionRunStore?.provide({seed:Number(this.session),themeId:this.themeId,locale:this.locale});return e===void 0?void 0:this.recordSession(e)}recordSession(e){return e!==void 0&&this.sessionRunStore?.record(e),e}composeCurrentScreen(){if(h(this.themeId)&&i(this.locale))return u({problem:this.generatedProblem,themeId:this.themeId,modeId:g(this.modeId)?this.modeId:`story-to-quantities`,locale:this.locale,storySeed:Number(this.seed)})}render(){if(!h(this.themeId))return m`<p role="alert">
         Unknown scenario ${JSON.stringify(this.themeId)}.
-      </p>`;if(this.activeSession!==void 0)return this.renderSession(this.activeSession);if(!n(this.modeId))return p`<p role="alert">
+      </p>`;if(this.activeSession!==void 0)return this.renderSession(this.activeSession);if(!g(this.modeId))return m`<p role="alert">
         Unknown task ${JSON.stringify(this.modeId)}.
-      </p>`;if(!e(this.locale))return p`<p role="alert">
+      </p>`;if(!i(this.locale))return m`<p role="alert">
         Unknown locale ${JSON.stringify(this.locale)}.
-      </p>`;if(this.screen===void 0)return p`<p role="alert">Puzzle screen is unavailable.</p>`;let t=this.screen,i=r[this.locale],a=this.headingFor(t.screen,i);return this.renderShell({locale:this.locale,heading:a,prompt:t.screen.target.prompt,feedback:t.feedback?.message??``,replay:t.context.replay,menuSeed:Number(this.seed),menuModeId:n(this.modeId)?this.modeId:`story-to-quantities`,source:this.renderSource(t,i),input:this.renderInput(t,i)})}headingFor(e,t){switch(e.modeId){case`story-to-quantities`:return t.storyToQuantities.heading;case`quantities-to-named-equation`:return t.quantitiesToNamedEquation.heading;case`named-equation-to-academic-notation`:return t.namedEquationToAcademicNotation.heading;case`academic-notation-to-named-equation`:return t.academicNotationToNamedEquation.heading}}renderSource(e,t){let n=p`<p>${e.context.story}</p>`;switch(e.screen.modeId){case`story-to-quantities`:return n;case`quantities-to-named-equation`:return p`${n}${this.renderQuantityList(e)}`;case`named-equation-to-academic-notation`:return p`${n}${this.renderQuantityList(e)}
+      </p>`;if(this.screen===void 0)return m`<p role="alert">Puzzle screen is unavailable.</p>`;let e=this.screen,t=a[this.locale],n=this.headingFor(e.screen,t);return this.renderShell({locale:this.locale,heading:n,prompt:e.screen.target.prompt,feedback:e.feedback?.message??``,replay:e.context.replay,menuSeed:Number(this.seed),menuModeId:g(this.modeId)?this.modeId:`story-to-quantities`,source:this.renderSource(e,t),input:this.renderInput(e,t)})}headingFor(e,t){switch(e.modeId){case`story-to-quantities`:return t.storyToQuantities.heading;case`quantities-to-named-equation`:return t.quantitiesToNamedEquation.heading;case`named-equation-to-academic-notation`:return t.namedEquationToAcademicNotation.heading;case`academic-notation-to-named-equation`:return t.academicNotationToNamedEquation.heading}}renderSource(e,t){let n=m`<p>${e.context.story}</p>`;switch(e.screen.modeId){case`story-to-quantities`:return n;case`quantities-to-named-equation`:return m`${n}${this.renderQuantityList(e)}`;case`named-equation-to-academic-notation`:return m`${n}${this.renderQuantityList(e)}
           <p class="equation">
-            ${f(e.screen.source.relation,e.screen.source.names)}
+            ${p(e.screen.source.relation,e.screen.source.names)}
           </p>
-          ${this.renderSymbolKey(e.screen,t.namedEquationToAcademicNotation.symbolKey)}`;case`academic-notation-to-named-equation`:return p`${n}${this.renderQuantityList(e)}
+          ${this.renderSymbolKey(e.screen,t.namedEquationToAcademicNotation.symbolKey)}`;case`academic-notation-to-named-equation`:return m`${n}${this.renderQuantityList(e)}
           <academic-notation-display
             .relation=${e.screen.source.relation}
             .symbols=${e.screen.source.symbols}
             .adapter=${this.academicDisplayAdapter}
           ></academic-notation-display>
-          ${this.renderSymbolKey(e.screen,t.academicNotationToNamedEquation.symbolKey)}`}}renderQuantityList(e){return p`<ul class="quantity-list">
-      ${e.context.quantities.map(e=>p`<li>
+          ${this.renderSymbolKey(e.screen,t.academicNotationToNamedEquation.symbolKey)}`}}renderQuantityList(e){return m`<ul class="quantity-list">
+      ${e.context.quantities.map(e=>m`<li>
           ${e.variableName} =
           ${e.given.kind===`known`?e.given.value:`?`}
         </li>`)}
-    </ul>`}renderSymbolKey(e,t){return p`<section class="symbol-key" aria-label=${t}>
+    </ul>`}renderSymbolKey(e,t){return m`<section class="symbol-key" aria-label=${t}>
       <h3>${t}</h3>
       <dl>
-        ${e.symbolKey.map(e=>p`<dt>${e.symbol}</dt><dd>${e.variableName}</dd>`)}
+        ${e.symbolKey.map(e=>m`<dt>${e.symbol}</dt><dd>${e.variableName}</dd>`)}
       </dl>
-    </section>`}renderInput(e,t){switch(e.screen.modeId){case`story-to-quantities`:return p`<div @puzzle-quantity-selection=${this.handleQuantitySelection}>
+    </section>`}renderInput(e,t){switch(e.screen.modeId){case`story-to-quantities`:return m`<div @puzzle-quantity-selection=${this.handleQuantitySelection}>
           <story-quantities-input
             .screen=${e.screen}
             .knownLegend=${t.storyToQuantities.knownLegend}
             .unknownLegend=${t.storyToQuantities.unknownLegend}
             .checkLabel=${t.controls.check}
           ></story-quantities-input>
-        </div>`;case`quantities-to-named-equation`:return this.renderNamedEquationInput(this.locale);case`named-equation-to-academic-notation`:return this.renderTextExpressionInput(e,t.namedEquationToAcademicNotation.inputLabel,t.controls.check);case`academic-notation-to-named-equation`:return this.renderTextExpressionInput(e,t.academicNotationToNamedEquation.inputLabel,t.controls.check)}}renderTextExpressionInput(e,t,n){let r=e.screen.input.kind===`expression`?e.screen.input.value:``,i=e.screen.modeId===`named-equation-to-academic-notation`&&e.feedback?.kind===`accepted`&&e.submission?.kind===`academic-notation`?e.submission.relation:void 0;return p`<div @puzzle-answer=${this.handleAnswer}>
+        </div>`;case`quantities-to-named-equation`:return this.renderNamedEquationInput(this.locale);case`named-equation-to-academic-notation`:return this.renderTextExpressionInput(e,t.namedEquationToAcademicNotation.inputLabel,t.controls.check);case`academic-notation-to-named-equation`:return this.renderTextExpressionInput(e,t.academicNotationToNamedEquation.inputLabel,t.controls.check)}}renderTextExpressionInput(e,t,n){let r=e.screen.input.kind===`expression`?e.screen.input.value:``,i=e.screen.modeId===`named-equation-to-academic-notation`&&e.feedback?.kind===`accepted`&&e.submission?.kind===`academic-notation`?e.submission.relation:void 0;return m`<div @puzzle-answer=${this.handleAnswer}>
       <named-equation-text-input
         .value=${r}
         .inputLabel=${t}
         .checkLabel=${n}
       ></named-equation-text-input>
-      ${i===void 0||e.screen.modeId!==`named-equation-to-academic-notation`?null:p`<academic-notation-display
+      ${i===void 0||e.screen.modeId!==`named-equation-to-academic-notation`?null:m`<academic-notation-display
             .relation=${i}
             .symbols=${e.screen.target.symbols}
             .adapter=${this.academicDisplayAdapter}
           ></academic-notation-display>`}
-    </div>`}renderNamedEquationInput(e){if(!E(this.inputMode))return p`<p role="alert">
+    </div>`}renderNamedEquationInput(e){if(!O(this.inputMode))return m`<p role="alert">
         Unknown input mode ${JSON.stringify(this.inputMode)}.
-      </p>`;let t=this.screen;if(t===void 0||!m(this.themeId))return p``;let n=this.currentProblemFor(),i=r[e],a=T[this.inputMode],o=u(n,v(this.themeId,n,e,t.context.replay?.storySeed??Number(this.seed)));return p`<div @puzzle-answer=${this.handleAnswer}>
-      <nav aria-label=${i.controls.inputMode}>
-        ${Object.keys(T).map(e=>p`<button
+      </p>`;let t=this.screen;if(t===void 0||!h(this.themeId))return m``;let n=this.currentProblemFor(),r=a[e],i=D[this.inputMode],o=d(n,b(this.themeId,n,e,t.context.replay?.storySeed??Number(this.seed)));return m`<div @puzzle-answer=${this.handleAnswer}>
+      <nav aria-label=${r.controls.inputMode}>
+        ${Object.keys(D).map(e=>m`<button
             type="button"
             aria-pressed=${this.inputMode===e}
             @click=${()=>this.selectInputMode(e)}
           >
-            ${e===`text`?i.controls.textInput:i.controls.multipleChoice}
+            ${e===`text`?r.controls.textInput:r.controls.multipleChoice}
           </button>`)}
       </nav>
-      ${a.render({definition:{choices:o},screen:{...t,submission:t.submission},resources:i})}
-    </div>`}handleAnswer(e){this.submitAnswer(e.detail)}startSessionFromStore(){this.activeSession=this.composeCurrentSession(),this.screen=this.activeSession===void 0?this.composeCurrentScreen():this.activeSession.screen}submitAnswer(t){if(this.activeSession!==void 0){this.activeSession=this.recordSession(this.activeSession.submit(t)),this.screen=this.activeSession?.screen;return}m(this.themeId)&&n(this.modeId)&&e(this.locale)&&(this.screen=h({problem:this.generatedProblem,themeId:this.themeId,modeId:this.modeId,locale:this.locale,storySeed:Number(this.seed),answer:t}))}selectInputMode(e){this.inputMode=e,this.activeSession===void 0&&(this.screen=this.composeCurrentScreen())}currentProblemFor(){return this.activeSession===void 0?this.generatedProblem:this.activeSession.currentProblem??this.generatedProblem}handleQuantitySelection(e){this.submitAnswer(e.detail)}handleLocaleChange(t){if(t.currentTarget instanceof HTMLSelectElement&&e(t.currentTarget.value)){let e=t.currentTarget.value;if(this.locale=e,this.activeSession!==void 0&&this.session!==``){this.requestSessionState({locale:e});return}this.requestApplicationState({locale:e})}}requestSessionState(e){this.dispatchEvent(new CustomEvent(s,{bubbles:!0,composed:!0,detail:{seed:Number(this.session),themeId:m(this.themeId)?this.themeId:`gaming.drone-power`,locale:e.locale}}))}requestApplicationState(e){this.dispatchEvent(new CustomEvent(d,{bubbles:!0,composed:!0,detail:{seed:Number(this.seed),themeId:m(this.themeId)?this.themeId:`gaming.drone-power`,modeId:n(this.modeId)?this.modeId:`story-to-quantities`,locale:e.locale}}))}renderSession(e){let t=this.locale,n=r[t],a=n.session;if(e.status===`complete`)return p`
+      ${i.render({definition:{choices:o},screen:{...t,submission:t.submission},resources:r})}
+    </div>`}handleAnswer(e){this.submitAnswer(e.detail)}startSessionFromStore(){this.activeSession=this.composeCurrentSession(),this.screen=this.activeSession===void 0?this.composeCurrentScreen():this.activeSession.screen}submitAnswer(e){if(this.activeSession!==void 0){this.activeSession=this.recordSession(this.activeSession.submit(e)),this.screen=this.activeSession?.screen;return}h(this.themeId)&&g(this.modeId)&&i(this.locale)&&(this.screen=_({problem:this.generatedProblem,themeId:this.themeId,modeId:this.modeId,locale:this.locale,storySeed:Number(this.seed),answer:e}))}selectInputMode(e){this.inputMode=e,this.activeSession===void 0&&(this.screen=this.composeCurrentScreen())}currentProblemFor(){return this.activeSession===void 0?this.generatedProblem:this.activeSession.currentProblem??this.generatedProblem}handleQuantitySelection(e){this.submitAnswer(e.detail)}handleLocaleChange(e){if(e.currentTarget instanceof HTMLSelectElement&&i(e.currentTarget.value)){let t=e.currentTarget.value;if(this.locale=t,this.activeSession!==void 0&&this.session!==``){this.requestSessionState({locale:t});return}this.requestApplicationState({locale:t})}}currentFamilyId(){return s(this.family)?this.family:t}requestSessionState(e){this.dispatchEvent(new CustomEvent(c,{bubbles:!0,composed:!0,detail:{seed:Number(this.session),themeId:h(this.themeId)?this.themeId:`gaming.drone-power`,locale:e.locale}}))}requestApplicationState(e){this.dispatchEvent(new CustomEvent(f,{bubbles:!0,composed:!0,detail:{seed:Number(this.seed),familyId:this.currentFamilyId(),themeId:h(this.themeId)?this.themeId:`gaming.drone-power`,modeId:g(this.modeId)?this.modeId:`story-to-quantities`,locale:e.locale}}))}renderSession(t){let n=this.locale,r=a[n],i=r.session;if(t.status===`complete`)return m`
         <puzzle-shell
-          .heading=${a.completionHeading}
-          .sourceLabel=${n.common.source}
-          .targetLabel=${n.common.target}
-          .feedbackLabel=${n.common.feedback}
-          .prompt=${a.completedTotal(e.summary?.total??0)}
+          .heading=${i.completionHeading}
+          .sourceLabel=${r.common.source}
+          .targetLabel=${r.common.target}
+          .feedbackLabel=${r.common.feedback}
+          .prompt=${i.completedTotal(t.summary?.total??0)}
           .feedback=${``}
-          .replayLabel=${n.common.replay}
+          .replayLabel=${r.common.replay}
           .hasReplay=${!1}
         >
           <div slot="source">
-            <p>${a.completedTotal(e.summary?.total??0)}</p>
+            <p>${i.completedTotal(t.summary?.total??0)}</p>
             <ul class="quantity-list">
-              ${i.map(t=>p`<li>
-                  ${this.modeLabel(t,n)}:
-                  ${e.summary?.counts[t]??0}
+              ${e.map(e=>m`<li>
+                  ${this.modeLabel(e,r)}:
+                  ${t.summary?.counts[e]??0}
                 </li>`)}
             </ul>
           </div>
           <div slot="input">
-            ${this.renderAnswerLog(e,a,n)}
+            ${this.renderAnswerLog(t,i,r)}
             <button
               type="button"
               class="session-next"
               @click=${this.handleNavigateHome}
             >
-              ${a.backToPuzzle}
+              ${i.backToPuzzle}
             </button>
           </div>
         </puzzle-shell>
-      `;let o=e.screen,s=this.headingFor(o.screen,n),c=a.positionLabel(e.position,e.total),l=e.hint,u=_(e),d=l===void 0||u===void 0?``:a.hintText(u),f=o.feedback?.message??``,m=d!==``&&f===``?d:[f,d].filter(e=>e!==``).join(` `);return this.renderShell({locale:t,heading:s,positionLabel:c,prompt:o.screen.target.prompt,feedback:m,replay:o.context.replay,menuSeed:e.replay.seed,menuModeId:o.screen.modeId,source:this.renderSource(o,n),input:p`
-        ${this.renderInput(o,n)}
-        ${this.renderAnswerLog(e,a,n)}
-        ${e.availableNext?p`<button
+      `;let o=t.screen,s=this.headingFor(o.screen,r),c=i.positionLabel(t.position,t.total),l=t.hint,u=y(t),d=l===void 0||u===void 0?``:i.hintText(u),f=o.feedback?.message??``,p=d!==``&&f===``?d:[f,d].filter(e=>e!==``).join(` `);return this.renderShell({locale:n,heading:s,positionLabel:c,prompt:o.screen.target.prompt,feedback:p,replay:o.context.replay,menuSeed:t.replay.seed,menuModeId:o.screen.modeId,source:this.renderSource(o,r),input:m`
+        ${this.renderInput(o,r)}
+        ${this.renderAnswerLog(t,i,r)}
+        ${t.availableNext?m`<button
               type="button"
               class="session-next"
               @click=${this.handleSessionNext}
             >
-              ${a.next}
+              ${i.next}
             </button>`:``}
-        ${this.supportsHint(e)?p`<button
+        ${this.supportsHint(t)?m`<button
               type="button"
               class="session-hint"
               @click=${this.handleSessionHint}
             >
-              ${a.hint}
+              ${i.hint}
             </button>`:``}
-      `})}renderAnswerLog(e,t,n){return e.answerLog.length===0?``:p`
+      `})}renderAnswerLog(e,t,n){return e.answerLog.length===0?``:m`
       <section class="answer-log" aria-label=${t.answerLogHeading}>
         <h3>${t.answerLogHeading}</h3>
         <ol class="answer-log-list">
-          ${e.answerLog.map((e,r)=>p`<li>
+          ${e.answerLog.map((e,r)=>m`<li>
               ${r+1}.
               ${this.modeLabel(e.modeId,n)}:
               ${this.describeSubmission(e.submission)}
@@ -870,13 +881,13 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
             </li>`)}
         </ol>
       </section>
-    `}describeSubmission(e){switch(e.kind){case`quantity-selection`:return`known=[${e.knownIds.join(`, `)}] unknown=${e.unknownId??`none`}`;case`named-equation`:case`academic-notation`:return e.input}}handleNavigateHome(){this.dispatchEvent(new CustomEvent(x,{bubbles:!0,composed:!0,detail:{}}))}supportsHint(e){if(e.status!==`active`)return!1;let t=e.currentProblem,n=e.plan.items[e.currentIndex];return t===void 0||n===void 0?!1:o({modeId:n.modeId,guidance:t.guidance??[]})!==void 0}modeLabel(e,t){switch(e){case`story-to-quantities`:return t.storyToQuantities.heading;case`quantities-to-named-equation`:return t.quantitiesToNamedEquation.heading;case`named-equation-to-academic-notation`:return t.namedEquationToAcademicNotation.heading;case`academic-notation-to-named-equation`:return t.academicNotationToNamedEquation.heading}}handleSessionNext(){this.activeSession!==void 0&&(this.activeSession=this.recordSession(this.activeSession.next()),this.screen=this.activeSession?.screen)}handleSessionHint(){this.activeSession!==void 0&&(this.activeSession=this.recordSession(this.activeSession.requestHint()))}renderShell({locale:e,heading:t,positionLabel:n,prompt:i,source:a,input:o,feedback:s,replay:c,menuSeed:l,menuModeId:u}){let d=r[e],f=g[e]??g.en;return p`
+    `}describeSubmission(e){switch(e.kind){case`quantity-selection`:return`known=[${e.knownIds.join(`, `)}] unknown=${e.unknownId??`none`}`;case`named-equation`:case`academic-notation`:return e.input}}handleNavigateHome(){this.dispatchEvent(new CustomEvent(C,{bubbles:!0,composed:!0,detail:{}}))}supportsHint(e){if(e.status!==`active`)return!1;let t=e.currentProblem,n=e.plan.items[e.currentIndex];return t===void 0||n===void 0?!1:o({modeId:n.modeId,guidance:t.guidance??[]})!==void 0}modeLabel(e,t){switch(e){case`story-to-quantities`:return t.storyToQuantities.heading;case`quantities-to-named-equation`:return t.quantitiesToNamedEquation.heading;case`named-equation-to-academic-notation`:return t.namedEquationToAcademicNotation.heading;case`academic-notation-to-named-equation`:return t.academicNotationToNamedEquation.heading}}handleSessionNext(){this.activeSession!==void 0&&(this.activeSession=this.recordSession(this.activeSession.next()),this.screen=this.activeSession?.screen)}handleSessionHint(){this.activeSession!==void 0&&(this.activeSession=this.recordSession(this.activeSession.requestHint()))}renderShell({locale:e,heading:t,positionLabel:n,prompt:r,source:i,input:o,feedback:s,replay:c,menuSeed:l,menuModeId:u}){let d=a[e],f=v[e]??v.en;return m`
       <puzzle-shell
         .heading=${n===void 0?t:`${t} — ${n}`}
         .sourceLabel=${d.common.source}
         .targetLabel=${d.common.target}
         .feedbackLabel=${d.common.feedback}
-        .prompt=${i}
+        .prompt=${r}
         .feedback=${s}
         .replayLabel=${d.common.replay}
         .hasReplay=${c!==void 0}
@@ -896,10 +907,14 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
         <puzzle-menu
           slot="settings"
           .seed=${l}
+          .familyId=${this.currentFamilyId()}
           .themeId=${this.themeId}
           .modeId=${u}
           .locale=${e}
           .menuLabel=${d.puzzleMenu.label}
+          .familyLabel=${d.puzzleMenu.family}
+          .totalFromPartsLabel=${d.puzzleMenu.totalFromParts}
+          .groupsTotalLabel=${d.puzzleMenu.groupsTotal}
           .scenarioLabel=${d.puzzleMenu.scenario}
           .dronePowerLabel=${d.puzzleMenu.dronePower}
           .creatorFollowersLabel=${d.puzzleMenu.creatorFollowers}
@@ -912,9 +927,9 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
           .showLabel=${d.puzzleMenu.show}
           .startSessionLabel=${d.puzzleMenu.startSession}
         ></puzzle-menu>
-        <div slot="source">${a}</div>
+        <div slot="source">${i}</div>
         <div slot="input">${o}</div>
-        ${c===void 0?null:p`<dl slot="replay" class="replay-list">
+        ${c===void 0?null:m`<dl slot="replay" class="replay-list">
               <dt>${d.common.seed}</dt>
               <dd>${c.seed}</dd>
               <dt>${d.common.generatorVersion}</dt>
@@ -925,4 +940,4 @@ import{A as e,C as t,D as n,E as r,O as i,S as a,T as o,_ as s,a as c,d as l,f a
               <dd>${c.storySeed}</dd>
             </dl>`}
       </puzzle-shell>
-    `}};function N(e){return t({seed:Number.isSafeInteger(e)?e:17,config:a}).problem}customElements.get(`math-modeling-puzzle`)===void 0&&customElements.define(`math-modeling-puzzle`,M);export{M as MathModelingPuzzle};
+    `}};function F(e,t){return w(e,{seed:Number.isSafeInteger(t)?t:17}).problem}customElements.get(`math-modeling-puzzle`)===void 0&&customElements.define(`math-modeling-puzzle`,P);export{P as MathModelingPuzzle};
