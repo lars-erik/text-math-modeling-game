@@ -119,7 +119,6 @@ test('the groups-total family menu selection navigates through the canonical has
   await new Promise((resolve) => setTimeout(resolve, 250));
 
   expect(globalThis.location.hash).toContain('family=groups-total');
-  expect(globalThis.location.hash).toContain('family=groups-total');
   expect(storyOf(puzzle)).toContain('drones draw');
   expect(storyOf(puzzle)).not.toContain('basic systems');
 });

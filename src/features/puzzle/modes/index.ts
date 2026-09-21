@@ -25,7 +25,6 @@ export {
   createNamedEquationChoiceSeeds,
   type NamedEquationChoiceSeed,
 } from './named-equation-choices';
-export { familySupportsMode, supportedFamilyIds } from './family-support';
 import type { Mode, ModeId } from './mode';
 import { storyToQuantitiesMode } from './story-to-quantities';
 import { quantitiesToNamedEquationMode } from './quantities-to-named-equation';

@@ -55,7 +55,7 @@ groups-total:      total = count * unitValue
 
 with canonical roles/IDs such as `base`, `count`, `unitValue`, and `total`. A drone theme may display these as `basePower`, `droneCount`, `dronePower`, and `totalPower`; a creator theme may display them as follower/post concepts. Neither mapping changes the `Problem` or its relation AST. No problem family may satisfy old assumptions with fake quantities (for example a `base = 0`); a family that lacks a role simply declares a role structure without it.
 
-Mathematical generation therefore takes mathematical inputs such as seed, family, concepts and numeric constraints. It does not take `scenarioId`, `themeId`, locale, task/mode, or input provider. Family mode-support is declared on the Mode axis (`features/puzzle/modes/family-support.ts`), never inside mathematical generation.
+Mathematical generation therefore takes mathematical inputs such as seed, family, concepts and numeric constraints. It does not take `scenarioId`, `themeId`, locale, task/mode, or input provider. Every family in the registry declares its required canonical roles, and generation validates each produced `Problem` against that declaration; support for a family across modes is proven by the family x theme x mode x locale cross-product composition test until a genuinely unsupported combination exists.
 
 The canonical DSL serializes only canonical mathematics and mathematical replay. Theme/scenario selection, localized names, story text and academic display choices are separate replay/presentation metadata.
 

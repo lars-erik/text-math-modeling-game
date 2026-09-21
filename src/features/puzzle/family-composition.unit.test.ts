@@ -2,10 +2,8 @@ import { expect, test } from 'vitest';
 import { serializeProblem } from '../problem-dsl';
 import {
   generateFamilyCase,
-  problemFamilies,
   problemFamilyIds,
 } from '../problem-generation/problem-families';
-import { familySupportsMode } from './modes/family-support';
 import { validateProblemAst } from '../problem-model/problem-validation';
 import { substituteVisibleValues } from '../representations/substitute-visible-values';
 import { createAcademicSymbolMap } from '../representations/academic-symbol-map';
@@ -25,12 +23,7 @@ const locales: readonly PuzzleLocale[] = ['en', 'nb'];
 test('every declared family x theme x mode x locale combination composes', () => {
   let composedCount = 0;
   for (const familyId of problemFamilyIds) {
-    const family = problemFamilies[familyId];
     for (const modeId of modeIds) {
-      expect(
-        familySupportsMode(familyId, modeId),
-        `${familyId} x ${modeId} must be declared explicitly`,
-      ).toBe(true);
       const generated = generateFamilyCase(familyId, { seed: 321 });
       const problemBefore = structuredClone(generated.problem);
       const dslBefore = serializeProblem(generated.problem);

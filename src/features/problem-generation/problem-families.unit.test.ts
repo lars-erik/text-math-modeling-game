@@ -5,8 +5,6 @@ import {
   problemFamilies,
   problemFamilyIds,
 } from './problem-families';
-import { familySupportsMode } from '../puzzle/modes/family-support';
-import { modeIds } from '../puzzle/modes';
 import { serializeProblem } from '../problem-dsl';
 
 test('the family registry contains exactly two real families', () => {
@@ -18,13 +16,6 @@ test('the family registry contains exactly two real families', () => {
   expect(isProblemFamilyId('unknown-family')).toBe(false);
 });
 
-test('family mode support is declared explicitly for every mode', () => {
-  for (const familyId of problemFamilyIds) {
-    for (const modeId of modeIds) {
-      expect(familySupportsMode(familyId, modeId)).toBe(true);
-    }
-  }
-});
 
 test('both families generate deterministically from the same seed', () => {
   for (const familyId of problemFamilyIds) {
@@ -82,4 +73,19 @@ test('generateFamilyCase validates the seed', () => {
   expect(() =>
     generateFamilyCase('groups-total', { seed: 0x1_0000_0000 }),
   ).toThrowError(/seed/);
+});
+
+test('every generated problem satisfies its family requiredRoles declaration', () => {
+  for (const familyId of problemFamilyIds) {
+    const family = problemFamilies[familyId];
+    for (const seed of [0, 1, 17, 123, 4294967295]) {
+      const { problem } = generateFamilyCase(familyId, { seed });
+      const actualRoles = problem.quantities
+        .map((quantity) => quantity.role)
+        .filter((role) => role !== undefined)
+        .sort();
+      const declaredRoles = [...family.requiredRoles].sort();
+      expect(actualRoles, `${familyId} seed ${seed}`).toEqual(declaredRoles);
+    }
+  }
 });

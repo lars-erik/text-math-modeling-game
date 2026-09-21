@@ -82,7 +82,29 @@ export function generateFamilyCase(
       'Generation seed must be a non-negative 32-bit unsigned integer.',
     );
   }
-  return problemFamilies[familyId].generateCase(options);
+  const generated = problemFamilies[familyId].generateCase(options);
+  assertDeclaredRoles(familyId, generated.problem);
+  return generated;
+}
+
+function assertDeclaredRoles(
+  familyId: ProblemFamilyId,
+  problem: Problem,
+): void {
+  const declaredRoles = problemFamilies[familyId].requiredRoles;
+  const actualRoles = problem.quantities
+    .map((quantity) => quantity.role)
+    .filter((role): role is QuantityRole => role !== undefined)
+    .sort();
+  if (
+    actualRoles.length !== declaredRoles.length ||
+    actualRoles.some((role, index) => role !== [...declaredRoles].sort()[index])
+  ) {
+    throw new Error(
+      `Family ${familyId} declared roles ${JSON.stringify(declaredRoles)} ` +
+        `but generated a problem with roles ${JSON.stringify(actualRoles)}.`,
+    );
+  }
 }
 
 export type { TotalFromPartsGenerationConfig, GroupsTotalGenerationConfig };
