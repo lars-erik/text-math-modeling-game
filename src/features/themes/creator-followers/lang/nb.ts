@@ -63,6 +63,12 @@ export const nb = {
     question: {
       followersPerPost: ({ noun }) =>
         `Hvor mange følgere gir hvert ${noun}?`,
+      startingFollowers: ({ noun }) =>
+        `Hvor mange følgere starter ${noun}en med?`,
+      promotedPostCount: ({ noun }) =>
+        `Hvor mange promoterte ${noun} er det?`,
+      finalFollowers: ({ noun }) =>
+        `Hvor mange følgere har ${noun}en til slutt?`,
     },
   },
 } satisfies CreatorFollowersLocaleResources;

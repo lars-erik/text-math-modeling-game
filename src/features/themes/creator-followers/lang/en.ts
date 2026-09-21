@@ -63,6 +63,12 @@ export const en = {
     question: {
       followersPerPost: ({ noun }) =>
         `How many followers does each ${noun} gain?`,
+      startingFollowers: ({ noun }) =>
+        `How many followers does the ${noun} start with?`,
+      promotedPostCount: ({ noun }) =>
+        `How many promoted ${noun} are there?`,
+      finalFollowers: ({ noun }) =>
+        `How many followers does the ${noun} finish with?`,
     },
   },
 } satisfies CreatorFollowersLocaleResources;

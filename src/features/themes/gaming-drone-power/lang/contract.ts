@@ -46,6 +46,9 @@ export type ScenarioLocaleResources = {
     };
     question: {
       perDronePower: (values: { noun: string }) => string;
+      basePower: (values: { noun: string }) => string;
+      droneCount: (values: { noun: string }) => string;
+      totalPower: (values: { noun: string }) => string;
     };
   };
 };

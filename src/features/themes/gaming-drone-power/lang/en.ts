@@ -54,6 +54,12 @@ export const en = {
     question: {
       perDronePower: ({ noun }) =>
         `How much power does one ${noun} draw?`,
+      basePower: ({ noun }) =>
+        `How much power does the ${noun} use for basic systems?`,
+      droneCount: ({ noun }) =>
+        `How many ${noun} does it power?`,
+      totalPower: ({ noun }) =>
+        `How much power do the ship and its ${noun} draw in total?`,
     },
   },
 } satisfies ScenarioLocaleResources;

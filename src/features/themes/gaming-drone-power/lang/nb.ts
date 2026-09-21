@@ -54,6 +54,12 @@ export const nb = {
     question: {
       perDronePower: ({ noun }) =>
         `Hvor mye effekt trekker én ${noun}?`,
+      basePower: ({ noun }) =>
+        `Hvor mye effekt bruker ${noun}et til grunnleggende systemer?`,
+      droneCount: ({ noun }) =>
+        `Hvor mange ${noun} driver den?`,
+      totalPower: ({ noun }) =>
+        `Hvor mye effekt trekker skipet og ${noun}ene til sammen?`,
     },
   },
 } satisfies ScenarioLocaleResources;

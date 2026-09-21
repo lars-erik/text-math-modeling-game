@@ -1,4 +1,5 @@
 import { dronePowerResources, type SupportedLocale } from './lang';
+import type { ScenarioLocaleResources } from './lang/contract';
 import type { ThemeFact } from '../theme';
 import type { DronePowerStoryPlan } from './story-plan';
 
@@ -53,9 +54,7 @@ export function renderDronePowerStory(
       `Story question fact ${plan.question.factId} must be hidden.`,
     );
   }
-  const question = resources.fragments.question.perDronePower({
-    noun: resources.nouns[plan.question.nounKey].singular,
-  });
+  const question = questionFragment(plan)(resources);
   return {
     text: [...sentences, question].join(' '),
     replay: {
@@ -63,6 +62,31 @@ export function renderDronePowerStory(
       scenarioId: 'gaming.drone-power',
       storySeed: plan.seed,
     },
+  };
+}
+
+function questionFragment(
+  plan: DronePowerStoryPlan,
+): (resources: ScenarioLocaleResources) => string {
+  return (resources) => {
+    switch (plan.question.fragmentKey) {
+      case 'question.perDronePower':
+        return resources.fragments.question.perDronePower({
+          noun: resources.nouns[plan.question.nounKey].singular,
+        });
+      case 'question.basePower':
+        return resources.fragments.question.basePower({
+          noun: resources.nouns[plan.question.nounKey].singular,
+        });
+      case 'question.droneCount':
+        return resources.fragments.question.droneCount({
+          noun: resources.nouns[plan.question.nounKey].plural,
+        });
+      case 'question.totalPower':
+        return resources.fragments.question.totalPower({
+          noun: resources.nouns[plan.question.nounKey].plural,
+        });
+    }
   };
 }
 

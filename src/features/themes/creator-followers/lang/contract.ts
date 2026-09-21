@@ -42,6 +42,9 @@ export type CreatorFollowersLocaleResources = {
     };
     question: {
       followersPerPost: (values: { noun: string }) => string;
+      startingFollowers: (values: { noun: string }) => string;
+      promotedPostCount: (values: { noun: string }) => string;
+      finalFollowers: (values: { noun: string }) => string;
     };
   };
 };
