@@ -75,6 +75,10 @@ If a tool appears unavailable, attempt to use it and report the actual error bef
 
 For files under `src/`, also follow `src/AGENTS.md` for the TDD rhythm, source layout, approvals and test commands.
 
+## Browser-test environment
+
+Follow [`docs/browser-testing.md`](docs/browser-testing.md) for Windows, macOS, Linux, and CI setup. After `npm ci` in `src/`, use `npm run browser:install` to install the pinned Chromium in Playwright's shared user cache. On Linux hosts with package-install privileges use `npm run browser:install:ci` to install both Chromium and required system libraries. Run `npm run browser:doctor` to diagnose startup failures without changing the machine. Do not repeatedly attempt arbitrary system package installations or disable tests to hide a missing browser; when system privileges are unavailable, report the error and consult the CI browser-test result.
+
 ## Architecture decisions
 
 When a user prompt approves an architectural decision, record it under `docs/adr/` using the existing MADR-style format. If the decision supersedes an older ADR, mark the older ADR accordingly rather than leaving two accepted decisions in conflict.
