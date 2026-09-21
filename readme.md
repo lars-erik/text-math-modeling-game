@@ -20,6 +20,7 @@ Open pull requests that change the application are published as temporary previe
 8. [Phase 1 execution plan](docs/07-phase-1-plan.md) — small red/green/refactor milestones and acceptance criteria.
 9. [Future roadmap](docs/08-future-roadmap.md) — architecture boundaries only.
 10. [Technology decisions](docs/09-technology-decisions.md) — Lit, Svelte, Vue, React; Vite/Bun; parser and renderer trade-offs.
+11. [Session persistence](docs/11-session-persistence.md) — local snapshots, replay versus resume, invalidation policy.
 
 [Project agent agreement](AGENTS.md) defines architecture preflight for all agents; [source working agreement](src/AGENTS.md) adds the implementation TDD rhythm.
 
@@ -47,7 +48,7 @@ The real application exposes four implemented learner transformations:
 
 Named and academic equations are parsed back into the canonical domain AST and checked structurally rather than by raw string comparison. Academic display uses a replaceable KaTeX adapter while the AST remains authoritative. The browser UI has a shared responsive shell, scenario/task/seed/locale controls, accessible interaction tests, and selected visual screenshot approvals. The application uses hash routing with a route name and its arguments in the hash query string, for example `#puzzle?seed=321&scenario=creator.followers&task=named-equation-to-academic-notation&language=nb`; an empty hash resolves to the Home destination and the public language parameter is `language`.
 
-One canonical mathematical Problem composes independently with a Theme and a Mode; switching Theme, Mode, locale or input provider does not regenerate or rewrite the Problem. See the [Milestone 8 architecture note](docs/milestone-8-architecture.md) for the new representation and display boundaries.
+One canonical mathematical Problem composes independently with a Theme and a Mode; switching Theme, Mode, locale or input provider does not regenerate or rewrite the Problem. See the [Milestone 8 architecture note](docs/milestone-8-architecture.md) for the new representation and display boundaries. Session runs persist locally behind a small repository port; an in-progress run can be resumed after refresh and completed runs appear in Home history. See [Session persistence](docs/11-session-persistence.md) for the snapshot contract, run identity and invalidation policy.
 
 ## Architectural invariant
 
