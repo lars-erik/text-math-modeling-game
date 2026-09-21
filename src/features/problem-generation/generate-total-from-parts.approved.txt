@@ -1,6 +1,7 @@
 replay {
   "seed": 17,
   "generatorVersion": "total-from-parts-v1",
+  "hiddenRole": "per-item",
   "config": {
     "base": {
       "min": 10,
@@ -57,6 +58,7 @@ problem total-from-parts-seed-17 {
     replay {
         seed 17
         generator total-from-parts-v1
+        hidden-role per-item
     }
 }
 
@@ -112,5 +114,6 @@ dsl
       replay {
           seed 17
           generator total-from-parts-v1
+          hidden-role per-item
       }
   }

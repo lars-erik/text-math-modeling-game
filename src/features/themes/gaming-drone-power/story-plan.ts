@@ -4,73 +4,109 @@ export type DronePowerStoryPlan = {
   scenarioId: 'gaming.drone-power';
   seed: number;
   structure: 'base-and-parts' | 'groups-only';
-  sentences: readonly (
-    | {
-        fragmentKey:
-          | 'baseFact.basicSystems'
-          | 'countFact.activeDrones';
-        factId: ThemeFact['themeQuantityId'];
-        nounKey: 'ship' | 'drone';
-      }
-    | {
-        fragmentKey: 'totalFact.combinedDraw' | 'totalFact.droneDraw';
-        factId: ThemeFact['themeQuantityId'];
-      }
-  )[];
-  question: {
-    fragmentKey: 'question.perDronePower';
+  sentences: readonly {
+    fragmentKey:
+      | 'baseFact.basicSystems'
+      | 'countFact.activeDrones'
+      | 'perItemFact.droneDraw'
+      | 'totalFact.combinedDraw'
+      | 'totalFact.droneDraw';
     factId: ThemeFact['themeQuantityId'];
-    nounKey: 'drone';
+    nounKey: 'ship' | 'drone';
+  }[];
+  question: {
+    fragmentKey:
+      | 'question.perDronePower'
+      | 'question.basePower'
+      | 'question.droneCount'
+      | 'question.totalPower'
+      | 'question.totalDronePower';
+    factId: ThemeFact['themeQuantityId'];
+    nounKey: 'ship' | 'drone';
   };
 };
+
+const statementFragmentsByRole = {
+  base: 'baseFact.basicSystems',
+  count: 'countFact.activeDrones',
+  'per-item': 'perItemFact.droneDraw',
+  total: 'totalFact.combinedDraw',
+} as const satisfies Record<
+  string,
+  | 'baseFact.basicSystems'
+  | 'countFact.activeDrones'
+  | 'perItemFact.droneDraw'
+  | 'totalFact.combinedDraw'
+>;
+
+const nounsByRole = {
+  base: 'ship',
+  count: 'drone',
+  'per-item': 'drone',
+  total: 'drone',
+} as const satisfies Record<string, 'ship' | 'drone'>;
+
+const questionFragmentsByRole = {
+  'per-item': 'question.perDronePower',
+  base: 'question.basePower',
+  count: 'question.droneCount',
+  total: {
+    'base-and-parts': 'question.totalPower',
+    'groups-only': 'question.totalDronePower',
+  },
+} as const satisfies Record<
+  string,
+  | DronePowerStoryPlan['question']['fragmentKey']
+  | {
+      'base-and-parts': DronePowerStoryPlan['question']['fragmentKey'];
+      'groups-only': DronePowerStoryPlan['question']['fragmentKey'];
+    }
+>;
 
 export function planDronePowerStory(
   facts: readonly ThemeFact[],
   seed: number,
 ): DronePowerStoryPlan {
-  const factIdByRole = new Map(facts.map((fact) => [fact.role, fact.themeQuantityId]));
-  const hasBase = factIdByRole.has('base');
+  const factByRole = new Map(facts.map((fact) => [fact.role, fact]));
+  const hasBase = factByRole.has('base');
+  const hiddenFact = facts.find((fact) => fact.visibility === 'hidden');
+  if (hiddenFact === undefined || hiddenFact.role === undefined) {
+    throw new Error('Drone-power story needs exactly one hidden fact.');
+  }
+  const structure = hasBase ? 'base-and-parts' : 'groups-only';
+  const totalQuestionFragment =
+    questionFragmentsByRole.total[structure];
   return {
     scenarioId: 'gaming.drone-power',
     seed,
-    structure: hasBase ? 'base-and-parts' : 'groups-only',
-    sentences: [
-      ...(hasBase
-        ? [
-            {
-              fragmentKey: 'baseFact.basicSystems' as const,
-              factId: requireRole(factIdByRole, 'base'),
-              nounKey: 'ship' as const,
-            },
-          ]
-        : []),
-      {
-        fragmentKey: 'countFact.activeDrones',
-        factId: requireRole(factIdByRole, 'count'),
-        nounKey: 'drone',
-      },
-      {
-        fragmentKey: hasBase
-          ? ('totalFact.combinedDraw' as const)
-          : ('totalFact.droneDraw' as const),
-        factId: requireRole(factIdByRole, 'total'),
-      },
-    ],
+    structure,
+    sentences: facts
+      .filter(
+        (fact): fact is ThemeFact & {
+          visibility: 'known';
+          role: 'base' | 'count' | 'per-item' | 'total';
+        } =>
+          fact.visibility === 'known' &&
+          (fact.role === 'base' ||
+            fact.role === 'count' ||
+            fact.role === 'per-item' ||
+            fact.role === 'total'),
+      )
+      .map((fact) => ({
+        fragmentKey:
+          fact.role === 'total' && !hasBase
+            ? ('totalFact.droneDraw' as const)
+            : statementFragmentsByRole[fact.role],
+        factId: fact.themeQuantityId,
+        nounKey: nounsByRole[fact.role],
+      })),
     question: {
-      fragmentKey: 'question.perDronePower',
-      factId: requireRole(factIdByRole, 'per-item'),
-      nounKey: 'drone',
+      fragmentKey:
+        hiddenFact.role === 'total'
+          ? totalQuestionFragment
+          : questionFragmentsByRole[hiddenFact.role],
+      factId: hiddenFact.themeQuantityId,
+      nounKey: nounsByRole[hiddenFact.role],
     },
   };
-}
-
-function requireRole(
-  factIdByRole: ReadonlyMap<string, string>,
-  role: string,
-): string {
-  const factId = factIdByRole.get(role);
-  if (factId === undefined) {
-    throw new Error(`Drone-power story needs a fact with role ${role}.`);
-  }
-  return factId;
 }

@@ -57,6 +57,8 @@ with canonical roles/IDs such as `base`, `count`, `unitValue`, and `total`. A dr
 
 Mathematical generation therefore takes mathematical inputs such as seed, family, concepts and numeric constraints. It does not take `scenarioId`, `themeId`, locale, task/mode, or input provider. Every family in the registry declares its required canonical roles, and generation validates each produced `Problem` against that declaration; support for a family across modes is proven by the family x theme x mode x locale cross-product composition test until a genuinely unsupported combination exists.
 
+Each family also declares the hidden roles it supports (`per-item`, `base`, `count`, `total` for `total-from-parts`; `per-item`, `count`, `total` for `groups-total`). The hidden role is a generation input: it decides only which quantities are `known` versus `hidden`, never the underlying values, the relation, or the story planning. The resolved hidden role is part of the replay metadata and the canonical puzzle hash, and defaults to `per-item` so pre-M12 seeds and persisted sessions stay reproducible.
+
 The canonical DSL serializes only canonical mathematics and mathematical replay. Theme/scenario selection, localized names, story text and academic display choices are separate replay/presentation metadata.
 
 ## Theme

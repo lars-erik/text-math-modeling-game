@@ -40,12 +40,19 @@ export type ScenarioLocaleResources = {
         isSingular: boolean;
       }) => string;
     };
+    perItemFact: {
+      droneDraw: (values: { value: string; unit: string }) => string;
+    };
     totalFact: {
       combinedDraw: (values: { value: string; unit: string }) => string;
       droneDraw: (values: { value: string; unit: string }) => string;
     };
     question: {
       perDronePower: (values: { noun: string }) => string;
+      basePower: (values: { noun: string }) => string;
+      droneCount: (values: { noun: string }) => string;
+      totalPower: (values: { noun: string }) => string;
+      totalDronePower: (values: { noun: string }) => string;
     };
   };
 };

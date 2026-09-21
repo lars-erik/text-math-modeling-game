@@ -17,6 +17,11 @@ export type PuzzleLocaleResources = {
     family: string;
     totalFromParts: string;
     groupsTotal: string;
+    hiddenRole: string;
+    perItemUnknown: string;
+    baseUnknown: string;
+    countUnknown: string;
+    totalUnknown: string;
     scenario: string;
     dronePower: string;
     creatorFollowers: string;

@@ -11,7 +11,8 @@ export const problemGrammar = ohm.grammar(String.raw`
       = "?"      -- hidden
       | integer  -- known
     Equation = "equation" "{" equationText "}"
-    Replay = "replay" "{" "seed" integer "generator" metadataIdentifier "}"
+    Replay = "replay" "{" "seed" integer "generator" metadataIdentifier HiddenRole? "}"
+    HiddenRole = "hidden-role" role
     Guidance = "guidance" "{" Watch* "}"
     Watch = "watch" metadataIdentifier "{" GuidanceRef* "}"
     GuidanceRef = identifier metadataIdentifier

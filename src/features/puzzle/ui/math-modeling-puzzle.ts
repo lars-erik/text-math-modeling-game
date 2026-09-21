@@ -44,8 +44,14 @@ import {
   defaultProblemFamilyId,
   generateFamilyCase,
   isProblemFamilyId,
+  problemFamilies,
   type ProblemFamilyId,
 } from '../../problem-generation/problem-families';
+import {
+  defaultHiddenRole,
+  isHiddenRole,
+  type HiddenRole,
+} from '../../problem-generation/hidden-role';
 import {
   isPuzzleInputMode,
   puzzleInputProviders,
@@ -65,6 +71,7 @@ export class MathModelingPuzzle extends LitElement {
   static properties = {
     seed: { type: String },
     family: { type: String },
+    hiddenRole: { attribute: 'hidden-role', type: String },
     session: { type: String },
     themeId: { attribute: 'theme', type: String },
     modeId: { attribute: 'mode', type: String },
@@ -231,6 +238,7 @@ export class MathModelingPuzzle extends LitElement {
 
   declare seed: string;
   declare family: string;
+  declare hiddenRole: string;
   declare session: string;
   declare themeId: string;
   declare modeId: string;
@@ -246,6 +254,7 @@ export class MathModelingPuzzle extends LitElement {
     super();
     this.seed = '17';
     this.family = defaultProblemFamilyId;
+    this.hiddenRole = defaultHiddenRole;
     this.session = '';
     this.themeId = 'gaming.drone-power';
     this.modeId = 'story-to-quantities';
@@ -253,7 +262,11 @@ export class MathModelingPuzzle extends LitElement {
     this.locale = 'en';
     this.academicDisplayAdapter = textAcademicDisplayAdapter;
     this.screen = undefined;
-    this.generatedProblem = generateCase(defaultProblemFamilyId, 17);
+    this.generatedProblem = generateCase(
+      defaultProblemFamilyId,
+      defaultHiddenRole,
+      17,
+    );
     this.activeSession = undefined;
   }
 
@@ -276,16 +289,19 @@ export class MathModelingPuzzle extends LitElement {
     }
     if (
       changedProperties.has('seed') ||
-      changedProperties.has('family')
+      changedProperties.has('family') ||
+      changedProperties.has('hiddenRole')
     ) {
       this.generatedProblem = generateCase(
         this.currentFamilyId(),
+        this.currentHiddenRole(),
         Number(this.seed),
       );
     }
     if (
       changedProperties.has('seed') ||
       changedProperties.has('family') ||
+      changedProperties.has('hiddenRole') ||
       changedProperties.has('themeId') ||
       changedProperties.has('modeId') ||
       changedProperties.has('locale') ||
@@ -641,6 +657,19 @@ export class MathModelingPuzzle extends LitElement {
       : defaultProblemFamilyId;
   }
 
+  private currentHiddenRole(): HiddenRole {
+    const familyId = this.currentFamilyId();
+    const hiddenRoles = problemFamilies[familyId].hiddenRoles;
+    if (
+      this.hiddenRole !== '' &&
+      isHiddenRole(this.hiddenRole) &&
+      hiddenRoles.includes(this.hiddenRole)
+    ) {
+      return this.hiddenRole;
+    }
+    return defaultHiddenRole;
+  }
+
   private requestSessionState(
     changes: Pick<SessionSelectionRequest, 'locale'>,
   ): void {
@@ -669,6 +698,7 @@ export class MathModelingPuzzle extends LitElement {
         detail: {
           seed: Number(this.seed),
           familyId: this.currentFamilyId(),
+          hiddenRole: this.currentHiddenRole(),
           themeId: isThemeId(this.themeId) ? this.themeId : 'gaming.drone-power',
           modeId: isModeId(this.modeId)
             ? this.modeId
@@ -929,7 +959,13 @@ export class MathModelingPuzzle extends LitElement {
           .modeId=${menuModeId}
           .locale=${locale}
           .menuLabel=${resources.puzzleMenu.label}
+          .hiddenRole=${this.currentHiddenRole()}
           .familyLabel=${resources.puzzleMenu.family}
+          .hiddenRoleLabel=${resources.puzzleMenu.hiddenRole}
+          .perItemUnknownLabel=${resources.puzzleMenu.perItemUnknown}
+          .baseUnknownLabel=${resources.puzzleMenu.baseUnknown}
+          .countUnknownLabel=${resources.puzzleMenu.countUnknown}
+          .totalUnknownLabel=${resources.puzzleMenu.totalUnknown}
           .totalFromPartsLabel=${resources.puzzleMenu.totalFromParts}
           .groupsTotalLabel=${resources.puzzleMenu.groupsTotal}
           .scenarioLabel=${resources.puzzleMenu.scenario}
@@ -963,9 +999,16 @@ export class MathModelingPuzzle extends LitElement {
   }
 }
 
-function generateCase(familyId: ProblemFamilyId, seed: number): Problem {
+function generateCase(
+  familyId: ProblemFamilyId,
+  hiddenRole: HiddenRole,
+  seed: number,
+): Problem {
   const parsed = Number.isSafeInteger(seed) ? seed : 17;
-  return generateFamilyCase(familyId, { seed: parsed }).problem;
+  return generateFamilyCase(familyId, {
+    seed: parsed,
+    hiddenRole,
+  }).problem;
 }
 
 if (customElements.get('math-modeling-puzzle') === undefined) {

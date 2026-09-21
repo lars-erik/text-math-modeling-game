@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
 import {
-  defaultTotalFromPartsGenerationConfig,
-  generateTotalFromPartsCase,
-} from '../problem-generation/generate-total-from-parts';
+  generateFamilyCase,
+  defaultProblemFamilyId,
+} from '../problem-generation/problem-families';
 import { composePuzzle } from '../puzzle/compose-puzzle';
 import type { LearnerAnswer } from '../puzzle/learner-answer';
 import type { QuantitySelection } from '../puzzle/modes';
@@ -185,9 +185,9 @@ test('a session item composed directly matches the playback item', () => {
   const session = start();
   const item = session.plan.items[0];
   const direct = composePuzzle({
-    problem: generateTotalFromPartsCase({
+    problem: generateFamilyCase(defaultProblemFamilyId, {
       seed: item.problemSeed,
-      config: defaultTotalFromPartsGenerationConfig,
+      hiddenRole: item.hiddenRole,
     }).problem,
     themeId: 'gaming.drone-power',
     modeId: item.modeId,
@@ -344,11 +344,17 @@ function correctAnswerFor(session: GrayboxSession):
     throw new Error('The session has no active puzzle screen.');
   }
   switch (task.modeId) {
-    case 'story-to-quantities':
+    case 'story-to-quantities': {
+      const quantities = session.screen?.context.quantities ?? [];
       return {
-        knownIds: ['base', 'count', 'total'],
-        unknownId: 'unitValue',
+        knownIds: quantities
+          .filter((quantity) => quantity.given.kind === 'known')
+          .map((quantity) => quantity.id),
+        unknownId: quantities.find(
+          (quantity) => quantity.given.kind === 'hidden',
+        )?.id,
       };
+    }
     case 'quantities-to-named-equation':
     case 'academic-notation-to-named-equation':
       return { kind: 'text', input: canonicalNamedEquation(session) };
@@ -368,7 +374,8 @@ function canonicalNamedEquation(session: GrayboxSession): string {
   const names = Object.fromEntries(
     quantities.map((quantity) => [quantity.role, quantity.variableName]),
   );
-  return `${names.total} = ${names.base} + ${names.count} * ${names['per-item']}`;
+  const baseTerm = names.base === undefined ? '' : `${names.base} + `;
+  return `${names.total} = ${baseTerm}${names.count} * ${names['per-item']}`;
 }
 
 function perModeCounts(modeIds: readonly string[]): Record<string, number> {

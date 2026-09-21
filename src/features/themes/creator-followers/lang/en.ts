@@ -54,6 +54,10 @@ export const en = {
       promotedPosts: ({ count, noun }) =>
         `Each of ${count} promoted ${noun} gains the same number of followers.`,
     },
+    perItemFact: {
+      followersPerPost: ({ value, unit }) =>
+        `Each of them gains ${value} ${unit}.`,
+    },
     totalFact: {
       finalAudience: ({ value, unit }) =>
         `The creator finishes with ${value} ${unit}.`,
@@ -63,6 +67,14 @@ export const en = {
     question: {
       followersPerPost: ({ noun }) =>
         `How many followers does each ${noun} gain?`,
+      startingFollowers: ({ noun }) =>
+        `How many followers does the ${noun} start with?`,
+      promotedPostCount: ({ noun }) =>
+        `How many promoted ${noun} are there?`,
+      finalFollowers: ({ noun }) =>
+        `How many followers does the ${noun} finish with?`,
+      totalPostGains: ({ noun }) =>
+        `How many followers do the promoted ${noun} bring in, in total?`,
     },
   },
 } satisfies CreatorFollowersLocaleResources;

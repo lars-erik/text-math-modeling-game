@@ -1,15 +1,15 @@
-session seed=918273 planner=session-plan-v1 theme=gaming.drone-power locale=en
+session seed=918273 planner=session-plan-v2 theme=gaming.drone-power locale=en
 plan length=10
-  item 1/10 problem-seed=619058406 mode=named-equation-to-academic-notation
-  item 2/10 problem-seed=1613875155 mode=academic-notation-to-named-equation
-  item 3/10 problem-seed=2058463390 mode=story-to-quantities
-  item 4/10 problem-seed=2754909060 mode=quantities-to-named-equation
-  item 5/10 problem-seed=2035329318 mode=named-equation-to-academic-notation
-  item 6/10 problem-seed=3030019899 mode=academic-notation-to-named-equation
-  item 7/10 problem-seed=3474637422 mode=story-to-quantities
-  item 8/10 problem-seed=2801184052 mode=quantities-to-named-equation
-  item 9/10 problem-seed=2081593430 mode=named-equation-to-academic-notation
-  item 10/10 problem-seed=3076285507 mode=academic-notation-to-named-equation
+  item 1/10 problem-seed=619058406 mode=named-equation-to-academic-notation hidden-role=count
+  item 2/10 problem-seed=1613875155 mode=academic-notation-to-named-equation hidden-role=base
+  item 3/10 problem-seed=2058463390 mode=story-to-quantities hidden-role=total
+  item 4/10 problem-seed=2754909060 mode=quantities-to-named-equation hidden-role=per-item
+  item 5/10 problem-seed=2035329318 mode=named-equation-to-academic-notation hidden-role=count
+  item 6/10 problem-seed=3030019899 mode=academic-notation-to-named-equation hidden-role=base
+  item 7/10 problem-seed=3474637422 mode=story-to-quantities hidden-role=total
+  item 8/10 problem-seed=2801184052 mode=quantities-to-named-equation hidden-role=per-item
+  item 9/10 problem-seed=2081593430 mode=named-equation-to-academic-notation hidden-role=count
+  item 10/10 problem-seed=3076285507 mode=academic-notation-to-named-equation hidden-role=base
 item 4/10
 mode quantities-to-named-equation edge quantities -> named-equation
 problem 2754909060 generator=total-from-parts-v1
@@ -42,10 +42,10 @@ log item 4 accepted named-equation "totalPower = basePower + droneCount * droneP
 item 5/10
 mode named-equation-to-academic-notation edge named-equation -> academic-notation
 problem 2035329318 generator=total-from-parts-v1
-submit academic-notation "26 = 11 + 5*p"
+submit academic-notation "26 = 11 + n*3"
 result accepted: The academic notation matches the relationship.
 transition item-completed
-log item 5 accepted academic-notation "26 = 11 + 5*p"
+log item 5 accepted academic-notation "26 = 11 + n*3"
 item 6/10
 mode academic-notation-to-named-equation edge academic-notation -> named-equation
 problem 3030019899 generator=total-from-parts-v1
@@ -56,10 +56,10 @@ log item 6 accepted named-equation "totalPower = basePower + droneCount * droneP
 item 7/10
 mode story-to-quantities edge story -> quantities
 problem 3474637422 generator=total-from-parts-v1
-submit quantity-selection known=[base, count, total] unknown=unitValue
+submit quantity-selection known=[base, count, unitValue] unknown=total
 result quantity-selection-accepted: The quantities match the story.
 transition item-completed
-log item 7 accepted quantity-selection known=[base, count, total] unknown=unitValue
+log item 7 accepted quantity-selection known=[base, count, unitValue] unknown=total
 item 8/10
 mode quantities-to-named-equation edge quantities -> named-equation
 problem 2801184052 generator=total-from-parts-v1
@@ -70,10 +70,10 @@ log item 8 accepted named-equation "totalPower = basePower + droneCount * droneP
 item 9/10
 mode named-equation-to-academic-notation edge named-equation -> academic-notation
 problem 2081593430 generator=total-from-parts-v1
-submit academic-notation "47 = 39 + 2*p"
+submit academic-notation "47 = 39 + n*4"
 result accepted: The academic notation matches the relationship.
 transition item-completed
-log item 9 accepted academic-notation "47 = 39 + 2*p"
+log item 9 accepted academic-notation "47 = 39 + n*4"
 item 10/10
 mode academic-notation-to-named-equation edge academic-notation -> named-equation
 problem 3076285507 generator=total-from-parts-v1

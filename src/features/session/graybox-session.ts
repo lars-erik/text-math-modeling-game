@@ -692,6 +692,7 @@ function recomposeScreenWithLocale(
 function generateItemProblem(plan: SessionPlan, index: number): Problem {
   return generateFamilyCase(defaultProblemFamilyId, {
     seed: plan.items[index].problemSeed,
+    hiddenRole: plan.items[index].hiddenRole,
   }).problem;
 }
 
