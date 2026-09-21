@@ -29,6 +29,14 @@ export class HomeScreen extends LitElement {
     this.completedRuns = [];
   }
 
+  setHiddenRuns(view: {
+    activeRun: { seed: number; position: number; total: number } | undefined;
+    completedRuns: readonly CompletedSessionSummaryView[];
+  }): void {
+    this.activeRun = view.activeRun;
+    this.completedRuns = view.completedRuns;
+  }
+
   static styles = css`
     :host {
       display: block;
