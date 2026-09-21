@@ -219,14 +219,18 @@ export function startMathModelingApplication(
   });
   options.root.addEventListener(navigateSessionRequestEvent, (event) => {
     const detail = (event as CustomEvent<NavigateSessionRequest>).detail;
-    const selection = {
-      seed: detail?.seed ?? defaultSessionSeed,
-      themeId: themeIdOrThrow(detail?.themeId ?? defaultThemeId),
-      locale: currentLanguage(),
-    };
-    sessionRunStore.start(selection);
-    navigateSafely(() => routeFromSessionSelection(selection));
-    puzzleElement.startSessionFromStore?.();
+    try {
+      const selection = {
+        seed: detail?.seed ?? defaultSessionSeed,
+        themeId: themeIdOrThrow(detail?.themeId ?? defaultThemeId),
+        locale: currentLanguage(),
+      };
+      sessionRunStore.start(selection);
+      navigateSafely(() => routeFromSessionSelection(selection));
+      puzzleElement.startSessionFromStore?.();
+    } catch {
+      return;
+    }
   });
   options.root.addEventListener(navigateResumeSessionRequestEvent, () => {
     const resumed = sessionRunStore.resumeActiveRun();
