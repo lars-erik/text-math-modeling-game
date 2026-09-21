@@ -221,3 +221,71 @@ test('themes never rewrite the canonical groups-total problem', () => {
   }
   expect(generated.problem).toEqual(before);
 });
+
+test('groups-total traverses all four representation edges with accepted answers', () => {
+  const generated = generateFamilyCase('groups-total', { seed: 17 });
+  const problem = generated.problem;
+  const locale = 'en' as const;
+  const themeId = 'gaming.drone-power' as const;
+
+  const storyScreen = composePuzzle({
+    problem,
+    themeId,
+    modeId: 'story-to-quantities',
+    locale,
+  });
+  const quantities = storyScreen.context.quantities;
+  const names = Object.fromEntries(
+    quantities.map((quantity) => [quantity.role, quantity.variableName]),
+  );
+
+  const storySubmission = submitPuzzle({
+    problem,
+    themeId,
+    modeId: 'story-to-quantities',
+    locale,
+    answer: {
+      knownIds: ['count', 'total'],
+      unknownId: 'unitValue',
+    },
+  });
+  expect(storySubmission.feedback?.kind).toBe('quantity-selection-accepted');
+
+  const namedSubmission = submitPuzzle({
+    problem,
+    themeId,
+    modeId: 'quantities-to-named-equation',
+    locale,
+    answer: {
+      kind: 'text',
+      input: `${names.total} = ${names.count} * ${names['per-item']}`,
+    },
+  });
+  expect(namedSubmission.feedback?.kind).toBe('accepted');
+
+  const totalValue = generated.answerKey.bindings.total;
+  const countValue = generated.answerKey.bindings.count;
+  const academicForward = submitPuzzle({
+    problem,
+    themeId,
+    modeId: 'named-equation-to-academic-notation',
+    locale,
+    answer: {
+      kind: 'text',
+      input: `${totalValue} = ${countValue} * p`,
+    },
+  });
+  expect(academicForward.feedback?.kind).toBe('accepted');
+
+  const academicReverse = submitPuzzle({
+    problem,
+    themeId,
+    modeId: 'academic-notation-to-named-equation',
+    locale,
+    answer: {
+      kind: 'text',
+      input: `${names['per-item']} * ${names.count} = ${names.total}`,
+    },
+  });
+  expect(academicReverse.feedback?.kind).toBe('accepted');
+});
