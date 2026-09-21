@@ -1,5 +1,7 @@
 # DSL and representation adapters
 
+> **Writing or reading serialized Problem DSL?** Start with the user-facing [Problem DSL authoring guide](problem-dsl/index.md) and [language reference](problem-dsl/reference.md). This document describes the implementation architecture and representation boundaries.
+
 ## DSL role
 
 The domain AST is the authority. The DSL is its readable, serializable authoring/debug format. Parse a DSL fixture into a domain `Problem`, serialize generated `Problem` values into stable DSL, and replay both. The normal generator constructs ASTs directly, followed by validation and optional serialization.
