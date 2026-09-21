@@ -1,6 +1,11 @@
 import type { PuzzleLocaleResources } from './contract';
 
 export const en = {
+  home: {
+    heading: 'Math modeling puzzles',
+    puzzleLabel: 'Start puzzle',
+    sessionLabel: 'Start session',
+  },
   language: {
     label: 'Language',
     en: 'English',

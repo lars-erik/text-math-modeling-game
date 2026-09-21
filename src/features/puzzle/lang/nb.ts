@@ -1,6 +1,11 @@
 import type { PuzzleLocaleResources } from './contract';
 
 export const nb = {
+  home: {
+    heading: 'Matemodelleringsoppgaver',
+    puzzleLabel: 'Start oppgave',
+    sessionLabel: 'Start økt',
+  },
   language: {
     label: 'Språk',
     en: 'Engelsk',
