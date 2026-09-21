@@ -285,6 +285,7 @@ export class MathModelingPuzzle extends LitElement {
     }
     if (
       changedProperties.has('seed') ||
+      changedProperties.has('family') ||
       changedProperties.has('themeId') ||
       changedProperties.has('modeId') ||
       changedProperties.has('locale') ||
@@ -338,11 +339,6 @@ export class MathModelingPuzzle extends LitElement {
   }
 
   render() {
-    if (this.family !== '' && !isProblemFamilyId(this.family)) {
-      return html`<p role="alert">
-        Unknown problem family ${JSON.stringify(this.family)}.
-      </p>`;
-    }
     if (!isThemeId(this.themeId)) {
       return html`<p role="alert">
         Unknown scenario ${JSON.stringify(this.themeId)}.
