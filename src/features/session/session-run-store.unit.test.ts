@@ -189,6 +189,25 @@ test('recording a completed run moves it to history and clears the active run', 
   expect(history[0]?.total).toBe(session.plan.length);
 });
 
+test('provide never reuses a completed run when the same seed and theme are requested again', () => {
+  const h = harness();
+  let session: GrayboxSession = h.store.start(sessionOptions);
+  for (let index = 0; index < session.plan.length; index += 1) {
+    session = session.submit(correctAnswerFor(session)).next();
+  }
+  expect(session.status).toBe('complete');
+  h.store.record(session);
+
+  const provided = h.store.provide(sessionOptions);
+  expect(provided.status).toBe('active');
+  expect(provided.runId).not.toBe(session.runId);
+  expect(provided.currentIndex).toBe(0);
+  expect(provided.answerLog).toEqual([]);
+  const history = h.store.completedRuns();
+  expect(history).toHaveLength(1);
+  expect(history[0]?.runId).toBe(session.runId);
+});
+
 test('resumeActiveRun restores the active run and reports none after completion', () => {
   const h = harness();
   expect(h.store.resumeActiveRun()).toBeUndefined();

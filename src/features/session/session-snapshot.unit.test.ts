@@ -227,6 +227,61 @@ test('invalid snapshots are rejected instead of restoring a broken run', () => {
   ).toBe('incompatible');
 });
 
+test('restore recalculates acceptance through the mode checker instead of trusting persisted booleans', () => {
+  const session = startRun();
+  const wrong = session.submit({ kind: 'text', input: 'wrong = wrong' });
+  const snapshot = snapshotSessionRun(wrong);
+  const tampered: typeof snapshot = {
+    ...snapshot,
+    answerLog: snapshot.answerLog.map((entry) => ({
+      ...entry,
+      accepted: true,
+    })),
+    currentCompleted: true,
+  };
+  const restored = restoreSessionRun(tampered);
+  expect(restored.kind).toBe('restored');
+  const session2 = restored.kind === 'restored' ? restored.session : undefined!;
+  expect(session2.answerLog[0]?.accepted).toBe(false);
+  expect(session2.availableNext).toBe(false);
+  expect(() => session2.next()).not.toThrow();
+  expect(session2.currentIndex).toBe(wrong.currentIndex);
+});
+
+test('restore rejects a completed snapshot whose log is not genuinely accepted', () => {
+  const session = startRun();
+  const partial = session.submit({ kind: 'text', input: 'wrong = wrong' });
+  const snapshot = snapshotSessionRun(partial);
+  const fakeComplete: typeof snapshot = {
+    ...snapshot,
+    status: 'complete',
+    currentCompleted: true,
+  };
+  expect(restoreSessionRun(fakeComplete).kind).toBe('incompatible');
+
+  const emptyComplete: typeof snapshot = {
+    ...snapshotSessionRun(startRun()),
+    status: 'complete',
+    currentCompleted: true,
+  };
+  expect(restoreSessionRun(emptyComplete).kind).toBe('incompatible');
+});
+
+test('restore rejects an active snapshot claiming progression without an accepted current item', () => {
+  const snapshot = snapshotSessionRun(startRun());
+  expect(
+    restoreSessionRun({ ...snapshot, currentCompleted: true }).kind,
+  ).toBe('restored');
+  const restored = restoreSessionRun({
+    ...snapshot,
+    currentCompleted: true,
+  });
+  const session2 = restored.kind === 'restored' ? restored.session : undefined!;
+  expect(session2.availableNext).toBe(false);
+  expect(() => session2.next()).not.toThrow();
+  expect(session2.currentIndex).toBe(0);
+});
+
 test('two runs with the same seed keep distinct run identities', () => {
   const first = startRun(sessionOptions, 'run-alpha');
   const second = startRun(sessionOptions, 'run-beta');

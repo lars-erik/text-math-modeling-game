@@ -42,6 +42,7 @@ export const defaultModeId: ModeId = 'story-to-quantities';
 type PuzzleAttributes = {
   setAttribute: (name: string, value: string) => void;
   removeAttribute: (name: string) => void;
+  startSessionFromStore?: () => void;
   hidden: boolean;
 };
 
@@ -218,13 +219,14 @@ export function startMathModelingApplication(
   });
   options.root.addEventListener(navigateSessionRequestEvent, (event) => {
     const detail = (event as CustomEvent<NavigateSessionRequest>).detail;
-    navigateSafely(() =>
-      routeFromSessionSelection({
-        seed: detail?.seed ?? defaultSessionSeed,
-        themeId: themeIdOrThrow(detail?.themeId ?? defaultThemeId),
-        locale: currentLanguage(),
-      }),
-    );
+    const selection = {
+      seed: detail?.seed ?? defaultSessionSeed,
+      themeId: themeIdOrThrow(detail?.themeId ?? defaultThemeId),
+      locale: currentLanguage(),
+    };
+    sessionRunStore.start(selection);
+    navigateSafely(() => routeFromSessionSelection(selection));
+    puzzleElement.startSessionFromStore?.();
   });
   options.root.addEventListener(navigateResumeSessionRequestEvent, () => {
     const resumed = sessionRunStore.resumeActiveRun();

@@ -45,7 +45,7 @@ A snapshot never contains functions, rendered screens, composed `PuzzleScreen` s
 Compatibility concerns are kept separate:
 
 - `SessionSnapshot` carries its own `schemaVersion` and `plannerVersion`. Changing the plan algorithm invalidates persisted runs even when the JSON shape is unchanged.
-- The stored profile record has its own profile-shape `schemaVersion`, independent of session snapshot compatibility; the two versions do not need to move in lockstep.
+- The stored profile record has its own profile-shape `schemaVersion`, independent of session snapshot compatibility; the two versions do not need to move in lockstep. Loading **compares against the expected profile schema version**: a profile from a different version is discarded along with its embedded snapshot, even when the snapshot itself is compatible, without touching unrelated keys.
 
 On mismatch, only this application's namespaced records (`math-modeling-game:session:*`) are discarded; unrelated keys and other applications' data are never touched. `localStorage.clear()` is never used. Corrupted individual records (malformed JSON, wrong shape) are removed or ignored without crashing Home or destroying other valid records. An ordinary deployment that does not change persistence compatibility does not wipe progress; there is no app-version check at all. Pre-alpha policy: incompatible data is intentionally disposable and automatically discarded; there is no migration machinery, and the policy will be revisited before public alpha.
 
@@ -61,6 +61,8 @@ On mismatch, only this application's namespaced records (`math-modeling-game:ses
 
 Validation happens before any restoration: malformed item indices, mode mismatches or unknown submissions make the whole snapshot `incompatible` rather than restoring a broken run.
 
+Acceptance is **recalculated, not trusted**: each persisted submission is re-submitted through its Mode checker and the resulting genuine acceptance replaces the persisted boolean, so a structurally valid snapshot cannot claim acceptance or completion it did not earn. The current item's next-availability is derived from the current item's genuine acceptance, and a `complete` snapshot whose log is not genuinely complete (every item present and accepted) is rejected as incompatible. Legitimate latest-answer-per-item and non-advancing restore semantics are unchanged.
+
 ## Run identity: replay versus resume
 
 These are different operations with different identities:
@@ -74,7 +76,7 @@ The `runId` is remembered per browser tab in `sessionStorage` (`math-modeling-ga
 
 A remembered run is only reused for replay when **all replay inputs that define the run's identity** match the route: seed and scenario/theme. Locale is intentionally mutable (the learner may switch language without losing the run); a route with the same seed but a different theme starts a new run and never receives the old run's theme.
 
-The single-active-run policy is deliberate for the MVP: starting a new session replaces the previously saved active run, which is covered by tests.
+The single-active-run policy is deliberate for the MVP: starting a new session replaces the previously saved active run, which is covered by tests. A completed in-memory run is never reused by `provide()`: an explicit Start after completion begins a fresh run in the same mounted app. Start is a **lifecycle command** — the application starts a new run in the store and explicitly refreshes the session view rather than inferring a restart from attribute changes (which Lit may deduplicate when the attributes are identical).
 
 ## Save points
 
@@ -82,7 +84,7 @@ The store records meaningful transitions only: session start, each submit (which
 
 ## Resilience
 
-Disabled storage, quota failures and storage exceptions never prevent in-memory play. All repository reads and writes are wrapped so that failures degrade to "no persisted runs" while the current session continues in memory. The game never throws to the learner because persistence failed.
+Disabled storage, quota failures and storage exceptions never prevent in-memory play. All repository reads and writes are wrapped so that failures degrade to "no persisted runs" while the current session continues in memory. Storage handles are acquired through guarded accessors, so even a `SecurityError` thrown when *reading* `localStorage`/`sessionStorage` (blocked cookies, sandboxed frames) leaves application startup intact. The game never throws to the learner because persistence failed.
 
 ## Home integration
 

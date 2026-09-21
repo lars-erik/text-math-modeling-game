@@ -147,20 +147,20 @@ export function restoreSessionRun(
     ) {
       return { kind: 'incompatible', reason: 'invalid-snapshot' };
     }
-    const submission = restoreSubmission(
+    const restored = restoreSubmission(
       entry.submission,
       options,
       plan,
       entry.itemIndex - 1,
     );
-    if (submission === undefined) {
+    if (restored === undefined) {
       return { kind: 'incompatible', reason: 'invalid-snapshot' };
     }
     restoredLog.push({
       itemIndex: entry.itemIndex,
       modeId: entry.modeId,
-      submission,
-      accepted: entry.accepted,
+      submission: restored.submission,
+      accepted: restored.accepted,
     });
   }
   if (
@@ -173,6 +173,9 @@ export function restoreSessionRun(
   }
   const deduplicatedLog = latestAnswerPerItem(restoredLog);
   if (snapshot.status === 'complete') {
+    if (!isGenuinelyComplete(deduplicatedLog, plan)) {
+      return { kind: 'incompatible', reason: 'invalid-snapshot' };
+    }
     return {
       kind: 'restored',
       session: createCompletedSession(
@@ -183,6 +186,11 @@ export function restoreSessionRun(
       ),
     };
   }
+  const currentItem = plan.items[snapshot.currentIndex];
+  const currentLogEntry = deduplicatedLog.find(
+    (entry) => entry.itemIndex === currentItem?.index,
+  );
+  const currentAccepted = currentLogEntry !== undefined && currentLogEntry.accepted;
   const hint =
     snapshot.hintGuidanceId === undefined
       ? undefined
@@ -199,7 +207,7 @@ export function restoreSessionRun(
       deduplicatedLog,
     ),
     hint,
-    snapshot.currentCompleted,
+    currentAccepted,
   );
   return { kind: 'restored', session };
 }
@@ -262,25 +270,43 @@ function snapshotSubmission(
   }
 }
 
+type RestoredSubmission = {
+  submission: ModeSubmission;
+  accepted: boolean;
+};
+
 function restoreSubmission(
   submission: SnapshotSubmission,
   options: StartSessionOptions,
   plan: SessionPlan,
   itemIndex: number,
-): ModeSubmission | undefined {
+): RestoredSubmission | undefined {
   const item = plan.items[itemIndex];
   if (item === undefined) {
     return undefined;
   }
   switch (submission.kind) {
-    case 'quantity-selection':
+    case 'quantity-selection': {
+      const answer = submissionToAnswer(submission);
+      if (answer === undefined) {
+        return undefined;
+      }
+      const screen = submitPuzzle({
+        problem: generateItemProblem(plan, itemIndex),
+        themeId: options.themeId,
+        modeId: item.modeId,
+        locale: options.locale,
+        storySeed: item.problemSeed,
+        answer,
+      });
+      if (screen.submission === undefined) {
+        return undefined;
+      }
       return {
-        kind: 'quantity-selection',
-        knownIds: [...submission.knownIds],
-        ...(submission.unknownId === undefined
-          ? {}
-          : { unknownId: submission.unknownId }),
+        submission: screen.submission,
+        accepted: acceptedKinds.has(screen.feedback?.kind ?? 'none'),
       };
+    }
     case 'named-equation':
     case 'academic-notation': {
       const answer = submissionToAnswer(submission);
@@ -295,9 +321,30 @@ function restoreSubmission(
         storySeed: item.problemSeed,
         answer,
       });
-      return screen.submission;
+      if (screen.submission === undefined) {
+        return undefined;
+      }
+      return {
+        submission: screen.submission,
+        accepted: acceptedKinds.has(screen.feedback?.kind ?? 'none'),
+      };
     }
   }
+}
+
+function isGenuinelyComplete(
+  log: readonly SessionItemLog[],
+  plan: SessionPlan,
+): boolean {
+  return (
+    log.length === plan.length &&
+    log.every(
+      (entry) =>
+        entry.accepted &&
+        entry.itemIndex >= 1 &&
+        entry.itemIndex <= plan.length,
+    )
+  );
 }
 
 function submissionToAnswer(

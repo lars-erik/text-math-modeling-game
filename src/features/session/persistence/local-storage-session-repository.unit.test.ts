@@ -160,6 +160,45 @@ test('removing a completed run keeps the other history entries intact', () => {
   expect(history[0]?.runId).toBe('run-second');
 });
 
+test('a profile from a different profile schema version is discarded without touching unrelated keys', () => {
+  const storage = memoryStorage({
+    'math-modeling-game:session:profile': JSON.stringify({
+      schemaVersion: 99,
+      activeSession: snapshotSessionRun(startRun()),
+    }),
+    'other-app:data': 'keep me',
+  });
+  const persistence = createLocalStorageSessionPersistence({ storage });
+  expect(persistence.profileRepository.loadProfile().activeSession)
+    .toBeUndefined();
+  expect(storage.backing.has(sessionStorageKeys.profile)).toBe(false);
+  expect(storage.backing.get('other-app:data')).toBe('keep me');
+});
+
+test('storage getters that throw are acquired safely and keep the app playable', () => {
+  const storage = memoryStorage({ 'other-app:data': 'keep me' });
+  const original = storage.getItem;
+  storage.getItem = () => {
+    throw new Error('blocked');
+  };
+  storage.setItem = () => {
+    throw new Error('quota exceeded');
+  };
+  storage.removeItem = () => {
+    throw new Error('blocked');
+  };
+  void original;
+  const persistence = createLocalStorageSessionPersistence({ storage });
+  expect(persistence.profileRepository.loadProfile().activeSession)
+    .toBeUndefined();
+  expect(() =>
+    persistence.profileRepository.saveProfile({
+      activeSession: snapshotSessionRun(startRun()),
+    }),
+  ).not.toThrow();
+  expect(persistence.historyRepository.listCompleted()).toEqual([]);
+});
+
 test('schema version mismatch discards only application-owned records', () => {
   const storage = memoryStorage({
     'math-modeling-game:session:profile': JSON.stringify({

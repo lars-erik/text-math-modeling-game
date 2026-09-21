@@ -177,6 +177,56 @@ test('a fresh replay link starts a new run instead of resuming the saved one', a
   ).toHaveLength(0);
 });
 
+test('starting a session from Home after completing a run begins a fresh run in the same mounted app', async () => {
+  localStorage.clear();
+  sessionStorage.clear();
+  window.location.hash =
+    '#session?seed=918273&scenario=gaming.drone-power&language=en';
+  const app = mountApp(window.location.hash);
+  await app.puzzle.updateComplete;
+  const total = 10;
+  for (let index = 1; index <= total; index += 1) {
+    if (index > 1) {
+      const next = page.getByRole('button', { name: 'Next puzzle' });
+      await next.click();
+      await app.puzzle.updateComplete;
+    }
+    await answerCurrentCorrect(app.puzzle);
+  }
+  const finalNext = page.getByRole('button', { name: 'Next puzzle' });
+  await finalNext.click();
+  await app.puzzle.updateComplete;
+  expect(shellText(app.puzzle)).toContain('Session complete');
+  const backHome = page.getByRole('button', { name: 'Back to start' });
+  await backHome.click();
+  await app.puzzle.updateComplete;
+  await app.home.updateComplete;
+  expect(homeText(app.home)).toContain(
+    'Session seed 918273 — 10 puzzles completed',
+  );
+  expect(homeText(app.home)).not.toContain('Continue session');
+
+  const startSessionButton = page.getByRole('button', {
+    name: 'Start session',
+  });
+  await startSessionButton.click();
+  await app.puzzle.updateComplete;
+  expect(shellText(app.puzzle)).toContain('Puzzle 1 / 10');
+  expect(
+    Array.from(
+      app.puzzle.shadowRoot?.querySelectorAll('.answer-log-list li') ?? [],
+    ),
+  ).toHaveLength(0);
+  const persisted = JSON.parse(
+    window.localStorage.getItem(sessionStorageKeys.profile) ?? '{}',
+  ) as { activeSession?: { runId?: string; currentIndex?: number } };
+  expect(persisted.activeSession?.currentIndex).toBe(0);
+  const history = JSON.parse(
+    window.localStorage.getItem(sessionStorageKeys.completedRuns) ?? '[]',
+  ) as { runId?: string }[];
+  expect(history).toHaveLength(1);
+});
+
 test('a completed session appears in history and is never offered as active', async () => {
   localStorage.clear();
   sessionStorage.clear();

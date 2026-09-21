@@ -97,6 +97,7 @@ export function createLocalStorageSessionPersistence(
         const profile = parseProfile(raw);
         if (
           profile === undefined ||
+          profile.schemaVersion !== userProfileSchemaVersion ||
           profile.activeSession === undefined ||
           !isCompatible(profile.activeSession)
         ) {

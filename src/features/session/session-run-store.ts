@@ -81,28 +81,31 @@ export function createSessionRunStore(
       return startNewRun(startOptions);
     },
     provide(provideOptions) {
-      if (current !== undefined) {
-        if (sameRunInputs(current, provideOptions)) {
-          return current.replay.locale === provideOptions.locale
-            ? current
-            : withLocale(current, provideOptions.locale);
-        }
-        return startNewRun(provideOptions);
-      }
-      const rememberedRunId = runIdMemory.get();
-      const active = restoreFromProfile();
       if (
-        rememberedRunId !== undefined &&
-        active !== undefined &&
-        active.runId === rememberedRunId &&
-        sameRunInputs(active, provideOptions)
+        current !== undefined &&
+        current.status === 'active' &&
+        sameRunInputs(current, provideOptions)
       ) {
-        current = active;
-        if (current.replay.locale !== provideOptions.locale) {
-          current = withLocale(current, provideOptions.locale);
-          safeSave(current);
+        return current.replay.locale === provideOptions.locale
+          ? current
+          : withLocale(current, provideOptions.locale);
+      }
+      if (current === undefined) {
+        const rememberedRunId = runIdMemory.get();
+        const active = restoreFromProfile();
+        if (
+          rememberedRunId !== undefined &&
+          active !== undefined &&
+          active.runId === rememberedRunId &&
+          sameRunInputs(active, provideOptions)
+        ) {
+          current = active;
+          if (current.replay.locale !== provideOptions.locale) {
+            current = withLocale(current, provideOptions.locale);
+            safeSave(current);
+          }
+          return current;
         }
-        return current;
       }
       return startNewRun(provideOptions);
     },

@@ -553,6 +553,13 @@ export class MathModelingPuzzle extends LitElement {
   private handleAnswer(event: CustomEvent<LearnerAnswer>): void {
     this.submitAnswer(event.detail);
   }
+  startSessionFromStore(): void {
+    this.activeSession = this.composeCurrentSession();
+    this.screen =
+      this.activeSession === undefined
+        ? this.composeCurrentScreen()
+        : this.activeSession.screen;
+  }
 
   private submitAnswer(answer: LearnerAnswer | QuantitySelection): void {
     if (this.activeSession !== undefined) {
