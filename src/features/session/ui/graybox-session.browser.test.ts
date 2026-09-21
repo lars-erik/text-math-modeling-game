@@ -47,14 +47,6 @@ function quantityLines(puzzle: MathModelingPuzzle): string[] {
   ).map((item) => (item.textContent ?? '').trim());
 }
 
-function variableName(line: string): string {
-  return line.split('=')[0].trim();
-}
-
-function knownValue(line: string): string | undefined {
-  return line.includes('?') ? undefined : line.split('=')[1]?.trim();
-}
-
 async function submitText(puzzle: MathModelingPuzzle, value: string) {
   const inputComponent = puzzle.shadowRoot?.querySelector(
     'named-equation-text-input',
@@ -69,19 +61,67 @@ async function submitText(puzzle: MathModelingPuzzle, value: string) {
   await puzzle.updateComplete;
 }
 
+type TestScreenQuantity = {
+  id: string;
+  label: string;
+  variableName: string;
+  displayValue: string;
+  role: string;
+  given: { kind: string };
+};
+
+function screenQuantities(
+  puzzle: MathModelingPuzzle,
+): ReadonlyArray<TestScreenQuantity> {
+  const storyInput = puzzle.shadowRoot?.querySelector(
+    'story-quantities-input',
+  ) as (HTMLElement & { screen?: { target?: { quantities?: unknown } } }) | null;
+  const storyQuantities =
+    storyInput?.screen?.target?.quantities ?? undefined;
+  if (storyQuantities !== undefined) {
+    return storyQuantities as ReadonlyArray<TestScreenQuantity>;
+  }
+  const lines = quantityLines(puzzle).map((line) => ({
+    name: line.split('=')[0].trim(),
+    hidden: line.includes('?'),
+  }));
+  if (lines.length !== roleByPosition.length) {
+    throw new Error('The session item exposes no readable quantity list.');
+  }
+  return lines.map((line, index) => ({
+    id: '',
+    label: line.name,
+    variableName: line.name,
+    displayValue: line.hidden ? '?' : '',
+    role: roleByPosition[index],
+    given: { kind: line.hidden ? 'hidden' : 'known' },
+  }));
+}
+
+const roleByPosition = ['base', 'count', 'per-item', 'total'] as const;
+
+function roleNames(puzzle: MathModelingPuzzle): Record<string, string> {
+  return Object.fromEntries(
+    screenQuantities(puzzle).map((quantity) => [
+      quantity.role,
+      quantity.variableName,
+    ]),
+  );
+}
+
+function hiddenIdOf(puzzle: MathModelingPuzzle): string {
+  const hidden = screenQuantities(puzzle).find(
+    (quantity) => quantity.given.kind === 'hidden',
+  );
+  if (hidden === undefined) {
+    throw new Error('The session item has no hidden quantity.');
+  }
+  return hidden.id;
+}
+
 async function answerCurrent(puzzle: MathModelingPuzzle): Promise<void> {
-  const quantities = quantityLines(puzzle).map((line) => {
-    const [name, value] = line.split('=').map((part) => part.trim());
-    return { name, value, hidden: value === '?' };
-  });
-  const nameOf = (fragment: string) =>
-    quantities.find((quantity) =>
-      quantity.name.toLowerCase().includes(fragment),
-    )?.name ?? '';
-  const total = nameOf('total');
-  const base = nameOf('base');
-  const count = nameOf('count');
-  const perItem = quantities.find((quantity) => quantity.hidden)?.name ?? '';
+  const names = roleNames(puzzle);
+  const hiddenId = hiddenIdOf(puzzle);
 
   const task = puzzle.shadowRoot?.querySelector(
     'story-quantities-input, named-equation-text-input',
@@ -94,14 +134,14 @@ async function answerCurrent(puzzle: MathModelingPuzzle): Promise<void> {
         'input[name="known-quantity"]',
       ) ?? [],
     )) {
-      checkbox.checked = checkbox.value !== 'unitValue';
+      checkbox.checked = checkbox.value !== hiddenId;
     }
     for (const radio of Array.from(
       task.shadowRoot?.querySelectorAll<HTMLInputElement>(
         'input[name="unknown-quantity"]',
       ) ?? [],
     )) {
-      radio.checked = radio.value === 'unitValue';
+      radio.checked = radio.value === hiddenId;
     }
     task.shadowRoot?.querySelector('form')?.requestSubmit();
     await puzzle.updateComplete;
@@ -110,22 +150,34 @@ async function answerCurrent(puzzle: MathModelingPuzzle): Promise<void> {
 
   const heading = shellText(puzzle);
   if (heading.includes('Named equation to academic notation')) {
-    const substituted = quantities
-      .filter((quantity) => !quantity.hidden)
-      .map((quantity) => `${knownValue(quantity.name) ?? ''}`);
-    const totalValue = quantities.find((quantity) => quantity.name === total)
-      ?.value;
-    const baseValue = quantities.find((quantity) => quantity.name === base)
-      ?.value;
-    const countValue = quantities.find((quantity) => quantity.name === count)
-      ?.value;
-    const academic = `${totalValue} = ${baseValue} + ${countValue}*${perItem === '' ? 'p' : 'p'}`;
+    const lines = quantityLines(puzzle).map((line) => {
+      const [name, value] = line.split('=').map((part) => part.trim());
+      return { name, value, hidden: value === '?' };
+    });
+    const known = Object.fromEntries(
+      lines.filter((line) => !line.hidden).map((line) => [line.name, line.value]),
+    );
+    const symbols: Record<string, string> = {
+      base: 'b',
+      count: 'n',
+      'per-item': 'p',
+      total: 'T',
+    };
+    const termOf = (role: string): string =>
+      known[names[role]] ?? symbols[role];
+    const academic = `${termOf('total')} = ${
+      names.base === undefined ? '' : `${termOf('base')} + `
+    }${termOf('count')}*${termOf('per-item')}`;
     await submitText(puzzle, academic);
     return;
   }
 
-  expect(total).not.toBe('');
-  await submitText(puzzle, `${total} = ${base} + ${count} * ${perItem}`);
+  expect(names.total).toBeDefined();
+  const baseTerm = names.base === undefined ? '' : `${names.base} + `;
+  await submitText(
+    puzzle,
+    `${names.total} = ${baseTerm}${names.count} * ${names['per-item']}`,
+  );
 }
 
 test('starts a session from the default single-puzzle view via the menu', async () => {

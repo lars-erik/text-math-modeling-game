@@ -136,6 +136,72 @@ test('the puzzle header offers a persistent way back to home', async () => {
   expect(puzzle.hidden).toBe(true);
 });
 
+test('varies the hidden role from the route while the values stay identical', async () => {
+  const quantityLinesOf = (puzzle: MathModelingPuzzle): string[] =>
+    Array.from(
+      puzzle.shadowRoot?.querySelectorAll('div[slot="source"] li') ?? [],
+    ).map((item) => (item.textContent ?? '').replace(/\s+/g, ' ').trim());
+
+  const baseHash =
+    '#puzzle?seed=17&scenario=gaming.drone-power&task=quantities-to-named-equation&language=en';
+  const perItem = mountPuzzle(baseHash);
+  await perItem.updateComplete;
+  const perItemLines = quantityLinesOf(perItem);
+  expect(perItemLines.join('\n')).toContain('dronePower = ?');
+  expect(perItemLines.join('\n')).not.toContain('droneCount = ?');
+
+  const countHidden = mountPuzzle(
+    '#puzzle?seed=17&hidden-role=count&scenario=gaming.drone-power&task=quantities-to-named-equation&language=en',
+  );
+  await countHidden.updateComplete;
+  const countHiddenLines = quantityLinesOf(countHidden);
+  expect(countHiddenLines.join('\n')).toContain('droneCount = ?');
+  expect(countHiddenLines.join('\n')).not.toContain('dronePower = ?');
+  const valuesOf = (
+    lines: string[],
+  ): Record<string, string | '?'> =>
+    Object.fromEntries(
+      lines.map((line) => {
+        const [name, rawValue] = line.split('=').map((part) => part.trim());
+        return [name, rawValue === '?' ? '?' : rawValue] as [string, string | '?'];
+      }),
+    );
+  const perItemValues = valuesOf(perItemLines);
+  const countHiddenValues = valuesOf(countHiddenLines);
+  for (const [name, value] of Object.entries(perItemValues)) {
+    const other = countHiddenValues[name];
+    if (value === '?' || other === '?') {
+      continue;
+    }
+    expect(other, `known value of ${name} must be role-independent`).toBe(value);
+  }
+  expect(countHiddenValues.droneCount).toBe('?');
+  expect(perItemValues.droneCount).not.toBe('?');
+  expect(countHiddenValues.dronePower).not.toBe('?');
+  expect(perItemValues.dronePower).toBe('?');
+  expect(countHiddenValues.totalPower).toBe(perItemValues.totalPower);
+
+  const totalHidden = mountPuzzle(
+    '#puzzle?seed=17&hidden-role=per-item&scenario=gaming.drone-power&task=quantities-to-named-equation&language=en',
+  );
+  await totalHidden.updateComplete;
+  const menu = totalHidden.shadowRoot?.querySelector('puzzle-menu');
+  const hiddenRoleSelect = menu?.shadowRoot?.querySelector(
+    'select[name="hidden-role"]',
+  ) as HTMLSelectElement | null;
+  expect(hiddenRoleSelect).not.toBeNull();
+  expect(
+    Array.from(hiddenRoleSelect!.options).map((option) => option.value),
+  ).toEqual(['per-item', 'base', 'count', 'total']);
+  hiddenRoleSelect!.value = 'total';
+  menu?.shadowRoot?.querySelector('form')?.requestSubmit();
+  await totalHidden.updateComplete;
+  expect(window.location.hash).toBe(
+    '#puzzle?seed=17&family=total-from-parts&hidden-role=total&scenario=gaming.drone-power&task=quantities-to-named-equation&language=en',
+  );
+  expect(quantityLinesOf(totalHidden).join('\n')).toContain('totalPower = ?');
+});
+
 test('replays the same problem from the URL state', async () => {
   const hash = '#puzzle?seed=321&scenario=creator.followers&task=quantities-to-named-equation&language=en';
   const first = mountPuzzle(hash);

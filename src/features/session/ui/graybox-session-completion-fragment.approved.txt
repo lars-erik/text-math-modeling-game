@@ -4,13 +4,13 @@ edge Story to quantities: 2
 edge Quantities to named equation: 2
 edge Named equation to academic notation: 3
 edge Academic notation to named equation: 3
-answer 1 1. Named equation to academic notation: 68 = 36 + 4*p (correct)
+answer 1 1. Named equation to academic notation: 68 = 36 + n*8 (correct)
 answer 2 2. Academic notation to named equation: totalPower = basePower + droneCount * dronePower (correct)
-answer 3 3. Story to quantities: known=[base, count, total] unknown=unitValue (correct)
+answer 3 3. Story to quantities: known=[base, count, unitValue] unknown=total (correct)
 answer 4 4. Quantities to named equation: totalPower = basePower + droneCount * dronePower (correct)
-answer 5 5. Named equation to academic notation: 26 = 11 + 5*p (correct)
+answer 5 5. Named equation to academic notation: 26 = 11 + n*3 (correct)
 answer 6 6. Academic notation to named equation: totalPower = basePower + droneCount * dronePower (correct)
-answer 7 7. Story to quantities: known=[base, count, total] unknown=unitValue (correct)
+answer 7 7. Story to quantities: known=[base, count, unitValue] unknown=total (correct)
 answer 8 8. Quantities to named equation: totalPower = basePower + droneCount * dronePower (correct)
-answer 9 9. Named equation to academic notation: 47 = 39 + 2*p (correct)
+answer 9 9. Named equation to academic notation: 47 = 39 + n*4 (correct)
 answer 10 10. Academic notation to named equation: totalPower = basePower + droneCount * dronePower (correct)
