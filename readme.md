@@ -87,14 +87,17 @@ The implementation package is rooted in `src/` so the repository can add other t
 cd src
 npm ci
 npm run browser:install
+npm run browser:doctor
 npm run typecheck
 npm test
 npm run build
 ```
 
+On Linux hosts with permission to install OS libraries, run `npm run browser:install:ci` instead of `npm run browser:install`. See [browser-test environment setup and recovery](docs/browser-testing.md) for Windows, Linux and agent instructions.
+
 Approval tests write deterministic `*.received.*` files when a baseline is missing or changed. Received files are ignored by Git. Inspect the console diff and received file before manually promoting it to the corresponding committed `*.approved.*` file. Tests and CI never update approved files automatically.
 
-`browser:install` keeps Playwright's Chromium binaries under `src/node_modules`; it does not write them to the user-level Playwright cache. `npm test` runs both the Node approval/property/unit suite and the headless Chromium interaction suite.
+`browser:install` installs the pinned Chromium revision in Playwright's standard user cache (shared across compatible checkouts, not under `node_modules`). `browser:doctor` checks its executable and attempts a headless launch without installing anything. `npm test` runs both the Node approval/property/unit suite and the headless Chromium interaction suite.
 
 `npm test` also writes Vitest reports under `src/test-results/`:
 
@@ -123,7 +126,7 @@ while still providing downloadable reports and screenshots.
 - Validation runs for `main` and pull requests targeting `main`; documentation-only and repository-agent-skill-only changes are ignored by the app build workflow.
 - CI runs:
   1. `npm ci`
-  2. `npm run browser:install`
+  2. `npm run browser:install:ci` (Chromium and Linux libraries)
   3. `npm run typecheck`
   4. `npm test`
   5. `npm run build` with `/text-math-modeling-game/` on `main` or `/text-math-modeling-game/pr-N/` for PR previews.
