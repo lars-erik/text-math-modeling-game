@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "browser:doctor": "node tools/browser.mjs doctor",
     "browser:install": "node tools/browser.mjs install",
+    "browser:install:ci": "node tools/browser.mjs install-ci",
     "build": "tsc --project tsconfig.build.json && vite build",
     "dev": "vite",
     "test": "npm run test:node && npm run test:browser",
