@@ -46,15 +46,16 @@ flowchart TB
 
 ## Canonical Problem
 
-A generated `Problem` represents mathematics only. For the initial family its identity is equivalent to:
+A generated `Problem` represents mathematics only. The supported problem families are declared in an explicit family registry; currently:
 
 ```text
-total = base + count * unitValue
+total-from-parts:  total = base + count * unitValue
+groups-total:      total = count * unitValue
 ```
 
-with canonical roles/IDs such as `base`, `count`, `unitValue`, and `total`. A drone theme may display these as `basePower`, `droneCount`, `dronePower`, and `totalPower`; a creator theme may display them as follower/post concepts. Neither mapping changes the `Problem` or its relation AST.
+with canonical roles/IDs such as `base`, `count`, `unitValue`, and `total`. A drone theme may display these as `basePower`, `droneCount`, `dronePower`, and `totalPower`; a creator theme may display them as follower/post concepts. Neither mapping changes the `Problem` or its relation AST. No problem family may satisfy old assumptions with fake quantities (for example a `base = 0`); a family that lacks a role simply declares a role structure without it.
 
-Mathematical generation therefore takes mathematical inputs such as seed, concepts and numeric constraints. It does not take `scenarioId`, `themeId`, locale, task/mode, or input provider.
+Mathematical generation therefore takes mathematical inputs such as seed, family, concepts and numeric constraints. It does not take `scenarioId`, `themeId`, locale, task/mode, or input provider. Family mode-support is declared on the Mode axis (`features/puzzle/modes/family-support.ts`), never inside mathematical generation.
 
 The canonical DSL serializes only canonical mathematics and mathematical replay. Theme/scenario selection, localized names, story text and academic display choices are separate replay/presentation metadata.
 
