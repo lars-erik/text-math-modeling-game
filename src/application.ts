@@ -99,30 +99,36 @@ export function startMathModelingApplication(
 
   const { root } = options;
 
-  const navigateSafely = (route: Route): void => {
+  const navigateSafely = (build: () => Route): void => {
     try {
-      controller.navigate(route);
+      controller.navigate(build());
     } catch {
       return;
     }
   };
 
   root.addEventListener(puzzleSelectionRequestEvent, (event) => {
-    navigateSafely(
-      routeFromPuzzleSelection((event as CustomEvent<PuzzleSelectionRequest>).detail),
+    navigateSafely(() =>
+      routeFromPuzzleSelection(
+        (event as CustomEvent<PuzzleSelectionRequest>).detail,
+      ),
     );
   });
   root.addEventListener(sessionSelectionRequestEvent, (event) => {
-    navigateSafely(
-      routeFromSessionSelection((event as CustomEvent<SessionSelectionRequest>).detail),
+    navigateSafely(() =>
+      routeFromSessionSelection(
+        (event as CustomEvent<SessionSelectionRequest>).detail,
+      ),
     );
   });
   root.addEventListener(navigateHomeRequestEvent, () => {
-    navigateSafely(routeFromHomeSelection({ language: currentLanguage() }));
+    navigateSafely(() =>
+      routeFromHomeSelection({ language: currentLanguage() }),
+    );
   });
   root.addEventListener(navigatePuzzleRequestEvent, (event) => {
     const detail = (event as CustomEvent<NavigatePuzzleRequest>).detail;
-    navigateSafely(
+    navigateSafely(() =>
       routeFromPuzzleSelection({
         seed: detail?.seed ?? defaultPuzzleSeed,
         themeId: themeIdOrThrow(detail?.themeId ?? defaultThemeId),
@@ -133,7 +139,7 @@ export function startMathModelingApplication(
   });
   root.addEventListener(navigateSessionRequestEvent, (event) => {
     const detail = (event as CustomEvent<NavigateSessionRequest>).detail;
-    navigateSafely(
+    navigateSafely(() =>
       routeFromSessionSelection({
         seed: detail?.seed ?? defaultSessionSeed,
         themeId: themeIdOrThrow(detail?.themeId ?? defaultThemeId),
