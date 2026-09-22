@@ -2,6 +2,8 @@
 
 **Status:** proposed reset plan for human review. No refactor or new feature work is authorized by this document.
 
+**Planning-task scope:** this task may recommend future project Agent Skills only. It does not create, rewrite, scaffold, or install them. The user-supplied `architecture-reset-planning` skill governs this planning task only and is not an implementation deliverable.
+
 **Repository baseline:** `main` at `ee77126` on 22 September 2026. The working tree was clean before this document was added. GitHub had no open issues or pull requests at the time of inspection. Issue [#45](https://github.com/lars-erik/text-math-modeling-game/issues/45) and PR [#46](https://github.com/lars-erik/text-math-modeling-game/pull/46) are closed and are used here only as negative evidence.
 
 ## Evidence language
@@ -38,13 +40,14 @@ Constraints do not infer real-world meaning from an arbitrary expression. Equal 
 
 The immediate work should be deletion and truthfulness:
 
-1. freeze/archive stale milestone instructions and correct the automatic “rule of two”;
-2. delete dead compatibility code and unproven generic misconception/guidance scaffolding;
-3. consolidate duplicate matrix tests and approvals;
-4. build a cross-domain constraint matrix and decide the canonical authored/generated lifecycle;
-5. stop for a manual architecture review before changing the domain model;
+1. complete the separate Codex/Context7 bootstrap gate so machine-local tooling cannot block programming;
+2. freeze/archive stale milestone instructions and correct the automatic “rule of two”;
+3. delete dead compatibility code and unproven generic misconception/guidance scaffolding;
+4. consolidate duplicate matrix tests and approvals;
+5. build a cross-domain constraint matrix and stop at a domain/contract decision gate before changing the domain model;
 6. converge authored and generated problems on one canonical representation and validation pipeline;
-7. prove semantic and presentation constraints with comparison and rectangle-area verticals before sharing an abstraction.
+7. implement the minimum mathematical constraints, then stop for a mandatory manual code/architecture review;
+8. only after that review, prove semantic and presentation constraints with comparison and rectangle-area verticals before sharing an abstraction.
 
 The evidence is insufficient to define a final universal `Situation`, `SemanticModel`, constraint solver, unit algebra, template language, language generator, or misconception ontology now.
 
@@ -146,7 +149,7 @@ The current kernel is already close: `src/features/problem-model/expression.ts:3
 The outer problem definition must make the mathematical validity obligation explicit without becoming a general constraint solver. Initially relevant categories are:
 
 - symbol value domains such as integer, rational, non-negative, positive, bounded, or integral count;
-- exact values/givens and a private complete solution witness where needed;
+- exact values/givens, plus a separate private complete solution witness only when required to validate relation satisfaction, intended solvability, or solution cardinality; use public declarations alone whenever they suffice;
 - non-localized dimensions and unit compatibility;
 - relations that a complete binding must satisfy;
 - the question target and required solution cardinality, including uniqueness where a Mode requires it;
@@ -167,13 +170,9 @@ Do not commit to a `FamilyDescriptor`, universal role enum, or common semantic b
 
 ### Presentation constraints
 
-The authored problem should state semantic presentation requirements, not concrete Theme IDs. Themes/templates advertise what they can faithfully express. Compatibility validation must ensure that a selected template:
+The authored problem should state semantic presentation requirements, not concrete Theme IDs. Themes/templates declare machine-checkable capabilities such as supported semantic assertion kinds, required participant bindings, question forms, dimensions/unit categories, and interpolation slots. A capability check can reject an unsupported pairing and verify that a selected template has its declared public inputs without receiving private values.
 
-- has slots for the required semantic participants and question intent;
-- preserves values, units, direction, grouping, and recurrence meaning;
-- does not invent facts or reinterpret a relationship;
-- does not reveal private solution values;
-- rejects unsupported semantics instead of forcing them into available wording.
+Capability checking cannot prove that arbitrary hand-written prose faithfully conveys every intended fact or relationship. Each authored template and representative rendered example therefore requires human review/approval for factual fidelity, wording, omissions, and unintended implications. This bounded review obligation is not AST-to-prose generation or language understanding.
 
 Theme and Mode remain independent peers within declared supported combinations. The architecture must no longer assume that every story Theme can express geometry, percentages, comparison, and growth.
 
@@ -202,11 +201,18 @@ generator ──────┘
         shared mathematical validation
                       ↓
           shared semantic validation
-                      ↓
-   selected-template compatibility validation
-                      ↓
- validated public problem + private solution witness
+               ┌──────┴──────┐
+               ↓             ↓
+ canonical validated    separate private
+ public problem         solution witness
+               │
+               ↓
+ selected Theme/template capability check and presentation
 ```
+
+Mathematical and semantic validity are properties of the candidate and its declarations. Presentation incompatibility is a separate result: a valid rectangle problem remains valid when a drone template cannot express it. The selected Theme/template receives only the validated public problem; it never receives the private witness.
+
+The witness is required only for validation obligations that public declarations and deliberately bounded checks cannot establish, such as satisfaction against hidden values, the existence of the intended solution, or required solution cardinality. It remains separate from the public problem, Theme/Mode inputs, learner-visible state, persistence, and serialized public output.
 
 No evidence justifies separate DSL files, imports between DSLs, a second user-facing parser, or a general-purpose solver.
 
@@ -457,7 +463,7 @@ Do not delete or generalize this contract until PR 3 maps which mathematical, se
 - localized question fragments;
 - deterministic choice among compatible templates.
 
-The outer problem supplies semantic facts, presentation requirements, and mathematical relation values. Theme templates advertise their compatible assertions/slots and consume only those facts and references; they do not infer semantics from arbitrary AST shape. Compatibility is a validation result, not a requirement that every Theme support every problem.
+The outer problem supplies semantic facts, presentation requirements, and mathematical relation values. Theme templates advertise their compatible assertions/slots and consume only those facts and references; they do not infer semantics from arbitrary AST shape. Compatibility has two parts: a machine-checkable capability result and a separate human-reviewed fidelity claim for each authored template/example. Neither part requires every Theme to support every problem or infers semantics from arbitrary AST shape.
 
 ### What it must not attempt
 
@@ -544,10 +550,13 @@ outer problem definition
            canonical unvalidated case
                        |
      shared mathematical + semantic validation
-                       |
-       validated public problem + private solution witness
+                       |                     \
+                       |                      separate private solution witness
+                       |                      (validation/checking only)
+                       v
+             validated public problem
 
-validated public problem --> Theme/template compatibility + presentation
+validated public problem --> Theme/template capability check + presentation
 validated public problem --> Mode behavior
 Theme presentation + Mode result --> composition --> public screen --> UI
 
@@ -556,6 +565,8 @@ it does not redefine constraints, semantics, Theme, Mode, or mathematics.
 ```
 
 The DSL and generators converge on the typed canonical boundary, not on text. Serialization is an authoring/replay representation, never a required runtime intermediate for generated problems.
+
+The capability check returns either a presentation-capable result or an unsupported-presentation result. It does not change candidate validity, manufacture missing semantics, or expose the private witness. Human approval of each authored template and representative rendering remains a separate fidelity obligation.
 
 ### Adding a mathematical operator/function
 
@@ -678,13 +689,14 @@ Should not change:
 
 - Direct test that generic math imports no outer semantic, Theme, Mode, session, or UI package.
 - Contract tests proving parsed and generated cases pass through the same canonical validation entry point without generated cases being serialized/reparsed.
-- Validation tests separating mathematical failure, semantic inconsistency, and unsupported presentation.
+- Validation tests separating mathematical failure, semantic declaration/reference inconsistency, and unsupported presentation.
 - Authored-case tests using a private solution witness to prove relation satisfaction and the required solution-cardinality contract without exposing the witness publicly.
 - Direct Theme non-mutation/Problem identity test, independent of the full matrix.
 - Direct public-screen shape test proving no `AnswerKey` or hidden binding is reachable; avoid substring-only JSON checks.
 - Constraint fixtures for comparison, rectangle area, percentage-of/discount, and compounded growth even before all become production families.
 - One research-derived semantic fixture per proven assertion kind, checking explicit facts versus inferred relationships.
 - Template compatibility tests only for declared semantic-requirement/Theme-template pairs.
+- Human-reviewed approval artifacts for each new authored template and representative rendered example, explicitly reviewing factual fidelity, omissions, unintended implications, and private-value non-exposure; these supplement rather than replace machine checks.
 - A test that structural mathematical alternatives are not accepted as story candidates without an authored semantic interpretation.
 
 The target suite should make large deletions safe by protecting contracts, not by preserving every historical presentation transcript.
@@ -738,6 +750,8 @@ Require the review to name both concrete examples, the stable invariant, and the
 ---
 
 ## 11. Agent skills plan
+
+**PLAN ONLY / post-review.** The entries below are recommendations for later work. Do not create, rewrite, scaffold, or install any of these skills in this planning task or PR. The current user-supplied reset-planning skill is task input, not authorization for a skills framework.
 
 Each skill should have a short `SKILL.md` (roughly 40–60 lines), a narrow trigger, an explicit default read list, an explicit “do not read by default” list, and at most one or two progressive-disclosure references. Skills should link to the architecture contract rather than duplicate it.
 
@@ -794,6 +808,14 @@ Each skill should have a short `SKILL.md` (roughly 40–60 lines), a narrow trig
 ## 12. Revised Phase 2 plan
 
 Use stage gates rather than a feature conveyor belt.
+
+### Bootstrap gate — Codex environment readiness
+
+This is a configuration prerequisite, not domain architecture work. The tracked `.codex/config.toml` must contain only repository-safe settings. Context7's stdio launcher is machine-local because the current native Windows host requires the working `npx.cmd` launcher while other hosts normally use `npx`; keep that stanza in the user-level `~/.codex/config.toml`. Do not restore the earlier remote URL without proving it works in the intended client.
+
+Before programming resumes, record the intended Codex development environments and verify Context7 in each one that will perform version-sensitive source work: restart the client, confirm the effective server list, and complete one focused documentation query. Native Windows Desktop is required for the current developer; CLI/IDE, WSL/Linux, or macOS are required only if they will be used. CI does not need Context7. On the current host the absolute `npx.cmd` exists and the same working stanza is present in user-level config, but `codex mcp list` from the embedded shell reported no configured server, so client-level verification remains open.
+
+The official [OpenAI MCP configuration guidance](https://learn.chatgpt.com/docs/extend/mcp?surface=cli) supports both user-level and trusted-project configuration. Using the user-level scope for this OS-specific launcher is this plan's portability decision.
 
 ### Stage A — reset and empirical evidence
 
@@ -908,7 +930,7 @@ No PR below is authorized until this plan is reviewed.
 - **Dependencies:** PR 2.
 - **Simpler afterward:** the human review can decide contracts from examples rather than proposed type names.
 
-### MANUAL REVIEW STOP — after PR 3
+### DOMAIN / CONTRACT DECISION GATE — after PR 3
 
 Stop all domain-model, semantic DSL, and new Mode work here.
 
@@ -924,7 +946,7 @@ Humans must decide:
 - presentation fidelity and compatibility rules;
 - whether unsupported Theme/template combinations replace the current universal cross-product requirement.
 
-The codebase should already be smaller and the documentation truthful, but no large outer semantic DSL should exist yet.
+The codebase should already be smaller and the documentation truthful, but no large outer semantic DSL should exist yet. This is a decision gate over research examples and proposed contracts; it does not claim that the runtime path has already been simplified or converged.
 
 ### PR 4 — Canonical representation and shared acceptance pipeline
 
@@ -946,12 +968,27 @@ The codebase should already be smaller and the documentation truthful, but no la
 - **Dependencies:** PR 4.
 - **Simpler afterward:** mathematical validity is explicit and independent of story semantics.
 
+### MANDATORY MANUAL CODE / ARCHITECTURE REVIEW — after PR 5
+
+Stop before PR 6. Review the implemented canonical authored/generated path and mathematical-constraint boundary, not proposed future semantics.
+
+Acceptance criteria:
+
+- one canonical representation for each major implemented concept;
+- no known competing representation on the main execution path;
+- obsolete milestone scaffolding and duplicate tests removed or consolidated;
+- current documentation matches the running architecture;
+- one human can trace authored DSL or generator input through shared validation, the validated public problem, Theme/Mode/composition, and UI;
+- the private witness is demonstrably absent from public state, presentation, persistence, and serialized public output.
+
+Do not begin the comparison semantic/presentation proof until this review accepts the path.
+
 ### PR 6 — First semantic/presentation vertical: comparison
 
 - **Purpose:** prove explicit meaning and template compatibility without relying on fixed-plus-repeated roles.
 - **Affected areas:** one comparison assertion/validator, one bounded Theme/template path, one locale, non-UI fixtures.
 - **Expected deletions:** none required; do not force comparison into existing roles.
-- **Tests:** mathematical validity, larger/reference/difference bindings, compatible and incompatible templates, fact preservation, no private-value exposure.
+- **Tests:** machine-check mathematical validity, larger/reference/difference bindings, declared template slots/capabilities, unsupported-presentation results, and privacy. **Human review:** approve the bounded authored template and representative rendered example for semantic/presentation fidelity.
 - **Risk:** medium; avoid creating a universal assertion hierarchy.
 - **Dependencies:** PR 5.
 - **Simpler afterward:** one demonstrated boundary exists between expression shape, situation meaning, and presentation support.
@@ -961,7 +998,7 @@ The codebase should already be smaller and the documentation truthful, but no la
 - **Purpose:** challenge the boundary with multiplication that does not mean grouping/rate.
 - **Affected areas:** one rectangle-area assertion/validator, geometric dimensions, one compatible presentation path; percentage and growth remain counterexample fixtures.
 - **Expected deletions:** role/count-per-item assumptions exposed as unnecessary by this proof, but no automatic abstraction extraction.
-- **Tests:** positive measures, length × length → area, semantic participant bindings, rejection by incompatible story templates, comparison proof unchanged.
+- **Tests:** machine-check positive measures, length × length → area, semantic participant bindings, declared template slots/capabilities, unsupported-presentation results, privacy, and the unchanged comparison proof. **Human review:** approve the bounded authored template and representative rendered example for semantic/presentation fidelity.
 - **Risk:** medium-high because it may falsify PR 6 assumptions; that is useful evidence.
 - **Dependencies:** PR 6.
 - **Simpler afterward:** shared infrastructure and genuinely distinct semantics are visible separately.
@@ -973,13 +1010,15 @@ The codebase should already be smaller and the documentation truthful, but no la
 - **Expected deletions:** duplicated mechanics genuinely shared by PRs 6–7; retain separate assertion types/validators where meaning differs.
 - **Tests:** both verticals, DSL round-trip, generic math isolation, explicit unsupported-presentation results, percentage/growth counterexample fixtures.
 - **Risk:** high; cancel this PR if no useful shared invariant exists.
-- **Dependencies:** second manual review after PR 7 and an accepted ADR for any durable contract.
+- **Dependencies:** the narrower post-PR-7 shared-invariant decision and an accepted ADR for any durable contract.
 - **Simpler afterward:** either one minimal proven carrier or two honest local paths. M13, session integration, full locale coverage, and new UI remain deferred.
 
-## 15. Final manual-review stop point
+## 15. Human review checkpoints
 
-The mandatory stop is **after PR 3 and before PR 4 production work**. At that point the repository should be small and truthful, the five-example constraint corpus should expose the real obligations, and the canonical authored/generated lifecycle should be a reviewable proposal rather than an accidental implementation fact.
+The first mandatory checkpoint is the **domain/contract decision gate after PR 3 and before PR 4**. It approves or rejects the research-derived lifecycle, constraint obligations, witness policy, and presentation-fidelity criteria before domain-model changes.
 
-There is a second decision checkpoint after PR 7: approve PR 8 only if comparison and rectangle area demonstrate useful shared infrastructure without collapsing their semantic differences. Percentage and growth must still fit the boundaries as explicit counterexamples. Otherwise cancel PR 8 and keep the vertical representations local.
+The second mandatory checkpoint is the **manual code/architecture review after PR 5 and before PR 6**. It verifies the implemented canonical path, mathematical-constraint cleanup, deletion/consolidation results, truthful documentation, and a human-traceable input-to-UI execution path.
+
+The post-PR-7 decision is narrower: approve PR 8 only if comparison and rectangle area demonstrate a genuine shared invariant without collapsing their semantic differences. Percentage and growth must still fit the boundaries as explicit counterexamples. Otherwise cancel PR 8 and keep the vertical representations local. This is not a substitute for either mandatory checkpoint.
 
 STOP — do not implement any proposed PR until this plan has been reviewed.
