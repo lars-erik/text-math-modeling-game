@@ -21,5 +21,6 @@ max_concurrent_threads_per_session = 2
 default_subagent_model = "gpt-5.6-terra"
 default_subagent_reasoning_effort = "medium"
 
-[mcp_servers.context7]
-url = "https://mcp.context7.com/mcp"
+# MCP launch commands are machine-local because they differ by operating system.
+# Configure Context7 in the user-level ~/.codex/config.toml instead of committing
+# an absolute executable path here.
