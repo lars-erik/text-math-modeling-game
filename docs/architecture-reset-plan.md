@@ -26,19 +26,27 @@ The supplied ChatGPT conversation URL could not be read. A direct fetch returned
 
 Do not implement M13, M14, or another product feature. Cancel M13 as currently specified.
 
-The repository does not need two authored languages. It already has the useful seed of the intended architecture: one outer problem DSL embeds an inline mathematical relation, and that relation becomes the same generic `Expression`/`Relation` tree used by evaluation and rendering. The reset should preserve that single-file authoring experience while making the type boundary explicit.
+The repository does not need two authored languages. It already has the useful seed of the intended architecture: one outer problem DSL embeds inline mathematical `Expression`/`Relation` values that become the same generic trees used by evaluation and rendering. The reset should preserve that single-file authoring experience while adding explicit constraints that make each problem mathematically valid, semantically interpretable, and compatible with faithful presentation.
+
+The two conceptual type layers remain useful, but the outer layer must distinguish three concerns rather than collapsing them into a family-shaped descriptor:
+
+1. **mathematical constraints** — symbol domains, exact values, dimensions, relation satisfaction, solvability, and uniqueness where a learning task requires it;
+2. **semantic constraints** — explicit statements about what quantities and relationships mean in a situation, independent of expression shape;
+3. **presentation constraints** — requirements that a Theme/template must satisfy without inventing, omitting required meaning, or changing facts.
+
+Constraints do not infer real-world meaning from an arbitrary expression. Equal groups, rectangle area, percentage-of, and compounded growth can all contain multiplication while requiring different semantic and presentation contracts.
 
 The immediate work should be deletion and truthfulness:
 
 1. freeze/archive stale milestone instructions and correct the automatic “rule of two”;
 2. delete dead compatibility code and unproven generic misconception/guidance scaffolding;
 3. consolidate duplicate matrix tests and approvals;
-4. cleanly name and isolate the existing mathematical expression kernel;
-5. stop for a manual architecture review;
-6. only then prove outer situation semantics with one concrete equal-groups/fixed-plus-repeated example and a second materially different comparison or take-away example;
-7. extract a shared semantic abstraction only if those two proofs demonstrate a stable invariant.
+4. build a cross-domain constraint matrix and decide the canonical authored/generated lifecycle;
+5. stop for a manual architecture review before changing the domain model;
+6. converge authored and generated problems on one canonical representation and validation pipeline;
+7. prove semantic and presentation constraints with comparison and rectangle-area verticals before sharing an abstraction.
 
-The evidence is insufficient to define a final universal `Situation`, `SemanticModel`, unit algebra, template language, or misconception ontology now.
+The evidence is insufficient to define a final universal `Situation`, `SemanticModel`, constraint solver, unit algebra, template language, language generator, or misconception ontology now.
 
 ---
 
@@ -84,97 +92,123 @@ The evidence is insufficient to define a final universal `Situation`, `SemanticM
 
 **EMPIRICAL PATTERN:** the same mathematical tree does not determine one semantic situation. Equal grouping, area, scaling, and percentage can all contain multiplication while requiring different outer meaning.
 
-**HYPOTHESIS:** a small family-local relationship descriptor that references declared symbols may eventually be useful.
+**HYPOTHESIS:** the outer DSL needs explicit semantic assertions that reference declared symbols and relations, but different assertions may remain separate until evidence demonstrates a shared invariant.
 
-**PROPOSED DESIGN:** do not define that descriptor until a first equal-groups/fixed-plus-repeated proof and a materially different comparison or take-away proof demonstrate what is genuinely shared.
+**PROPOSED DESIGN:** do not start with a universal or family-shaped descriptor. First state the mathematical, semantic, and presentation constraints for comparison, geometry, percentages, and growth; then implement two materially different vertical proofs and share only what they demonstrate.
 
 ---
 
-## 2. Single DSL, two conceptual/type layers
+## 2. Single DSL, two type layers, three constraint concerns
 
-The normal authored representation should remain one text file and one authoring workflow.
+The normal authored representation should remain one text file and one authoring workflow. The two type layers are:
 
-Conceptually:
+- generic mathematical `Expression`/`Relation` values;
+- an outer problem definition that declares symbols, constraints, meaning, question intent, and presentation requirements.
+
+Within the outer layer, mathematical, semantic, and presentation constraints are different validation concerns. They may refer to the same symbol and relation identities, but they must not silently substitute for one another.
 
 ```text
 one authored problem file
 └─ outer problem definition
-   ├─ symbol/quantity declarations
-   ├─ known/unknown or question intent
-   ├─ optional family-local semantic relationships
-   ├─ concepts/replay/pedagogical metadata when justified
-   └─ relation: Relation
-      ├─ left: Expression
-      └─ right: Expression
+   ├─ symbols and values/givens
+   ├─ mathematical constraints
+   ├─ explicit semantic assertions
+   ├─ presentation requirements
+   ├─ question/solution contract
+   ├─ optional replay metadata
+   └─ Expression / Relation values
 ```
 
-Illustrative type shape, not a committed API:
+### Generic mathematical values
 
-```ts
-type ProblemDefinition = {
-  id: string;
-  symbols: readonly SymbolDeclaration[];
-  relation: Relation;             // Layer A datatype value
-  question?: QuestionIntent;      // Layer B
-  semantics?: FamilyDescriptor;   // Layer B, only after proof
-};
-
-type Expression =
-  | { kind: 'constant'; value: NumericValue }
-  | { kind: 'symbol'; id: SymbolId }
-  | { kind: 'unary'; operator: UnaryOperator; operand: Expression }
-  | { kind: 'binary'; operator: BinaryOperator; left: Expression; right: Expression }
-  | { kind: 'call'; function: FunctionId; arguments: readonly Expression[] };
-
-type Relation =
-  | { kind: 'equality'; left: Expression; right: Expression }
-  | { kind: 'comparison'; operator: ComparisonOperator; left: Expression; right: Expression };
-```
-
-The illustrative union is a direction, not an instruction to add all nodes now. Current evidence supports only constants, symbol references, addition, multiplication, equality, and nesting. Add division/rational values, subtraction, powers, calls, or comparisons only with the concrete vertical example that needs them.
-
-### Layer A: generic mathematics
-
-Belongs here:
+Belongs in the generic mathematical layer:
 
 - constants and symbol references;
-- the actually required unary/binary/call operations;
+- only the unary/binary/call operations required by actual examples;
 - equality/comparison relation shapes when evidenced;
 - evaluation with explicit bindings;
-- generic substitution;
-- reference collection;
-- structural normalization/comparison parameterized by policy;
-- canonical and academic/string renderers over the same tree.
+- generic substitution and reference collection;
+- structural normalization/comparison parameterized by caller policy;
+- canonical and academic/string rendering over the same tree.
 
 Does not belong here:
 
 - `base`, `count`, `per-item`, or `total` as pedagogical roles;
-- known/hidden learner status;
-- units as localized story wording;
-- Theme, Mode, story text, question text, guidance, misconception classes, session, or UI;
-- claims that a multiplication subtree means equal groups.
+- known/hidden learner status or question intent;
+- equal-group, comparison, geometric, percentage, or growth meaning;
+- Theme/template compatibility;
+- guidance, misconception classes, session, or UI.
 
-The current kernel is already close: `src/features/problem-model/expression.ts:3-13` defines only literal/reference/add/multiply/equality; evaluation at `:40-75` is independent of Theme, Mode, and UI.
+The current kernel is already close: `src/features/problem-model/expression.ts:3-13` defines only literal/reference/add/multiply/equality; evaluation at `:40-75` is independent of Theme, Mode, and UI. Add rationals/division, powers, calls, or comparisons only with the concrete example that requires them.
 
-### Layer B: outer problem/situation definition
+### Mathematical constraints
 
-Belongs here when supported by evidence:
+The outer problem definition must make the mathematical validity obligation explicit without becoming a general constraint solver. Initially relevant categories are:
 
-- symbol declarations and stable identity;
-- learner-visible known/unknown/question status;
-- semantic relationships that mathematics alone cannot infer;
-- optional units/dimensions at the symbol/fact boundary;
-- family-local pedagogical metadata;
-- compatibility with bounded Theme templates;
-- references to mathematical `Expression`/`Relation` values.
+- symbol value domains such as integer, rational, non-negative, positive, bounded, or integral count;
+- exact values/givens and a private complete solution witness where needed;
+- non-localized dimensions and unit compatibility;
+- relations that a complete binding must satisfy;
+- the question target and required solution cardinality, including uniqueness where a Mode requires it;
+- exactness or rounding policy for values such as percentages and growth.
 
-It must not duplicate the mathematical AST. A family descriptor should reference symbols or meaningful relationships; it should not rebuild `add` and `multiply` as another tree.
+The current global “exactly one hidden quantity” rule is a puzzle-policy shortcut, not a sufficient solvability or uniqueness proof.
 
-### Current serialization already supports the direction
+### Semantic constraints
 
-`src/features/problem-dsl/problem-grammar.ts:4-20` contains one outer `Problem` grammar with an equation field. `src/features/problem-dsl/parse-problem.ts:161-190` delegates the inline equation text to the existing expression parser and returns the same `Relation`. This is one authored language even though parsing is factored into reusable components.
+Semantic assertions state what the symbols and relationships mean in the situation. They may reference symbols and relations but must not duplicate the mathematical AST. They are explicit because constraints and expression shape cannot distinguish, for example:
 
-No evidence justifies separate DSL files, imports between DSLs, or a second user-facing parser.
+- equal groups from rectangle area;
+- percentage-of from a generic scalar product;
+- compounded growth from arbitrary exponentiation;
+- comparison difference from an unordered additive decomposition.
+
+Do not commit to a `FamilyDescriptor`, universal role enum, or common semantic base type. A comparison assertion and a rectangle-area assertion may remain separate until two implementations demonstrate a useful invariant.
+
+### Presentation constraints
+
+The authored problem should state semantic presentation requirements, not concrete Theme IDs. Themes/templates advertise what they can faithfully express. Compatibility validation must ensure that a selected template:
+
+- has slots for the required semantic participants and question intent;
+- preserves values, units, direction, grouping, and recurrence meaning;
+- does not invent facts or reinterpret a relationship;
+- does not reveal private solution values;
+- rejects unsupported semantics instead of forcing them into available wording.
+
+Theme and Mode remain independent peers within declared supported combinations. The architecture must no longer assume that every story Theme can express geometry, percentages, comparison, and growth.
+
+### Cross-domain challenge examples
+
+| Example | Mathematical constraints | Explicit semantic assertions | Presentation requirements |
+| --- | --- | --- | --- |
+| Comparison: `big = small + difference` | Comparable dimensions; appropriate domains/order; unique target if required | Larger quantity, reference quantity, and directed difference | Comparative direction and comparable entities must be expressible; generic “three addends” wording is invalid |
+| Rectangle: `area = width * height` | Positive measures; length × length → area | Width and height are orthogonal extents; area measures the rectangle's region | Geometry-capable vocabulary or representation; count/per-item templates must be rejected |
+| Percentage: `part = factor * whole` | Exact rational factor; dimensionless factor; part/whole dimension agreement | Proportion-of; “discount” is a distinct semantic assertion that may require another relation | Must distinguish “25% of” from “25% discount” and must not invent a remaining price |
+| Growth: `end = start * factor^periods` | Positive factor; integral non-negative periods; start/end dimension agreement; exactness/rounding | Repeated compounding over equal periods | Period and compounding vocabulary plus a deliberate factor/rate interpretation |
+
+These examples are architecture tests, not instructions to implement four new product families.
+
+### Current serialization and the convergence requirement
+
+`src/features/problem-dsl/problem-grammar.ts:4-20` contains one outer grammar with an equation field. `src/features/problem-dsl/parse-problem.ts:161-190` delegates inline equation text to the expression parser and returns the same `Relation`. This remains one authored language even when parsing is factored into reusable components.
+
+Authored and generated problems should converge on one typed canonical representation and one validation pipeline, but generators should not serialize and reparse DSL text:
+
+```text
+DSL parser ─────┐
+                ├─> canonical unvalidated definition/case
+generator ──────┘
+                      ↓
+        shared mathematical validation
+                      ↓
+          shared semantic validation
+                      ↓
+   selected-template compatibility validation
+                      ↓
+ validated public problem + private solution witness
+```
+
+No evidence justifies separate DSL files, imports between DSLs, a second user-facing parser, or a general-purpose solver.
 
 ---
 
@@ -191,6 +225,16 @@ problem DSL text
 ```
 
 **OBSERVED FACT:** this is not the main exercise runtime path. Production consumers primarily generate `Problem` objects directly. The serializer is used by debug output; the parser is chiefly protected by tests and authoring docs. `src/features/problem-model/print-problem-debug.ts:1,25` is the only production-side serialization consumer found in the audit.
+
+The typed `Problem` gives the two paths a partial meeting point, but not yet one acceptance pipeline:
+
+- parsing calls `validateProblemAst` (`parse-problem.ts:204-216`), which checks references, current safe-integer/dimension rules, one hidden quantity, and replay consistency;
+- the parser has no private `AnswerKey`, so it cannot prove the intended solution, solvability, or uniqueness (`docs/problem-dsl/reference.md:212-219`);
+- generators construct `Problem + AnswerKey` directly and enforce generator-specific ranges/role declarations;
+- `validateProblemConstraints` can check relation satisfaction and answer consistency (`problem-validation.ts:132-150,435-511`), but it has no production caller;
+- neither path validates explicit semantic meaning or selected-template compatibility because those contracts do not yet exist.
+
+The absence of DSL parsing from the hot runtime path is not itself a defect. The defect is that parsing and generation do not converge at a single validated canonical boundary before Theme, Mode, session, and UI consume the problem.
 
 ### Actual single-puzzle runtime path
 
@@ -336,30 +380,27 @@ Add operation kinds only alongside a selected example that needs them. A future 
 
 ### Problem
 
-**KEEP as the outer aggregate, but narrow its promises.** Today it is the one object shared by generation, DSL, Theme, Mode, and composition. That is useful. It should own declared symbols/facts, one or more mathematical relations, public/private separation, and only proven semantic/pedagogical metadata.
+**KEEP an outer aggregate, but decide its lifecycle before treating the current `Problem` type as final.** Today one type is shared by generation, DSL, Theme, Mode, and composition. The target must distinguish conceptually between:
+
+- an authored/generated definition or candidate;
+- a materialized instance with concrete givens and question intent;
+- a validated public problem paired with a private solution witness.
+
+Those may be separate types, validated states of one type, or a smaller arrangement. The required invariant is that Theme, Mode, session, and UI consume only the validated public form.
 
 Do not rename it merely to signal architecture. Rename only if the crystallized behavior makes the current name misleading.
 
 ### Semantic situation/problem description
 
-**DO NOT introduce a universal new top-level object yet.** Current Theme story planners derive their two supported shapes from role sets and `hasBase`. That proves bounded story rendering exists; it does not prove a general `Situation` API.
+**DO NOT introduce a universal new top-level object or family descriptor yet.** Current Theme story planners derive two fixed-plus-repeated shapes from role sets and `hasBase`. That proves bounded story rendering exists; it does not prove a general `Situation` API.
 
-First proof hypothesis:
+The outer DSL nevertheless needs a place for explicit semantic assertions. A comparison assertion may bind larger/reference/difference symbols; a rectangle-area assertion may bind width/height/area; a percentage assertion may bind factor/whole/part. These remain distinct until evidence demonstrates a stable shared invariant. They reference the mathematical symbols and relations but do not rebuild the expression tree.
 
-```text
-aggregate
-  = contribution occurring once
-  + repeated group contribution
-
-repeated group contribution
-  = group count × amount per equivalent group
-```
-
-If a descriptor is eventually needed, it should reference the relevant declared symbols/relationships. It should not be a second expression tree. A multiplication subtree alone cannot identify equal groups because the same tree can represent area or scaling.
+A multiplication subtree cannot identify equal groups, rectangle area, scaling, percentage-of, or growth. Domains and dimensions can reject some invalid cases, but they cannot supply real-world meaning.
 
 ### Theme
 
-**KEEP as presentation/context.** Theme may own vocabulary, learner-facing names, localized units, introductory fragments, and bounded templates compatible with a proven semantic family. It must not define mathematical correctness, clone a `Problem`, or import a concrete Mode.
+**KEEP as presentation/context.** Theme may own vocabulary, learner-facing names, localized units, introductory fragments, and bounded templates. Templates must declare the semantic assertions, question forms, dimensions, and presentation slots they support. A Theme/template may reject an incompatible problem; it must not define mathematical correctness, clone a `Problem`, import a concrete Mode, or force unsupported semantics into available wording.
 
 ### Mode
 
@@ -368,23 +409,25 @@ If a descriptor is eventually needed, it should reference the relevant declared 
 ### Semantic classifications
 
 - Do not put universal `base/count/per-item/total` tags on every quantity.
-- Prefer family-local relationship descriptors referencing participants where a template/checker actually needs them.
+- Prefer explicit, narrowly scoped semantic assertions referencing participants where a template/checker actually needs them.
 - Do not annotate arbitrary expression subtrees with story meaning.
 - A whole-situation discriminator alone is insufficient because templates/checkers need participant bindings.
-- The likely minimum is a family-local relationship plus symbol references, proven twice before sharing.
+- Do not make generator `ProblemFamilyId` the source of semantic meaning.
+- Share a semantic carrier only after two materially different assertions demonstrate what it must preserve.
 
 ### Units/dimensions
 
-- Keep contextual display units in Theme.
-- Keep any non-localized measurement/dimension declaration on outer symbols, not expressions.
+- Keep contextual display-unit wording in Theme, while mathematical dimensions and canonical unit identity belong to the outer symbol declarations.
+- Comparison requires compatible dimensions; rectangle area requires length × length → area; percentage factors are dimensionless; growth start/end share a dimension while the factor is dimensionless and periods are integral/time-based.
 - Do not build conversion or full dimensional algebra until concrete examples and validation rules require it.
+- Initially forbid unsupported conversions rather than inventing a general conversion system.
 - Treat the current closed `Dimension` vocabulary (`problem.ts:11-15`) as provisional.
 
 ### Misconceptions and guidance
 
 `problem-model/misconception.ts` recognizes exactly one tree pattern and `Problem.guidance` carries opaque IDs with quantity references. This is insufficient evidence for generic mathematical-domain ownership.
 
-Delete the generic placement and current generic-looking contract during cleanup. If the learner behavior remains important, reintroduce it later as family-local semantic/pedagogical data backed by a research-derived example. Do not let M14 preserve the current shape by default.
+Do not delete or generalize this contract until PR 3 maps which mathematical, semantic, or presentation obligation it currently protects. If the learner behavior remains important, relocate it later as narrowly scoped semantic/pedagogical data backed by a research-derived example. Do not let M14 preserve the current shape by default.
 
 ---
 
@@ -406,7 +449,7 @@ Delete the generic placement and current generic-looking contract during cleanup
 
 ### Recommended bounded mechanism
 
-**HYPOTHESIS:** for a proven semantic family, a Theme can provide:
+**HYPOTHESIS:** for a proven set of semantic assertions and presentation requirements, a Theme can provide:
 
 - vocabulary/participant mappings;
 - introductory/context fragments;
@@ -414,7 +457,7 @@ Delete the generic placement and current generic-looking contract during cleanup
 - localized question fragments;
 - deterministic choice among compatible templates.
 
-The outer problem supplies semantic facts and mathematical relation values. Theme templates consume those facts and references; they do not infer semantics from arbitrary AST shape.
+The outer problem supplies semantic facts, presentation requirements, and mathematical relation values. Theme templates advertise their compatible assertions/slots and consume only those facts and references; they do not infer semantics from arbitrary AST shape. Compatibility is a validation result, not a requirement that every Theme support every problem.
 
 ### What it must not attempt
 
@@ -442,7 +485,7 @@ Issue #45 required a typed semantic candidate representation and Theme rendering
 | Active authority of `docs/10-phase-2-plan.md` M13+ and stale progress prose | M13 is closed/cancelled; the document still says M10 is in PR #30 and specifies the failed direction. Move to archive with a status banner. |
 | Stale Phase 1 operational instructions in `src/AGENTS.md:16` | Every source edit should not select an acceptance criterion from a historical Phase 1 plan. |
 | Automatic abstraction rule in root `AGENTS.md:39`, architecture guardian step 7, and `docs/06-testing-and-approvals.md` | Replace with the evidence-based shared-invariant rule. |
-| Generic ownership of `Problem.guidance` and `problem-model/misconception.ts` plus misconception-specific approvals/tests | One family-specific pattern is not a generic mathematical domain. Reintroduce only after semantic proof if behavior remains required. |
+| Generic ownership claim for `Problem.guidance` and `problem-model/misconception.ts` | One family-specific pattern is not generic mathematics. First classify the protected behavior in PR 3; then delete, relocate, or retain it deliberately rather than removing evidence before the replacement boundary is decided. |
 | Duplicate DSL approval (`problem-dsl.approval.test.ts` and approved text) if parser AST equality plus round-trip remain | Same fixture is protected by parser, serializer, and approval tests. Keep one human-readable authoring fixture only if explicitly valuable. |
 | Academic transcript approvals (`academic-notation.approval.test.ts` and its three approved text files) | Renderer, parser, Mode, adapter, and browser coverage already protect the behavior. |
 | Debug-printer approvals duplicated by precise unit tests | Debug output should have at most one intentional support artifact. |
@@ -489,21 +532,30 @@ generic math
           ^
           |
 outer problem definition
-  symbol facts / visibility / question intent
-  proven family-local semantic relationships
+  symbol declarations and mathematical constraints
+  explicit semantic assertions
+  presentation requirements
+  question / solution contract
   relation values from generic math
-          ^
-          |
-generation / authored DSL
-  -> Problem + private AnswerKey
+          ^                         ^
+          |                         |
+      authored DSL              generator
+          \                         /
+           canonical unvalidated case
+                       |
+     shared mathematical + semantic validation
+                       |
+       validated public problem + private solution witness
 
-outer problem --> Theme presentation
-outer problem --> Mode behavior
+validated public problem --> Theme/template compatibility + presentation
+validated public problem --> Mode behavior
 Theme presentation + Mode result --> composition --> public screen --> UI
 
 session/application orchestrates stable IDs/replay and public learner inputs;
-it does not redefine family, Theme, Mode, or mathematical semantics.
+it does not redefine constraints, semantics, Theme, Mode, or mathematics.
 ```
+
+The DSL and generators converge on the typed canonical boundary, not on text. Serialization is an authoring/replay representation, never a required runtime intermediate for generated problems.
 
 ### Adding a mathematical operator/function
 
@@ -523,12 +575,14 @@ Should not change:
 - session/persistence;
 - pedagogical roles or misconception types.
 
-### Adding a semantic problem family
+### Adding a semantic problem kind/assertion
 
 Should change:
 
 - research/example fixture and domain hypothesis;
-- outer family-local semantic relationship, if required;
+- explicit semantic assertions and their focused consistency validator;
+- mathematical constraints required by the example;
+- presentation requirements independent of concrete Theme IDs;
 - generator/authored fixture;
 - only Themes/templates declared compatible;
 - capability declarations and one vertical test.
@@ -545,7 +599,7 @@ Should not change:
 Should change:
 
 - one Theme's vocabulary, units, fragments/templates, and registry entry;
-- compatibility declarations with proven semantic families;
+- compatibility declarations with proven semantic assertions and presentation requirements;
 - focused Theme tests and one selected composition test.
 
 Should not change:
@@ -578,7 +632,7 @@ Should not change:
 Should change:
 
 - one Theme's bounded template set and locale resources;
-- compatibility with a proven semantic family;
+- compatibility with proven semantic assertions, question intent, dimensions, and required slots;
 - focused rendering tests.
 
 Should not change:
@@ -623,10 +677,14 @@ Should not change:
 ### Add
 
 - Direct test that generic math imports no outer semantic, Theme, Mode, session, or UI package.
+- Contract tests proving parsed and generated cases pass through the same canonical validation entry point without generated cases being serialized/reparsed.
+- Validation tests separating mathematical failure, semantic inconsistency, and unsupported presentation.
+- Authored-case tests using a private solution witness to prove relation satisfaction and the required solution-cardinality contract without exposing the witness publicly.
 - Direct Theme non-mutation/Problem identity test, independent of the full matrix.
 - Direct public-screen shape test proving no `AnswerKey` or hidden binding is reachable; avoid substring-only JSON checks.
-- One research-derived semantic fixture per proven family, checking explicit facts versus inferred relationships.
-- Template compatibility tests only for declared family/Theme pairs.
+- Constraint fixtures for comparison, rectangle area, percentage-of/discount, and compounded growth even before all become production families.
+- One research-derived semantic fixture per proven assertion kind, checking explicit facts versus inferred relationships.
+- Template compatibility tests only for declared semantic-requirement/Theme-template pairs.
 - A test that structural mathematical alternatives are not accepted as story candidates without an authored semantic interpretation.
 
 The target suite should make large deletions safe by protecting contracts, not by preserving every historical presentation transcript.
@@ -746,45 +804,46 @@ Use stage gates rather than a feature conveyor belt.
 
 ### Stage B — domain hypothesis
 
-- State the single-DSL/two-type-layer boundary.
-- Propose only the minimum semantic information required by one selected family.
-- Explicitly list counterexamples and unproven concepts.
-- Human accepts/rejects the hypothesis before implementation.
+- State the single-DSL/two-type-layer boundary and the three constraint concerns.
+- Build constraint records for comparison, rectangle area, percentage-of/discount, growth, and one current equal-groups problem.
+- Decide the authored/generated definition-instance-validation lifecycle and private solution-witness policy.
+- Explicitly list counterexamples and unproven concepts; do not define universal domain types.
+- Human accepts/rejects the validation obligations before implementation.
 
-### Stage C — first vertical proof
+### Stage C — canonical convergence
 
-- Use one fixed additive/equal-groups or fixed-plus-repeated problem.
-- Use one Theme and one locale.
-- Author one correct situation and one explicitly coherent alternative interpretation.
-- Keep candidate semantics independent of learner-facing wording.
-- Do not require a new general Mode, session support, all Themes/locales, or a template engine.
+- Make DSL parsing and generation produce the same canonical typed form.
+- Run both through shared mathematical and semantic validation before Theme/Mode consumption.
+- Keep the private solution witness outside learner-visible state.
+- Do not serialize/reparse generated cases.
 
-### Stage D — second materially different proof
+### Stage D — first semantic/presentation proof
 
-- Prefer comparison (`big = small + difference`) or take-away because it challenges the once-plus-repeated model.
-- Demonstrate the different participant/relationship meaning and bounded wording.
-- Treat this second example as evidence, not an automatic extraction command.
+- Use comparison (`big = small + difference`) because it exercises existing addition/equality while challenging the current roles.
+- Prove explicit semantics, mathematical validity, compatible/incompatible templates, and fact preservation.
+- Do not add a Mode, session integration, or generic template system.
 
-### Stage E — justified abstraction
+### Stage E — second materially different proof
 
-- Name the invariant shared by the two proofs.
-- Either retain two local adapters or introduce the smallest outer descriptor inside the existing DSL.
-- Generalize only fields and behavior used by both examples.
+- Use rectangle area because it shares multiplication syntax with equal groups and percentages while requiring different semantics and dimensions.
+- Keep percentage and growth as mandatory architectural counterexamples/fixtures without shipping them as product families.
+- Treat the second implementation as evidence, not an extraction instruction.
 
-### Stage F — product proof and coverage
+### Stage F — conditional abstraction
 
-- Reconsider the matching-situation Mode only for semantic families with proven candidates/templates.
-- Start with one Theme/locale and deterministic candidate set.
-- Expand to a second Theme/locale only when the same semantic representation demonstrably works.
-- Add declared-supported composition tests; session planning comes later.
+- Name any invariant shared by comparison and geometry.
+- Either retain two explicit validators/adapters or introduce the smallest shared carrier for semantic assertions and presentation requirements.
+- Update DSL serialization and Theme/template compatibility only to the demonstrated extent.
+- Keep M13, session work, full locale coverage, and new UI outside this reset sequence.
 
 ### Disposition of current milestones
 
 - **M13:** cancel as specified. Preserve the product question as Stage C–F research/proof work. Remove “generate distractor semantics from canonical relation structure” as a requirement.
 - **M14:** merge into a later semantic/pedagogical proof only when a concrete learner error requires guidance. Do not add generic DSL guidance syntax now.
 - **M15:** postpone. Mixed-family sessions package proven capabilities; they do not discover them.
-- **M16:** reorder as a candidate for the second materially different semantic proof, selecting one comparison or take-away family rather than a broad family expansion.
-- **M17–M18:** defer as independent research-backed verticals after the domain review.
+- **M16:** reuse its comparison evidence for the first semantic/presentation proof, not as a broad product-family milestone.
+- **M17:** keep percentage/fraction cases as mathematical-domain and presentation counterexamples until exact rational/rounding decisions exist.
+- **M18:** defer visual product work; rectangle-area presentation in the reset is an architecture proof, not a commitment to a visual Mode.
 - **M19:** rewrite as an evidence-triggered persistence/history extension. M10.6 already provides active/completed local persistence.
 - **M20:** defer and redefine after the new semantic boundary and a real fifth edge are proven.
 
@@ -796,12 +855,16 @@ Do not require the full Problems × Themes × Modes × locales product until a c
 
 Only the following are genuine product/domain decisions; implementation details should be settled by code evidence.
 
-1. **What exactly is the matching-situation learning task?** Decide whether alternatives are different coherent situations with different models, different wordings of the same situation/model, or both as separate tasks. Issue #45 and PR #46 blurred these meanings.
-2. **Which first two semantic proofs represent intended curriculum?** Recommend fixed-plus-repeated/equal-groups first and comparison or take-away second. Confirm that these are educationally representative rather than choosing examples merely because current code supports them.
-3. **Does an authored problem define a stable situation with a separately selected question/unknown, or is known/hidden status part of the authored problem identity?** Research supports varying unknown role without changing the relation, but the product intent must decide the authoring boundary.
-4. **What structural equivalence should each learner task accept?** Exact tree, commutative reordering, associative regrouping, or algebraic equivalence are pedagogical choices. Current `namedEquationStructurePolicy` accepts commutativity and swapped equality sides but not general algebraic equivalence (`normalized-structure.ts:3-71`).
-5. **Is the current one-example misconception feedback required during the reset?** If not, delete it. If yes, preserve the learner behavior as an explicitly family-local experiment, not generic mathematics.
-6. **How much bounded authored language variation is needed before a future LLM?** Decide the minimum useful number of templates per proven semantic family; do not ask implementation to build a general language system.
+1. **What does the authored DSL serialize?** Decide whether it describes a definition, a concrete instance, or supports both, and where materialization occurs.
+2. **How does an authored problem provide solution evidence?** A private authored witness plus validation may be sufficient initially; a general solver is not required.
+3. **What is the question/solution contract?** Decide whether known/hidden is authored identity or presentation state, which symbol/relation is targeted, and when zero/one/multiple solutions are allowed.
+4. **Which exact numeric domains are initially supported?** Current safe integers cannot faithfully cover percentages or growth; rational values and rounding policy need deliberate scope.
+5. **What is the canonical dimension/unit boundary?** Decide which non-localized dimensions and unit identities are mathematical, which wording is Theme-owned, and whether unsupported conversions are simply rejected.
+6. **What must presentation preserve?** Decide which facts/relationships are mandatory in text, which may be omitted, and what counts as inventing or changing a fact.
+7. **What exactly is the matching-situation learning task?** Decide whether alternatives are different coherent situations with different models, different wordings of the same situation/model, or separate tasks. Issue #45 and PR #46 blurred these meanings.
+8. **What structural equivalence should each learner task accept?** Exact tree, commutative reordering, associative regrouping, or algebraic equivalence are pedagogical choices. Current `namedEquationStructurePolicy` accepts commutativity and swapped equality sides but not general algebraic equivalence (`normalized-structure.ts:3-71`).
+9. **Is the current one-example misconception feedback required during the reset?** If retained, classify it as narrowly scoped semantic/pedagogical behavior rather than generic mathematics.
+10. **How much bounded authored language variation is needed before a future LLM?** Decide the minimum useful template coverage; do not ask implementation to build a general language system.
 
 Naming (`Situation` versus `ProblemDescription`), file layout, registry mechanics, and test framework choices are not human domain decisions unless implementation evidence exposes a real trade-off.
 
@@ -811,106 +874,112 @@ Naming (`Situation` versus `ProblemDescription`), file layout, registry mechanic
 
 No PR below is authorized until this plan is reviewed.
 
-### PR 1 — Documentation truth and work-routing reset
+### PR 1 — Documentation truth and architecture decision ledger
 
-- **Purpose:** make the repository tell the truth before code changes.
+- **Purpose:** make the repository tell the truth and expose unresolved decisions before code changes.
 - **Affected areas:** `AGENTS.md`, `src/AGENTS.md`, architecture guardian, README reading order, architecture contract status, Phase 2 status, research/archive banners.
-- **Expected deletions:** duplicated architecture rules; automatic second-implementation extraction language; stale Phase 1 acceptance-criterion mandate; active M13 requirements.
-- **Tests:** link/reference check only if available; no production suite change.
-- **Risk:** low; wording must not accidentally approve a new architecture.
+- **Expected deletions:** duplicated rules; automatic second-implementation extraction language; stale Phase 1 mandate; active M13 requirements.
+- **Additions:** the three constraint concerns; authored/generated convergence gap; provisional status for current roles, dimensions, one-hidden rule, and universal cross-product language.
+- **Tests:** link/reference check only if available.
+- **Risk:** low; do not accidentally approve final types.
 - **Dependencies:** none.
-- **Simpler afterward:** agents can reach current boundaries in about five files and will not treat M13/history as active scope.
+- **Simpler afterward:** agents can distinguish current facts, open decisions, empirical input, and historical plans.
 
-### PR 2 — Delete dead and unproven scaffolding; reset tests
+### PR 2 — Safe deletion and test-baseline reduction
 
-- **Purpose:** remove code/tests that make accidental architecture look required.
-- **Affected areas:** compatibility spike; generic guidance/misconception path if the human decision permits deletion; duplicate DSL/academic/debug/generator approvals; matrix/session browser helpers; stale compatibility tests.
-- **Expected deletions:** compatibility component/test; misconception/guidance tests/snapshots and generic ownership assertion; redundant approvals; role-position browser helpers; exact matrix counts.
-- **Tests:** consolidate parser round-trip, supported composition, session snapshot integrity, and one browser journey; keep suite green at every deletion checkpoint.
-- **Risk:** medium because current feedback/input-provider behavior may be visible; audit callers before each deletion.
-- **Dependencies:** PR 1 establishes what is current.
-- **Simpler afterward:** tests protect contracts instead of M8–M12 scaffolding; snapshots no longer amplify every union change.
+- **Purpose:** remove indisputably dead or duplicate material without deleting evidence needed to design the new boundary.
+- **Affected areas:** compatibility spike; duplicate DSL/academic/debug/generator approvals; exact matrix counts; role-position browser helpers; stale compatibility tests.
+- **Expected deletions:** compatibility component/test, redundant approvals/helpers, and historical assertions with no current product contract.
+- **Deferred:** guidance/misconception, role, dimension, and validation behavior remain until PR 3 classifies the obligation each protects.
+- **Tests:** retain parser/validation baselines, supported composition, session snapshot integrity, and minimal browser confidence.
+- **Risk:** low-medium; caller-audit each deletion.
+- **Dependencies:** PR 1.
+- **Simpler afterward:** a smaller suite still records current mathematical and product behavior.
 
-### PR 3 — Canonical mathematical boundary and single-DSL cleanup
+### PR 3 — Cross-domain constraint corpus and canonical-lifecycle proposal
 
-- **Purpose:** make the existing clean expression model explicit without expanding its surface.
-- **Affected areas:** `expression.ts`, generic expression parser naming, substitution, normalization policy placement, role-derived academic symbol mapping, outer DSL embedding tests, dependency tests.
-- **Expected deletions:** misleading `named-expression` semantic naming; Mode-specific policy from the math package; duplicated visibility/substitution coupling; role-derived generic notation assumption where it can be replaced by explicit mapping.
-- **Tests:** neutral-symbol expression/parser/formatter/evaluator tables; one outer DSL embed/round-trip; generic-math dependency boundary; unchanged existing mathematical behavior.
-- **Risk:** medium; wide rename/move risk, so keep commits mechanical and behavior-preserving.
-- **Dependencies:** PR 2 reduces test noise.
-- **Simpler afterward:** one canonical mathematical representation; one authored DSL; clear outer-versus-math dependency; easier direct human trace.
+- **Purpose:** make the target validation obligations falsifiable before changing production types.
+- **Affected areas:** `docs/research`, current architecture references, and a small non-production fixture/decision format.
+- **Examples:** one current equal-groups case plus comparison, rectangle area, percentage-of versus discount, and compounded growth.
+- **For each example:** record value domains, dimensions/units, relations, solution-cardinality requirement, private witness need, explicit semantics, presentation requirements, compatible/incompatible templates, and rounding/exactness.
+- **Expected deletions:** unsupported catalog-as-spec claims and universal-role language.
+- **Tests:** optional schema validation for machine-readable fixtures; no production feature tests.
+- **Risk:** low technical risk and high architectural leverage.
+- **Dependencies:** PR 2.
+- **Simpler afterward:** the human review can decide contracts from examples rather than proposed type names.
 
 ### MANUAL REVIEW STOP — after PR 3
 
-Stop all semantic DSL and new Mode work here.
+Stop all domain-model, semantic DSL, and new Mode work here.
 
-The repository should now have:
+Humans must decide:
 
-- one canonical expression/relation representation;
-- one outer `Problem` path shared by authored and generated cases;
-- no abandoned M13 representation in the main path;
-- no obsolete compatibility spike or known duplicate test/snapshot layer;
-- current documentation that describes current code;
-- a short trace from serialized problem definition through `Problem`, Theme, Mode, composition, and UI;
-- research findings visible as empirical evidence, not requirements.
+- what the DSL serializes: definition, instance, or both;
+- the definition → materialization → validated-case lifecycle;
+- authored private solution-witness policy;
+- question target and required solution cardinality;
+- initial exact numeric domains and rounding rules;
+- mathematical dimension/canonical-unit versus Theme display-unit ownership;
+- semantic-assertion ownership;
+- presentation fidelity and compatibility rules;
+- whether unsupported Theme/template combinations replace the current universal cross-product requirement.
 
-A human should inspect the entire serialized-definition-to-UI path and decide whether PR 4's proposed first semantic proof is the right product question. Do not commit to a large outer semantic DSL here.
+The codebase should already be smaller and the documentation truthful, but no large outer semantic DSL should exist yet.
 
-### PR 4 — Research example matrix and first domain hypothesis
+### PR 4 — Canonical representation and shared acceptance pipeline
 
-- **Purpose:** turn the current limited research into falsifiable, fully authored examples.
-- **Affected areas:** `docs/research` and a small non-production fixture format only.
-- **Expected deletions:** unsupported catalog-as-spec claims and universal-role language.
-- **Tests:** none, or schema validation for the example matrix if it is machine-readable.
-- **Risk:** low technical risk; high leverage if examples are chosen poorly.
-- **Dependencies:** manual approval after PR 3.
-- **Simpler afterward:** explicit facts, inferred semantics, alternative models, and incoherent alternatives are reviewable without code vocabulary.
+- **Purpose:** make authored and generated cases converge on one typed canonical form and validator entry point.
+- **Affected areas:** DSL parser boundary, family generators, `Problem` lifecycle, validation APIs, public/private result contract.
+- **Expected deletions:** parallel acceptance assumptions and direct consumption of unvalidated generated problems.
+- **Tests:** parsed/generated cases run the same validators; generated cases are not serialized/reparsed; validated public state cannot reach the private solution witness.
+- **Risk:** medium-high because it touches the central domain boundary.
+- **Dependencies:** approved manual-review decisions.
+- **Simpler afterward:** Theme, Mode, session, and UI consume one validated public contract.
 
-### PR 5 — First outer-semantic vertical proof
+### PR 5 — Mathematical constraint boundary
 
-- **Purpose:** prove one fixed equal-groups/fixed-plus-repeated situation with bounded presentation.
-- **Affected areas:** one outer problem fixture/descriptor if required, one Theme, one locale, pure candidate/interpretation logic; no session.
-- **Expected deletions:** local role/`hasBase` derivation only if the proven semantic facts replace it cleanly.
-- **Tests:** mathematical identity, fact/unknown preservation, one correct situation, one explicitly authored coherent alternative, template compatibility, no `AnswerKey` exposure.
-- **Risk:** medium; danger of prematurely naming a universal abstraction.
-- **Dependencies:** PR 4 and human approval of its hypothesis.
-- **Simpler afterward:** one concrete boundary between relation structure and situation meaning exists.
+- **Purpose:** implement only the approved minimum for domains, exact values, dimensions, relation satisfaction, and solution obligations.
+- **Affected areas:** numeric values/domains, symbol declarations, dimension validation, question/solution contract, private witness validation.
+- **Expected deletions:** global `single-hidden-quantity` or role-derived checks only where replaced by explicit scoped constraints.
+- **Tests:** current families plus PR 3 contract fixtures; comparison/geometry/percentage/growth need not become product features.
+- **Risk:** high if it drifts toward a general solver or unit system; reject that expansion.
+- **Dependencies:** PR 4.
+- **Simpler afterward:** mathematical validity is explicit and independent of story semantics.
 
-### PR 6 — Second materially different semantic proof
+### PR 6 — First semantic/presentation vertical: comparison
 
-- **Purpose:** challenge the first model with comparison or take-away.
-- **Affected areas:** one second local family representation and bounded Theme template; the existing generic math layer only if the example truly needs one operator.
-- **Expected deletions:** duplicated assumptions exposed by the second proof, but no framework extraction by default.
-- **Tests:** second research-derived fixture, correct/incoherent interpretation checks, first proof remains unchanged.
-- **Risk:** medium-high because it may falsify the first hypothesis; that is success, not failure.
+- **Purpose:** prove explicit meaning and template compatibility without relying on fixed-plus-repeated roles.
+- **Affected areas:** one comparison assertion/validator, one bounded Theme/template path, one locale, non-UI fixtures.
+- **Expected deletions:** none required; do not force comparison into existing roles.
+- **Tests:** mathematical validity, larger/reference/difference bindings, compatible and incompatible templates, fact preservation, no private-value exposure.
+- **Risk:** medium; avoid creating a universal assertion hierarchy.
 - **Dependencies:** PR 5.
-- **Simpler afterward:** the shared invariant—or lack of one—is evidence rather than speculation.
+- **Simpler afterward:** one demonstrated boundary exists between expression shape, situation meaning, and presentation support.
 
-### PR 7 — Conditional outer abstraction
+### PR 7 — Second semantic/presentation vertical: rectangle area
 
-- **Purpose:** share only the invariant demonstrated by PRs 5 and 6.
-- **Affected areas:** outer `Problem` metadata, DSL parser/serializer, Theme template contract, capability declarations, only if justified.
-- **Expected deletions:** duplicated family-local mapping that the two proofs genuinely share.
-- **Tests:** both semantic fixtures, DSL round-trip, generic math isolation, declared compatible Theme pairs.
-- **Risk:** high; cancel this PR if the two examples do not share a stable representation.
-- **Dependencies:** second human review after PR 6 and an accepted ADR if a durable contract is chosen.
-- **Simpler afterward:** either one honest minimal descriptor or two intentionally local adapters—both are preferable to a false universal model.
+- **Purpose:** challenge the boundary with multiplication that does not mean grouping/rate.
+- **Affected areas:** one rectangle-area assertion/validator, geometric dimensions, one compatible presentation path; percentage and growth remain counterexample fixtures.
+- **Expected deletions:** role/count-per-item assumptions exposed as unnecessary by this proof, but no automatic abstraction extraction.
+- **Tests:** positive measures, length × length → area, semantic participant bindings, rejection by incompatible story templates, comparison proof unchanged.
+- **Risk:** medium-high because it may falsify PR 6 assumptions; that is useful evidence.
+- **Dependencies:** PR 6.
+- **Simpler afterward:** shared infrastructure and genuinely distinct semantics are visible separately.
 
-### PR 8 — Narrow matching-situation product proof
+### PR 8 — Conditional semantic/presentation contract
 
-- **Purpose:** revisit the fifth representation edge only after semantic candidates exist.
-- **Affected areas:** one Mode, composition, focused UI component, one Theme/locale initially, optional second Theme/locale only after compatibility proof.
-- **Expected deletions:** any remaining speculative M13 assumptions or duplicated global switches that the focused implementation makes unnecessary.
-- **Tests:** pure checker/candidate order, one composition/privacy test, one accessible browser interaction, declared support only; no session planner integration initially.
-- **Risk:** medium; session and full cross-product pressure must not broaden the slice.
-- **Dependencies:** PR 7 if a shared descriptor is justified, otherwise explicit local adapters from PRs 5–6.
-- **Simpler afterward:** the feature is built on validated situations instead of treating AST mutations as stories.
+- **Purpose:** share only the invariant demonstrated by comparison and geometry.
+- **Affected areas:** outer DSL serialization, semantic-validation interface, presentation-requirement carrier, Theme/template capability checks, only if justified.
+- **Expected deletions:** duplicated mechanics genuinely shared by PRs 6–7; retain separate assertion types/validators where meaning differs.
+- **Tests:** both verticals, DSL round-trip, generic math isolation, explicit unsupported-presentation results, percentage/growth counterexample fixtures.
+- **Risk:** high; cancel this PR if no useful shared invariant exists.
+- **Dependencies:** second manual review after PR 7 and an accepted ADR for any durable contract.
+- **Simpler afterward:** either one minimal proven carrier or two honest local paths. M13, session integration, full locale coverage, and new UI remain deferred.
 
 ## 15. Final manual-review stop point
 
-The mandatory stop is **after PR 3 and before PR 4/5 production work**. At that point the repository should be small and truthful enough for a human to review the current architecture directly, with one representation per major concept and no known obsolete competing main path.
+The mandatory stop is **after PR 3 and before PR 4 production work**. At that point the repository should be small and truthful, the five-example constraint corpus should expose the real obligations, and the canonical authored/generated lifecycle should be a reviewable proposal rather than an accidental implementation fact.
 
-There is a second decision checkpoint after PR 6: approve PR 7 only if two materially different examples demonstrate the same semantic invariant. Otherwise keep the two representations local and do not generalize.
+There is a second decision checkpoint after PR 7: approve PR 8 only if comparison and rectangle area demonstrate useful shared infrastructure without collapsing their semantic differences. Percentage and growth must still fit the boundaries as explicit counterexamples. Otherwise cancel PR 8 and keep the vertical representations local.
 
 STOP — do not implement any proposed PR until this plan has been reviewed.
